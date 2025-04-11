@@ -7,8 +7,7 @@
 
 Field::Field(const int siz, int *f){
   const int num_size = siz * siz / 2;
-  int len[num_size];
-  memset(len, 0, num_size);
+  int *len = new int[num_size];
 
   this->size = siz;
   this->pentities = new PENT[num_size];
@@ -39,9 +38,9 @@ PENT Field::getPair(int num){
   return this->pentities[num];
 }
 
-ENT* getPair(ENT* ent){
+ENT* Field::getPair(ENT* ent){
   PENT pent = this->getPair(ent->num);
-  return (pent.p1 == ent) ? pent.p1 : pent.p2
+  return (pent.p1 == ent) ? pent.p1 : pent.p2;
 }
 
 ENT* Field::get(int x, int y){

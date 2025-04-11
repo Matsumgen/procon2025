@@ -24,7 +24,7 @@ public:
   Field(const int siz, int *f);
   void print();
   PENT getPair(int num);
-  ENT* getPair(ENT ent);
+  ENT* getPair(ENT *ent);
   ENT* get(int x, int y);
   void rotate(int x, int y, int siz);
 
