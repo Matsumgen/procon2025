@@ -72,7 +72,9 @@ int main(void)
 
     // 生成した問題を表示し、csvファイルにも書き出す
     strcat(filename, ".csv");
-    FILE *fp = fopen(filename, "w");
+    char filepath[512] = "problem/";
+    strcat(filepath, filename);
+    FILE *fp = fopen(filepath, "w");
 
     for (int i = 0; i < size; i++)
     {
