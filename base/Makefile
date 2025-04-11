@@ -1,5 +1,5 @@
 CC	  = g++
-CFLAGS    =
+CFLAGS    = -std=c++17
 INCLUDE   = -I./inc
 
 TARGET    = exe
