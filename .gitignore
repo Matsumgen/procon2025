@@ -2,3 +2,4 @@ pro
 .DS_Store
 exe
 *.o
+venv
