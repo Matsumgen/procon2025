@@ -7,11 +7,12 @@
 //p = {x, y}
 //pを交換
 typedef struct field_entities {
-  int num;
-  int *p;
+  int num; 
+  int *p;  //座標
 } ENT;
 
 //ENTが変わっても変更する必要なし
+//ペアの数字
 typedef struct pair_entities {
   ENT *p1;
   ENT *p2;

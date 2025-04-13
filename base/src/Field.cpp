@@ -6,17 +6,24 @@
 #include <sstream>
 
 Field::Field(const int siz, int *f){
+  //コンストラクタ
+  //fieldを初期化し、ペアも見つける
+
+  //ペアの数を計算しnum_sizeに代入
   const int num_size = siz * siz / 2;
   int *len = new int[num_size];
 
   this->size = siz;
   this->pentities = new PENT[num_size];
+
+  //ENT*型の2次元配列を用意
   this->field = new ENT**[siz];
   for (int i = 0; i < siz; ++i) {
     this->field[i] = new ENT*[siz];
   }
   int n;
   ENT *ent;
+  //fieldを初期化しながらペアを探す
   for(int y = 0; y < siz; y++){
     for(int x = 0; x < siz; x++){
       n = *(f + y * siz + x);
@@ -25,9 +32,11 @@ Field::Field(const int siz, int *f){
       ent->num = n;
       this->field[y][x] = ent;
       if(len[n] == 0){
+        //初めて出てきた数字
         this->pentities->p1 = ent;
         len[n]++;
       }else {
+        //2回目以降の時
         this->pentities->p2 = ent;
       }
     }
@@ -58,11 +67,14 @@ void Field::print(){
 }
 
 void Field::rotate(int x, int y, int siz){
+  //sizを2で割った時の商
   int a = siz >> 1;
+  //sizを2で割った時のあまり(偶数の時は0、奇数の時は1)
   int b = siz & 1;
   ENT *buf;
   int h, w, x1, x2, y1, y2;
   int *p_buf;
+  //動かす盤面を4等分して動かす(奇数の時は真ん中は除く)
   for(h = 0; h < a; h++){
     y1 = y + h;
     y2 = y + siz - h - 1;
@@ -82,6 +94,7 @@ void Field::rotate(int x, int y, int siz){
       this->field[x1][y2] = buf;
     }
   }
+  //奇数の時の真ん中を動かす
   if(b == 1){
     int mx = x + a, my = y + a;
     for(int i = 0; i < a; i++){
