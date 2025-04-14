@@ -33,14 +33,18 @@ Field::Field(const int siz, int *f){
       this->field[y][x] = ent;
       if(len[n] == 0){
         //初めて出てきた数字
-        this->pentities->p1 = ent;
+        this->pentities[n].p1 = ent;  // 最初の要素にしか入ってなさそうだったため修正
         len[n]++;
       }else {
         //2回目以降の時
-        this->pentities->p2 = ent;
+        this->pentities[n].p2 = ent;  // 最初の要素にしか入ってなさそうだったため修正
       }
     }
   }
+
+  // 解放
+  delete ent;
+  delete [] len;
 }
 
 PENT Field::getPair(int num){
@@ -49,7 +53,7 @@ PENT Field::getPair(int num){
 
 ENT* Field::getPair(ENT* ent){
   PENT pent = this->getPair(ent->num);
-  return (pent.p1 == ent) ? pent.p1 : pent.p2;
+  return (pent.p1 == ent) ? pent.p2 : pent.p1;  // 両方ともentを返しそうだったので修正
 }
 
 ENT* Field::get(int x, int y){
@@ -64,6 +68,15 @@ void Field::print(){
     }
     std::cout << std::endl;
   }
+
+  /*
+  // 座標を表示
+  for (int i = 0; i < this->size; i++){
+    for (int j = 0; j < this->size; j++){
+      printf("(%d, %d)%c", this->field[i][j]->p[0], this->field[i][j]->p[1], " \n"[j == this->size - 1]);
+    }
+  }
+  */
 }
 
 void Field::rotate(int x, int y, int siz){
@@ -83,10 +96,11 @@ void Field::rotate(int x, int y, int siz){
       x2 = x + siz - w - 1;
       buf = this->get(x1, y1);
       p_buf = buf->p;
-      this->field[y1][x1]->p = this->field[x2][y1]->p;
-      this->field[x2][y1]->p = this->field[y2][x2]->p;
-      this->field[y2][x2]->p = this->field[x1][y2]->p;
-      this->field[x1][y2]->p = p_buf;
+      // 座標がおかしくなったため修正(反時計回り)
+      this->field[y1][x1]->p = this->field[x1][y2]->p;
+      this->field[x1][y2]->p = this->field[y2][x2]->p;
+      this->field[y2][x2]->p = this->field[x2][y1]->p;
+      this->field[x2][y1]->p = p_buf;
 
       this->field[y1][x1] = this->field[x2][y1];
       this->field[x2][y1] = this->field[y2][x2];
@@ -102,12 +116,13 @@ void Field::rotate(int x, int y, int siz){
       x2 = x + siz - i - 1;
       y1 = y + i;
       y2 = y + siz - i - 1;
-      p_buf = buf->p;
       buf = this->get(mx, y1);
-      this->field[y1][mx]->p = this->field[my][x1]->p;
-      this->field[my][x1]->p = this->field[y2][mx]->p;
-      this->field[y2][mx]->p = this->field[my][x2]->p;
-      this->field[my][x2]->p = p_buf;
+      p_buf = buf->p;  // 場所を修正
+      // 座標がおかしくなったため修正(反時計回り)
+      this->field[y1][mx]->p = this->field[my][x2]->p;
+      this->field[my][x2]->p = this->field[y2][mx]->p;
+      this->field[y2][mx]->p = this->field[my][x1]->p;
+      this->field[my][x1]->p = p_buf;
 
       this->field[y1][mx] = this->field[my][x1];
       this->field[my][x1] = this->field[y2][mx];
