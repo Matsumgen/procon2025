@@ -43,7 +43,6 @@ Field::Field(const int siz, int *f){
   }
 
   // 解放
-  delete ent;
   delete [] len;
 }
 
@@ -85,49 +84,45 @@ void Field::rotate(int x, int y, int siz){
   //sizを2で割った時のあまり(偶数の時は0、奇数の時は1)
   int b = siz & 1;
   ENT *buf;
-  int h, w, x1, x2, y1, y2;
+  int h1, w1, h2, w2;
   int *p_buf;
   //動かす盤面を4等分して動かす(奇数の時は真ん中は除く)
-  for(h = 0; h < a; h++){
-    y1 = y + h;
-    y2 = y + siz - h - 1;
-    for(w = 0; w < a; w++){
-      x1 = x + w;
-      x2 = x + siz - w - 1;
-      buf = this->get(x1, y1);
+  for(h1 = 0; h1 < a; h1++){
+    h2 = siz - h1 - 1;
+    for(w1 = 0; w1 < a; w1++){
+      w2 = siz - w1 - 1;
+      buf = this->get(x + w1, y + h1);
       p_buf = buf->p;
-      // 座標がおかしくなったため修正(反時計回り)
-      this->field[y1][x1]->p = this->field[x1][y2]->p;
-      this->field[x1][y2]->p = this->field[y2][x2]->p;
-      this->field[y2][x2]->p = this->field[x2][y1]->p;
-      this->field[x2][y1]->p = p_buf;
+      this->field[y + h1][x + w1]->p = this->field[y + w2][x + h1]->p;
+      this->field[y + w2][x + h1]->p = this->field[y + h2][x + w2]->p;
+      this->field[y + h2][x + w2]->p = this->field[y + w1][x + h2]->p;
+      this->field[y + w1][x + h2]->p = p_buf;
 
-      this->field[y1][x1] = this->field[x2][y1];
-      this->field[x2][y1] = this->field[y2][x2];
-      this->field[y2][x2] = this->field[x1][y2];
-      this->field[x1][y2] = buf;
+      this->field[y + h1][x + w1] = this->field[y + w2][x + h1];
+      this->field[y + w2][x + h1] = this->field[y + h2][x + w2];
+      this->field[y + h2][x + w2] = this->field[y + w1][x + h2];
+      this->field[y + w1][x + h2] = buf;
     }
   }
   //奇数の時の真ん中を動かす
   if(b == 1){
-    int mx = x + a, my = y + a;
+    int mw = x + a, mh = y + a;
     for(int i = 0; i < a; i++){
-      x1 = x + i;
-      x2 = x + siz - i - 1;
-      y1 = y + i;
-      y2 = y + siz - i - 1;
-      buf = this->get(mx, y1);
+      w1 = x + i;
+      w2 = x + siz - i - 1;
+      h1 = y + i;
+      h2 = y + siz - i - 1;
+      buf = this->get(mw, h1);
       p_buf = buf->p;  // 場所を修正
-      // 座標がおかしくなったため修正(反時計回り)
-      this->field[y1][mx]->p = this->field[my][x2]->p;
-      this->field[my][x2]->p = this->field[y2][mx]->p;
-      this->field[y2][mx]->p = this->field[my][x1]->p;
-      this->field[my][x1]->p = p_buf;
+      this->field[h1][mw]->p = this->field[mh][w1]->p;
+      this->field[mh][w1]->p = this->field[h2][mw]->p;
+      this->field[h2][mw]->p = this->field[mh][w2]->p;
+      this->field[mh][w2]->p = p_buf;
 
-      this->field[y1][mx] = this->field[my][x1];
-      this->field[my][x1] = this->field[y2][mx];
-      this->field[y2][mx] = this->field[my][x2];
-      this->field[my][x2] = buf;
+      this->field[h1][mw] = this->field[mh][w1];
+      this->field[mh][w1] = this->field[h2][mw];
+      this->field[h2][mw] = this->field[mh][w2];
+      this->field[mh][w2] = buf;
     }
   }
 }
