@@ -1,5 +1,5 @@
 //debug情報表示する際にコメントを外す
-#define DEBUG_FIELD
+/* #define DEBUG_FIELD */
 
 #include <Field.hpp>
 #include <iostream>
