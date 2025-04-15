@@ -1,16 +1,17 @@
 
 #include <Field.hpp>
-//1pair最大3回?
-//xが等しい列に揃えて回転
+#include <iostream>
 
 int main(void){
   Field *f = loadProblem("../problem/sample.csv");
   f->print();
-  f->rotate(1, 0, 4);
+  if(f->toPoint(f->get(2, 1)->p, f->get(3, 3)->p)){
+    std::cout << "成功" << std::endl;
+  }else{
+    std::cout << "失敗" << std::endl;
+  }
   f->print();
-  f->rotate(1, 3, 5);
-  f->print();
-  f->rotate(3, 0, 3);
+  f->toPoint(f->get(1,0)->p, f->get(2, 5)->p);
   f->print();
   return 0;
 }

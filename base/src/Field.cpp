@@ -1,3 +1,5 @@
+//debug情報表示する際にコメントを外す
+#define DEBUG_FIELD
 
 #include <Field.hpp>
 #include <iostream>
@@ -41,9 +43,17 @@ Field::Field(const int siz, int *f){
       }
     }
   }
+  this->confirm_topL = new int[3];
+  this->confirm_topR = new int[3];
+  this->confirm_lowerL = new int[3];
+  this->confirm_lowerR = new int[3];
 
   // 解放
   delete [] len;
+}
+
+int Field::getSize(){
+  return this->size;
 }
 
 PENT Field::getPair(int num){
@@ -79,6 +89,9 @@ void Field::print(){
 }
 
 void Field::rotate(int x, int y, int siz){
+#ifdef DEBUG_FIELD
+  std::cout << "rotate: x=" << x << " y=" << y << " siz=" << siz << std::endl;
+#endif
   //sizを2で割った時の商
   int a = siz >> 1;
   //sizを2で割った時のあまり(偶数の時は0、奇数の時は1)
@@ -124,6 +137,80 @@ void Field::rotate(int x, int y, int siz){
       this->field[h2][mw] = this->field[mh][w2];
       this->field[mh][w2] = buf;
     }
+  }
+}
+
+//可能なときは1、不可能であれば0
+int Field::toPointCheck(int *from, int *to, int *buf){
+  int X = to[0] - from[0];
+  int Y = to[1] - from[1];
+  int siz = X + Y + 1;
+  buf[2] = siz;
+#ifdef DEBUG_FIELD
+  printf("toPointCheck: from={%d, %d} to={%d, %d} X=%d Y=%d siz=%d\n", from[0], from[1], to[0], to[1], X, Y, siz);
+#endif
+
+  if(from[0] < to[0] && from[1] <= to[1]){
+    buf[0] = from[0] - Y;
+    buf[1] = from[1];
+  }else if(to[0] <= from[0] && from[1] < to[1]){
+    buf[0] = from[0] - siz;
+    buf[1] = from[1] - X;
+  }else if(from[0] < to[0] && to[1] <= from[1]){
+    buf[0] = to[0];
+    buf[1] = from[1] - siz;
+  }else{
+    buf[0] = from[0];
+    buf[1] = from[1] - Y;
+  }
+#ifdef DEBUG_FIELD
+  printf("toPointCheck: buf={%d, %d, %d}\n", buf[0], buf[1], buf[2]);
+#endif
+
+  //確定した範囲
+  //confirm_topL topR lowerL lowerR
+  //line(2の倍数(縦の幅)), width, mode(0ならfill, 1なら横)
+  //可能か判定
+  if(buf[0] < 0 || buf[1] < 0 || this->size <= buf[0] + siz || this->size <= buf[1] + siz){
+    return 0;
+  }
+  int b1 = this->confirm_topL[0];
+  int b2 = this->confirm_topL[1];
+  if(buf[1] < b1 || (buf[0] < b2 && buf[1] <= b1 + 1 && !(this->confirm_topL[2] && buf[1] == b1 + 1 && b2 - 2 <= buf[0]))){
+    return 0;
+  }
+  b1 = this->size - this->confirm_topR[0];
+  b2 = this->confirm_topR[1];
+  if(b1 <= buf[0] || (buf[1] < b2 && b1 - 2 <= buf[0] && !(this->confirm_topR[2] && buf[0] == b1 - 2 && b2 - 2 <= buf[1]))){
+    return 0;
+  }
+  b1 = this->size - this->confirm_lowerR[0];
+  b2 = this->size - this->confirm_lowerR[1];
+  if(b1 <= buf[1] || (b2 <= buf[0] && b1 - 2 <= buf[1] && !(this->confirm_lowerR[2] && buf[1] == b1 - 2 && buf[0] < b2 + 2))){
+    return 0;
+  }
+  b1 = this->confirm_lowerL[0];
+  b2 = this->size - this->confirm_lowerL[1];
+  if(buf[0] < b1 || (b2 <= buf[1] && buf[0] <= b1 + 1 && !(this->confirm_lowerL[2] && buf[0] == b1 + 1 && buf[1] < b2 + 2))){
+    return -1;
+  }
+  return 1;
+}
+
+//成功1、失敗0
+int Field::toPoint(int *from, int *to){
+  int buf[3];
+  if(this->toPointCheck(from, to, buf)){
+    this->rotate(buf[0], buf[1], buf[2]);
+#ifdef DEBUG_FIELD
+    std::cout << "Success" << std::endl;
+#endif
+    return 1;
+  }else{
+#ifdef DEBUG_FIELD
+    std::cout << "False" << std::endl;
+#endif
+    return 0;
   }
 }
 

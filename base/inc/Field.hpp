@@ -24,16 +24,21 @@ class Field {
 public:
   Field(const int siz, int *f);
   void print();
+  int getSize();
   PENT getPair(int num);
   ENT* getPair(ENT *ent);
   ENT* get(int x, int y);
   void rotate(int x, int y, int siz);
+  int toPointCheck(int *from, int *to, int* buf);
+  int toPoint(int *from, int *to);
 
 protected:
   int size;
   PENT *pentities;
   ENT ***field;
   std::vector<std::string> answer;
+  //confirm_* = {line, width, mode} mode: 0->fill, 1->横
+  int *confirm_topL, *confirm_topR, *confirm_lowerL, *confirm_lowerR;
 
 /* private: */
 };
