@@ -20,13 +20,13 @@ Field::Field(const int siz, int *f){
 
   //ENT*型の2次元配列を用意
   this->field = new ENT**[siz];
-  for (int i = 0; i < siz; ++i) {
-    this->field[i] = new ENT*[siz];
-  }
+  this->confirm = new int*[siz];
   int n;
   ENT *ent;
   //fieldを初期化しながらペアを探す
   for(int y = 0; y < siz; y++){
+    this->field[y] = new ENT*[siz];
+    this->confirm[y] = new int[siz];
     for(int x = 0; x < siz; x++){
       n = *(f + y * siz + x);
       ent = new ENT;
@@ -43,10 +43,6 @@ Field::Field(const int siz, int *f){
       }
     }
   }
-  this->confirm_topL = new int[3];
-  this->confirm_topR = new int[3];
-  this->confirm_lowerL = new int[3];
-  this->confirm_lowerR = new int[3];
 
   // 解放
   delete [] len;
@@ -70,22 +66,26 @@ ENT* Field::get(int x, int y){
 }
 
 void Field::print(){
-  std::cout << std::endl;
   for(int y = 0; y < this->size; y++){
     for(int x = 0; x < this->size; x++){
-      std::cout << this->field[y][x]->num << '\t';
+      if(this->isConfirm(x, y)){
+        std::cout << "\x1b[33m" << this->field[y][x]->num << "\t\x1b[m";
+      }else{
+        std::cout << this->field[y][x]->num << '\t';
+      }
     }
     std::cout << std::endl;
   }
 
-  /*
+#ifdef DEBUG_FIELD
   // 座標を表示
   for (int i = 0; i < this->size; i++){
     for (int j = 0; j < this->size; j++){
       printf("(%d, %d)%c", this->field[i][j]->p[0], this->field[i][j]->p[1], " \n"[j == this->size - 1]);
     }
   }
-  */
+#endif
+  std::cout << std::endl;
 }
 
 void Field::rotate(int x, int y, int siz){
@@ -106,11 +106,13 @@ void Field::rotate(int x, int y, int siz){
       w2 = siz - w1 - 1;
       buf = this->get(x + w1, y + h1);
       p_buf = buf->p;
-      this->field[y + h1][x + w1]->p = this->field[y + w2][x + h1]->p;
-      this->field[y + w2][x + h1]->p = this->field[y + h2][x + w2]->p;
-      this->field[y + h2][x + w2]->p = this->field[y + w1][x + h2]->p;
-      this->field[y + w1][x + h2]->p = p_buf;
+      //座標は左回り
+      this->field[y + h1][x + w1]->p = this->field[y + w1][x + h2]->p;
+      this->field[y + w1][x + h2]->p = this->field[y + h2][x + w2]->p;
+      this->field[y + h2][x + w2]->p = this->field[y + w2][x + h1]->p;
+      this->field[y + w2][x + h1]->p = p_buf;
 
+      //fieldの要素は右回り
       this->field[y + h1][x + w1] = this->field[y + w2][x + h1];
       this->field[y + w2][x + h1] = this->field[y + h2][x + w2];
       this->field[y + h2][x + w2] = this->field[y + w1][x + h2];
@@ -127,10 +129,11 @@ void Field::rotate(int x, int y, int siz){
       h2 = y + siz - i - 1;
       buf = this->get(mw, h1);
       p_buf = buf->p;  // 場所を修正
-      this->field[h1][mw]->p = this->field[mh][w1]->p;
-      this->field[mh][w1]->p = this->field[h2][mw]->p;
-      this->field[h2][mw]->p = this->field[mh][w2]->p;
-      this->field[mh][w2]->p = p_buf;
+
+      this->field[h1][mw]->p = this->field[mh][w2]->p;
+      this->field[mh][w2]->p = this->field[h2][mw]->p;
+      this->field[h2][mw]->p = this->field[mh][w1]->p;
+      this->field[mh][w1]->p = p_buf;
 
       this->field[h1][mw] = this->field[mh][w1];
       this->field[mh][w1] = this->field[h2][mw];
@@ -146,9 +149,6 @@ int Field::toPointCheck(int *from, int *to, int *buf){
   int Y = to[1] - from[1];
   int siz = X + Y + 1;
   buf[2] = siz;
-#ifdef DEBUG_FIELD
-  printf("toPointCheck: from={%d, %d} to={%d, %d} X=%d Y=%d siz=%d\n", from[0], from[1], to[0], to[1], X, Y, siz);
-#endif
 
   if(from[0] < to[0] && from[1] <= to[1]){
     buf[0] = from[0] - Y;
@@ -164,35 +164,14 @@ int Field::toPointCheck(int *from, int *to, int *buf){
     buf[1] = from[1] - Y;
   }
 #ifdef DEBUG_FIELD
+  printf("toPointCheck: from={%d, %d} to={%d, %d} X=%d Y=%d siz=%d\n", from[0], from[1], to[0], to[1], X, Y, siz);
   printf("toPointCheck: buf={%d, %d, %d}\n", buf[0], buf[1], buf[2]);
 #endif
 
-  //確定した範囲
-  //confirm_topL topR lowerL lowerR
-  //line(2の倍数(縦の幅)), width, mode(0ならfill, 1なら横)
-  //可能か判定
-  if(buf[0] < 0 || buf[1] < 0 || this->size <= buf[0] + siz || this->size <= buf[1] + siz){
+  //確定した範囲内であるか判定
+  int _s = siz - 1;
+  if(this->isConfirm(buf) || this->isConfirm(buf[0] + _s, buf[1]) || this->isConfirm(buf[0], buf[1] + _s) || this->isConfirm(buf[0] + _s, buf[1] + _s)){
     return 0;
-  }
-  int b1 = this->confirm_topL[0];
-  int b2 = this->confirm_topL[1];
-  if(buf[1] < b1 || (buf[0] < b2 && buf[1] <= b1 + 1 && !(this->confirm_topL[2] && buf[1] == b1 + 1 && b2 - 2 <= buf[0]))){
-    return 0;
-  }
-  b1 = this->size - this->confirm_topR[0];
-  b2 = this->confirm_topR[1];
-  if(b1 <= buf[0] || (buf[1] < b2 && b1 - 2 <= buf[0] && !(this->confirm_topR[2] && buf[0] == b1 - 2 && b2 - 2 <= buf[1]))){
-    return 0;
-  }
-  b1 = this->size - this->confirm_lowerR[0];
-  b2 = this->size - this->confirm_lowerR[1];
-  if(b1 <= buf[1] || (b2 <= buf[0] && b1 - 2 <= buf[1] && !(this->confirm_lowerR[2] && buf[1] == b1 - 2 && buf[0] < b2 + 2))){
-    return 0;
-  }
-  b1 = this->confirm_lowerL[0];
-  b2 = this->size - this->confirm_lowerL[1];
-  if(buf[0] < b1 || (b2 <= buf[1] && buf[0] <= b1 + 1 && !(this->confirm_lowerL[2] && buf[0] == b1 + 1 && buf[1] < b2 + 2))){
-    return -1;
   }
   return 1;
 }
@@ -212,6 +191,27 @@ int Field::toPoint(int *from, int *to){
 #endif
     return 0;
   }
+}
+
+void Field::setConfirm(int x, int y){
+  this->confirm[y][x] = 1;
+}
+void Field::setConfirm(int *p){
+  this->setConfirm(p[0], p[1]);
+}
+void Field::setConfirm(ENT *ent){
+  this->setConfirm(ent->p[0], ent->p[1]);
+}
+
+//確定範囲内にあれば1, なければ0を返す
+int Field::isConfirm(int x, int y){
+  if(0 <= x && x < this->size && 0 <= y && y < this->size){
+    return this->confirm[y][x];
+  }
+  return 1;
+}
+int Field::isConfirm(int *p){
+  return this->isConfirm(p[0], p[1]);
 }
 
 /* Field* getProblem(){ */

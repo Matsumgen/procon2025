@@ -31,14 +31,19 @@ public:
   void rotate(int x, int y, int siz);
   int toPointCheck(int *from, int *to, int* buf);
   int toPoint(int *from, int *to);
+  void setConfirm(int x, int y);
+  void setConfirm(int *p);
+  void setConfirm(ENT *ent);
+  int isConfirm(int x, int y);
+  int isConfirm(int *p);
 
 protected:
   int size;
   PENT *pentities;
   ENT ***field;
   std::vector<std::string> answer;
-  //confirm_* = {line, width, mode} mode: 0->fill, 1->横
-  int *confirm_topL, *confirm_topR, *confirm_lowerL, *confirm_lowerR;
+  //confirm[size][size] 確定したら1、そうでないなら0
+  int **confirm;
 
 /* private: */
 };

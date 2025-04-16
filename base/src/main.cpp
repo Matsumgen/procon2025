@@ -13,5 +13,9 @@ int main(void){
   f->print();
   f->toPoint(f->get(1,0)->p, f->get(2, 5)->p);
   f->print();
+  f->setConfirm(0, 0);
+  f->setConfirm(0, 1);
+  f->toPoint(f->get(1,0)->p, f->get(2, 1)->p);
+  f->print();
   return 0;
 }
