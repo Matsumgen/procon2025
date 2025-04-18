@@ -23,6 +23,7 @@ typedef struct pair_entities {
 class Field {
 public:
   Field(const int siz, int *f);
+  ~Field();
   void print();
   int getSize();
   PENT getPair(int num);
@@ -34,8 +35,11 @@ public:
   void setConfirm(int x, int y);
   void setConfirm(int *p);
   void setConfirm(ENT *ent);
+  void unsetConfirm(int x, int y);
+  void unsetConfirm(int *p);
   int isConfirm(int x, int y);
   int isConfirm(int *p);
+  std::vector<std::string> getAnswer();
 
 protected:
   int size;

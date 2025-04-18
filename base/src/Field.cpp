@@ -6,6 +6,7 @@
 #include <cstring>
 #include <fstream>
 #include <sstream>
+#include <cstdlib>
 
 Field::Field(const int siz, int *f){
   //コンストラクタ
@@ -13,7 +14,7 @@ Field::Field(const int siz, int *f){
 
   //ペアの数を計算しnum_sizeに代入
   const int num_size = siz * siz / 2;
-  int *len = new int[num_size];
+  int *len = new int[num_size]{};
 
   this->size = siz;
   this->pentities = new PENT[num_size];
@@ -46,6 +47,22 @@ Field::Field(const int siz, int *f){
 
   // 解放
   delete [] len;
+}
+
+Field::~Field(){
+  //デストラクター
+  delete [] this->pentities;
+  for(int y = 0; y < this->size; y++){
+    for(int x = 0; x < this->size; x++){
+      delete [] this->field[y][x]->p;
+      delete this->field[y][x];
+    }
+    delete [] this->field[y];
+    delete [] confirm[y];
+  }
+  delete [] this->field;
+  delete [] confirm;
+
 }
 
 int Field::getSize(){
@@ -89,9 +106,6 @@ void Field::print(){
 }
 
 void Field::rotate(int x, int y, int siz){
-#ifdef DEBUG_FIELD
-  std::cout << "rotate: x=" << x << " y=" << y << " siz=" << siz << std::endl;
-#endif
   //sizを2で割った時の商
   int a = siz >> 1;
   //sizを2で割った時のあまり(偶数の時は0、奇数の時は1)
@@ -100,6 +114,9 @@ void Field::rotate(int x, int y, int siz){
   int h1, w1, h2, w2;
   int *p_buf;
   //動かす盤面を4等分して動かす(奇数の時は真ん中は除く)
+#ifdef DEBUG_FIELD
+  printf("rotate: x=%d y=%d siz=%d b=%d\n", x, y, siz, b);
+#endif
   for(h1 = 0; h1 < a; h1++){
     h2 = siz - h1 - 1;
     for(w1 = 0; w1 < a; w1++){
@@ -141,31 +158,37 @@ void Field::rotate(int x, int y, int siz){
       this->field[mh][w2] = buf;
     }
   }
+  //取り敢えずでの実装
+  std::stringstream ss;
+  ss << this->answer.size() << ": {" << x << ", " << y << ", " << siz << "}";
+  this->answer.push_back(ss.str());
 }
 
 //可能なときは1、不可能であれば0
 int Field::toPointCheck(int *from, int *to, int *buf){
-  int X = to[0] - from[0];
-  int Y = to[1] - from[1];
+  int X = std::abs(to[0] - from[0]);
+  int Y = std::abs(to[1] - from[1]);
   int siz = X + Y + 1;
   buf[2] = siz;
 
   if(from[0] < to[0] && from[1] <= to[1]){
+    //fromから見て右下(+fromの右)
     buf[0] = from[0] - Y;
     buf[1] = from[1];
   }else if(to[0] <= from[0] && from[1] < to[1]){
-    buf[0] = from[0] - siz;
+    //fromから見て左下(+fromの下)
+    buf[0] = to[0] - Y;
     buf[1] = from[1] - X;
   }else if(from[0] < to[0] && to[1] <= from[1]){
-    buf[0] = to[0];
-    buf[1] = from[1] - siz;
-  }else{
+    //fromから見て右上
     buf[0] = from[0];
-    buf[1] = from[1] - Y;
+    buf[1] = to[1];
+  }else{
+    buf[0] = to[0];
+    buf[1] = to[1] - X;
   }
 #ifdef DEBUG_FIELD
-  printf("toPointCheck: from={%d, %d} to={%d, %d} X=%d Y=%d siz=%d\n", from[0], from[1], to[0], to[1], X, Y, siz);
-  printf("toPointCheck: buf={%d, %d, %d}\n", buf[0], buf[1], buf[2]);
+  printf("toPointCheck: from={%d, %d} to={%d, %d} X=%d Y=%d siz=%d buf={%d, %d, %d}\n", from[0], from[1], to[0], to[1], X, Y, siz, buf[0], buf[1], buf[2]);
 #endif
 
   //確定した範囲内であるか判定
@@ -202,6 +225,12 @@ void Field::setConfirm(int *p){
 void Field::setConfirm(ENT *ent){
   this->setConfirm(ent->p[0], ent->p[1]);
 }
+void Field::unsetConfirm(int x, int y){
+  this->confirm[y][x] = 0;
+}
+void Field::unsetConfirm(int *p){
+  this->unsetConfirm(p[0], p[1]);
+}
 
 //確定範囲内にあれば1, なければ0を返す
 int Field::isConfirm(int x, int y){
@@ -212,6 +241,10 @@ int Field::isConfirm(int x, int y){
 }
 int Field::isConfirm(int *p){
   return this->isConfirm(p[0], p[1]);
+}
+
+std::vector<std::string> Field::getAnswer(){
+  return this->answer;
 }
 
 /* Field* getProblem(){ */

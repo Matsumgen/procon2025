@@ -1,21 +1,30 @@
 
 #include <Field.hpp>
+#include <algo.hpp>
 #include <iostream>
+#include <string>
+#include <chrono>
 
-int main(void){
-  Field *f = loadProblem("../problem/sample.csv");
-  f->print();
-  if(f->toPoint(f->get(2, 1)->p, f->get(3, 3)->p)){
-    std::cout << "成功" << std::endl;
-  }else{
-    std::cout << "失敗" << std::endl;
+int main(int argc, char *argv[]){
+  std::chrono::system_clock::time_point  startTime, endTime;
+  Field *f;
+  for(int i = 1; i < argc; i++){
+    startTime = std::chrono::system_clock::now(); // 計測開始時間
+    f = loadProblem(argv[i]);
+    /* f->print(); */
+    alg1(f);
+    /* f->print(); */
+    endTime = std::chrono::system_clock::now();  // 計測終了時間
+    std::cout << "file: " << argv[i] << std::endl;
+    std::cout << "size: " << f->getSize() << std::endl;
+    std::cout << "time: " << std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count() << "[ms]" << std::endl;
+    std::cout << "answer step: " << f->getAnswer().size() << std::endl;
+    std::cout << std::endl << std::endl;
+    /* std::cout << "answer" << std::endl; */
+    /* for(std::string ans : f->getAnswer()){ */
+    /*   std::cout << ans << std::endl; */
+    /* } */
+    delete f;
   }
-  f->print();
-  f->toPoint(f->get(1,0)->p, f->get(2, 5)->p);
-  f->print();
-  f->setConfirm(0, 0);
-  f->setConfirm(0, 1);
-  f->toPoint(f->get(1,0)->p, f->get(2, 1)->p);
-  f->print();
   return 0;
 }
