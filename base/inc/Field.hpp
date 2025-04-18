@@ -40,6 +40,7 @@ public:
   int isConfirm(int x, int y);
   int isConfirm(int *p);
   std::vector<std::string> getAnswer();
+  int isEnd();
 
 protected:
   int size;

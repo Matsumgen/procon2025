@@ -15,11 +15,16 @@ int main(int argc, char *argv[]){
     alg1(f);
     /* f->print(); */
     endTime = std::chrono::system_clock::now();  // 計測終了時間
+    if(!f->isEnd()){
+      std::cout << "ERROR: is not End" << std::endl;
+      f->print();
+      return 1;
+    }
     std::cout << "file: " << argv[i] << std::endl;
     std::cout << "size: " << f->getSize() << std::endl;
-    std::cout << "time: " << std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count() << "[ms]" << std::endl;
+    std::cout << "time[ms]: " << std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count() << std::endl;
     std::cout << "answer step: " << f->getAnswer().size() << std::endl;
-    std::cout << std::endl << std::endl;
+    std::cout << std::endl;
     /* std::cout << "answer" << std::endl; */
     /* for(std::string ans : f->getAnswer()){ */
     /*   std::cout << ans << std::endl; */

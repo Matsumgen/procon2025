@@ -247,6 +247,22 @@ std::vector<std::string> Field::getAnswer(){
   return this->answer;
 }
 
+//全て揃っているなら1
+int Field::isEnd(){
+  PENT pent;
+  for(int i=0; i < this->size * this->size / 2; i++){
+    pent = this->getPair(i);
+    if(pent.p1->p[0] == pent.p2->p[0]){
+      if(pent.p1->p[1] != pent.p2->p[1] + 1 && pent.p1->p[1] != pent.p2->p[1] - 1)  return 0;
+    }else if(pent.p1->p[1] == pent.p2->p[1]){
+      if(pent.p1->p[0] != pent.p2->p[0] + 1 && pent.p1->p[0] != pent.p2->p[0] - 1)  return 0;
+    }else{
+      return 0;
+    }
+  }
+  return 1;
+}
+
 /* Field* getProblem(){ */
 /* } */
 
