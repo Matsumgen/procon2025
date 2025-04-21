@@ -1,0 +1,56 @@
+.mr_20 {
+    margin-right: 20px;
+}
+
+/*table th,
+table td {
+    border: solid 1px black;
+    outline : none;
+    text-align : center;
+}
+
+table {
+    border-collapse: collapse;
+}*/
+
+.grid {
+    position: relative;
+    padding: 0px;
+}
+
+.grid .result_cell {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    margin: 0;
+    text-align: center;
+    outline : 2px black solid;
+    outline-offset : -1px;
+}
+
+.grid .not_rotate {
+    position: absolute;
+}
+
+.grid .rotate {
+    position: absolute;
+    transform-origin: center;
+}
+
+#result .ok_pair {
+    background: rgba(00, 255, 255, 0.25);
+}
+
+#result .operated {
+    background: rgba(00, 255, 0, 0.25);
+}
+
+#result .ok_pair.operated {
+    background : rgba(143, 191, 255, 0.25);
+}
+
+#result .bold {
+    outline : 4px solid #000000;
+    outline-offset : -2px;
+}
