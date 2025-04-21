@@ -35,7 +35,7 @@ for i in range(n):
 
   # コマンドとして実行（例：your_program.py に渡す）
   try:
-    ret = subprocess.run(['./procon2025/base/exe', temp_csv_path], capture_output=True, text=True, check=True)
+    ret = subprocess.run(['./exe', temp_csv_path], capture_output=True, text=True, check=True)
     res = [-1,-1,-1]
     ret_str = ret.stdout.splitlines()
     for j in range(3):
@@ -44,6 +44,7 @@ for i in range(n):
     results.append(res)
   except Exception as e:
     print(f"[{i+1}/{n}]", "ERROR")
+    print(e)
     shutil.copy(temp_csv_path, f"./error_{int(random.random() * 1000)}.csv")
   finally:
     # 実行後に一時ファイルを削除
