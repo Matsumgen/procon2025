@@ -20,11 +20,14 @@ int main(int argc, char *argv[]){
       f->print();
       return 1;
     }
+    //統計取る場合はこれだけ表示
     std::cout << "file: " << argv[i] << std::endl;
     std::cout << "size: " << f->getSize() << std::endl;
     std::cout << "time[ms]: " << std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count() << std::endl;
     std::cout << "answer step: " << f->getAnswer().size() << std::endl;
     std::cout << std::endl;
+
+
     /* std::cout << "answer" << std::endl; */
     /* for(std::string ans : f->getAnswer()){ */
     /*   std::cout << ans << std::endl; */
