@@ -23,17 +23,32 @@ typedef struct pair_entities {
 class Field {
 public:
   Field(const int siz, int *f);
+  ~Field();
   void print();
+  int getSize();
   PENT getPair(int num);
   ENT* getPair(ENT *ent);
   ENT* get(int x, int y);
   void rotate(int x, int y, int siz);
+  int toPointCheck(int *from, int *to, int* buf);
+  int toPoint(int *from, int *to);
+  void setConfirm(int x, int y);
+  void setConfirm(int *p);
+  void setConfirm(ENT *ent);
+  void unsetConfirm(int x, int y);
+  void unsetConfirm(int *p);
+  int isConfirm(int x, int y);
+  int isConfirm(int *p);
+  std::vector<std::string> getAnswer();
+  int isEnd();
 
 protected:
   int size;
   PENT *pentities;
   ENT ***field;
   std::vector<std::string> answer;
+  //confirm[size][size] 確定したら1、そうでないなら0
+  int **confirm;
 
 /* private: */
 };
