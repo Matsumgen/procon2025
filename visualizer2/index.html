@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script src="solve.js"></script>
+    <title>Visualizer</title>
+</head>
+<body>
+    <h1>Web版Visualizer</h1>
+    <p>
+        使い方<br>
+        入力欄に初期状態を入力してください。<br>
+        csvで入力するかスペース区切りで入力するか選択できます。また, Nを入力に含めるかも選択できます。<br>
+        出力欄にプログラムの実行結果を入力すると結果が表示されます。<br>
+        出力形式はx, y, nを空白区切りで操作の回数分だけ出力してください。<br>
+        各マスにカーソルを合わせると, そのマスとペアの座標が表示されます。
+    </p>
+    <hr>
+    <label for="isCSV">Is CSV : </label><input type="checkbox" id="isCSV" name="isCSV" class="mr_20">
+    <label for="isIncludeN">Include N : </label><input type="checkbox" id="isIncludeN" name="isIncludeN"><br>
+    <label for="input">入力 : </label><br>
+    <textarea id="input" name="input" rows="5" cols="50"></textarea><br><br>
+    <label for="output">出力 : </label><br>
+    <textarea id="output" name="output" rows="5" cols="50"></textarea><br><br>
+    <label for="isLoop">loop : </label><input type="checkbox" id="isLoop" name="isLoop" class="mr_20">
+    <label for="isSmooth">smooth : </label><input type="checkbox" id="isSmooth" name="isSmooth" class="mr_20"><br>
+    <input type="button" id="play" name="play" value="▶" class="mr_20">
+    <label class="mr_20">
+        slow
+        <input type="range" id="speed" name="speed" min="0" max="100" step="1" style="width:200px">
+        fast
+    </label>
+    <label for="turn">turn : </label><input type="number" id="turn" name="turn" min="0" max="0" value="0" style="width:75px"><br>
+    <input type="range" id="t_bar" name="t_bar" min="0" max="0" step="1" style="width:700px">
+    <hr>
+    <div id="result">
+    </div>
+
+    <script src="UI.js"></script>
+</body>
+</html>
