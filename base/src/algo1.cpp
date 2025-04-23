@@ -14,17 +14,17 @@
 //結果にtoがなければstepのうち2の場所から全探索(step=0の場所に行ければ3)
 //step数とrotateの引数を返す
 //不可能な場合は-1を返す
-int serchShortestStep1(Field *f, int *from, int *to, int **ret){
+int serchShortestStep1(Field& f, const int *from, const int *to, int **ret){
   //step[y][x] = {int num, int from_x, int from_y, int x, int y, int size}
-  int fsize = f->getSize();
+  int fsize = f.getSize();
   //confirmとandをとる？
   std::vector<std::vector<std::vector<int>>> step(fsize, std::vector<std::vector<int>>(fsize, std::vector<int>(6, 10)));
   int to_x, to_y, from_x = from[0], from_y = from[1], s = 0;
   int buf[3];
-  int *_from, *_to;
+  const int *_from, *_to;
   for(int i = 0; i < fsize; i++){
     for(int j=0; j<fsize; j++){
-      step[i][j][0] = f->isConfirm(j, i) ? -1 : 10;
+      step[i][j][0] = f.isConfirm(j, i) ? -1 : 10;
     }
   }
 
@@ -44,10 +44,10 @@ int serchShortestStep1(Field *f, int *from, int *to, int **ret){
   step[from[1]][from[0]][0] = 0;
   _from = from;
   while(1){
-    for(to_y = 0; to_y < f->getSize(); to_y++){
-      for(to_x = 0; to_x < f->getSize(); to_x++){
-        _to = f->get(to_x, to_y)->p;
-        if(s < step[to_y][to_x][0] && f->toPointCheck(_from, _to, buf)){
+    for(to_y = 0; to_y < f.getSize(); to_y++){
+      for(to_x = 0; to_x < f.getSize(); to_x++){
+        _to = f.get(to_x, to_y)->p;
+        if(s < step[to_y][to_x][0] && f.toPointCheck(_from, _to, buf)){
           step[to_y][to_x][0] = s + 1;
           step[to_y][to_x][1] = _from[0];
           step[to_y][to_x][2] = _from[1];
@@ -97,13 +97,13 @@ int serchShortestStep1(Field *f, int *from, int *to, int **ret){
       }
     }while(step[from_y][from_x][0] != s);
 
-    _from = f->get(from_x, from_y)->p;
+    _from = f.get(from_x, from_y)->p;
   }
 }
 
 //とりあえず先読みはしない
-void alg1(Field *f){
-  int fsize = f->getSize();
+void alg1(Field& f){
+  int fsize = f.getSize();
   int tp[][2] = {
     {0, 0},     {fsize-1, 0},
     {fsize-1, fsize-1}, {0, fsize-1} 
@@ -125,7 +125,7 @@ void alg1(Field *f){
     printf("[%d/%d]\n", stepC, endStep);
     printf("tp={{%d, %d}, {%d, %d}, {%d, %d}, {%d, %d}}\n", tp[0][0], tp[0][1], tp[1][0], tp[1][1], tp[2][0], tp[2][1], tp[3][0], tp[3][1]);
     printf("next_stepF={%d, %d, %d, %d}\n", next_stepF[0], next_stepF[1], next_stepF[2], next_stepF[3]);
-    f->print();
+    f.print();
   };
 #endif
   //とりあえず横にのみ揃える
@@ -167,31 +167,31 @@ void alg1(Field *f){
     int endF = 0;
     auto stopFCheck = [&](int j) {
       if(j == 0 && tp[j][0] == fsize - (stepC << 1) - 4){
-        if(!f->isConfirm(tp[j][0]+3, tp[j][1])){
+        if(!f.isConfirm(tp[j][0]+3, tp[j][1])){
           tp[1][1] += 2;
           next_stepF[1] = 2;
-        }else if(!f->isConfirm(tp[j][0]+2, tp[j][1])){
+        }else if(!f.isConfirm(tp[j][0]+2, tp[j][1])){
           next_stepF[j] = 3;
         }
       }else if(j == 1 && tp[j][1] == fsize - (stepC << 1)  - 4){
-        if(!f->isConfirm(tp[j][0], tp[j][1]+3)){
+        if(!f.isConfirm(tp[j][0], tp[j][1]+3)){
           tp[2][0] -= 2;
           next_stepF[2] = 2;
-        }else if(!f->isConfirm(tp[j][0], tp[j][1]+2)){
+        }else if(!f.isConfirm(tp[j][0], tp[j][1]+2)){
           next_stepF[j] = 3;
         }
       }else if(j == 2 && tp[j][0] == (stepC << 1)  + 3){
-        if(!f->isConfirm(tp[j][0]-3, tp[j][1])){
+        if(!f.isConfirm(tp[j][0]-3, tp[j][1])){
           tp[3][1] -= 2;
           next_stepF[3] = 2;
-        }else if(!f->isConfirm(tp[j][0]-2, tp[j][1])){
+        }else if(!f.isConfirm(tp[j][0]-2, tp[j][1])){
           next_stepF[j] = 3;
         }
       }else if(j == 3 && tp[j][1] == (stepC << 1) + 3){
-        if(!f->isConfirm(tp[j][0], tp[j][1]-3)){
+        if(!f.isConfirm(tp[j][0], tp[j][1]-3)){
           tp[0][0] += 2;
           next_stepF[0] = 2;
-        }else if(!f->isConfirm(tp[j][0], tp[j][1]-2)){
+        }else if(!f.isConfirm(tp[j][0], tp[j][1]-2)){
           next_stepF[j] = 3;
         }
       }
@@ -271,7 +271,7 @@ void alg1(Field *f){
         std::cout << "ERROR: updateTp i=" << i << std::endl;
         break;
       }
-    }while(f->isConfirm(tp[i]) && 0 <= tp[i][0] && tp[i][0] < fsize && 0 <= tp[i][1] && tp[i][1] <= fsize);
+    }while(f.isConfirm(tp[i]) && 0 <= tp[i][0] && tp[i][0] < fsize && 0 <= tp[i][1] && tp[i][1] < fsize);
     if(next_stepF[0] == 1 && next_stepF[1] == 1 && next_stepF[2] == 1 && next_stepF[3] == 1){
       next_stepF[0] = 0;
       next_stepF[1] = 0;
@@ -300,8 +300,8 @@ void alg1(Field *f){
       if(next_stepF[i])  continue;
       //step数が同じ場合は最も少ない場所を優先する
       pairTo(i, 1);
-      pairP = f->getPair(f->get(tp[i][0], tp[i][1]))->p; //異常あり？
-      f->setConfirm(tp[i]);
+      pairP = f.getPair(f.get(tp[i][0], tp[i][1]))->p; //異常あり？
+      f.setConfirm(tp[i]);
       buf_s = serchShortestStep1(f, pairP, pairToP, buf_step);
       if(buf_s == -1){
         pairTo(i, 0);
@@ -311,7 +311,7 @@ void alg1(Field *f){
         buf_step[buf_s][2] = 2;
         buf_s++;
       }
-      f->unsetConfirm(tp[i]);
+      f.unsetConfirm(tp[i]);
       if(buf_s < min_s || (buf_s == min_s && confirm_num[i] < confirm_num[min_p])){
         copyStep();
         min_s = buf_s;
@@ -325,13 +325,13 @@ void alg1(Field *f){
 #ifdef DEBUG_ALGO1
       printf("alg1/rotate: x=%d y=%d siz=%d\n", min_step[i][0], min_step[i][1], min_step[i][2]);
 #endif
-      f->rotate(min_step[i][0], min_step[i][1], min_step[i][2]);
+      f.rotate(min_step[i][0], min_step[i][1], min_step[i][2]);
     }
 
     confirm_num[min_p] += 1;
     pairTo(min_p, 1);
-    f->setConfirm(tp[min_p]);
-    f->setConfirm(pairToP);
+    f.setConfirm(tp[min_p]);
+    f.setConfirm(pairToP);
     updateTp(min_p);
 #ifdef DEBUG_ALGO1
     algDebugPrint();
@@ -342,8 +342,8 @@ void alg1(Field *f){
     for(int i = 0; i < 4; i+=3){
       do{
         pairTo(i, 1);
-        pairP = f->getPair(f->get(tp[i][0], tp[i][1]))->p;
-        f->setConfirm(tp[i]);
+        pairP = f.getPair(f.get(tp[i][0], tp[i][1]))->p;
+        f.setConfirm(tp[i]);
         min_s = serchShortestStep1(f, pairP, pairToP, min_step);
         if(min_s == -1){
           pairTo(i, 0);
@@ -353,16 +353,16 @@ void alg1(Field *f){
           min_step[min_s][2] = 2;
           min_s++;
         }
-        f->unsetConfirm(tp[i]);
+        f.unsetConfirm(tp[i]);
         for(int j = 0; j < min_s; j++){
 #ifdef DEBUG_ALGO1
           printf("alg1/rotate: x=%d y=%d siz=%d\n", min_step[j][0], min_step[j][1], min_step[j][2]);
 #endif
-          f->rotate(min_step[j][0], min_step[j][1], min_step[j][2]);
+          f.rotate(min_step[j][0], min_step[j][1], min_step[j][2]);
         }
         pairTo(i, 1);
-        f->setConfirm(tp[i]);
-        f->setConfirm(pairToP);
+        f.setConfirm(tp[i]);
+        f.setConfirm(pairToP);
         updateTp(i);
 #ifdef DEBUG_ALGO1
         algDebugPrint();
@@ -370,20 +370,20 @@ void alg1(Field *f){
       }while(!next_stepF[i]);
     }
   }
-  if(f->get(tp[0][0], tp[0][1])->num == f->get(tp[0][0]+1, tp[0][1]+1)->num){
-    if(f->get(tp[0][0], tp[0][1]-1)->num != f->get(tp[0][0]+1, tp[0][1]-1)->num){
-      f->rotate(tp[0][0], tp[0][1]-2, 2);
+  if(f.get(tp[0][0], tp[0][1])->num == f.get(tp[0][0]+1, tp[0][1]+1)->num){
+    if(f.get(tp[0][0], tp[0][1]-1)->num != f.get(tp[0][0]+1, tp[0][1]-1)->num){
+      f.rotate(tp[0][0], tp[0][1]-2, 2);
     }
-    if(f->get(tp[0][0]-2, tp[0][1]-1)->num != f->get(tp[0][0]-1, tp[0][1]-1)->num){
-      f->rotate(tp[0][0]-2, tp[0][1]-2, 2);
+    if(f.get(tp[0][0]-2, tp[0][1]-1)->num != f.get(tp[0][0]-1, tp[0][1]-1)->num){
+      f.rotate(tp[0][0]-2, tp[0][1]-2, 2);
     }
-    f->rotate(tp[0][0], tp[0][1]-1, 2);
-    f->rotate(tp[0][0]-2, tp[0][1]-1, 3);
+    f.rotate(tp[0][0], tp[0][1]-1, 2);
+    f.rotate(tp[0][0]-2, tp[0][1]-1, 3);
   }
-  f->setConfirm(tp[0]);
-  f->setConfirm(tp[0][0]+1, tp[0][1]);
-  f->setConfirm(tp[0][0], tp[0][1]+1);
-  f->setConfirm(tp[0][0]+1, tp[0][1]+1);
+  f.setConfirm(tp[0]);
+  f.setConfirm(tp[0][0]+1, tp[0][1]);
+  f.setConfirm(tp[0][0], tp[0][1]+1);
+  f.setConfirm(tp[0][0]+1, tp[0][1]+1);
 #ifdef DEBUG_ALGO1
   algDebugPrint();
 #endif

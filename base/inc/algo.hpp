@@ -3,7 +3,8 @@
 
 #include <Field.hpp>
 
+int serchShortestStep1(Field& f, const int *from, const int *to, int **ret);
 
-void alg1(Field *f);
+void alg1(Field& f);
 
 #endif
