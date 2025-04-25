@@ -22,25 +22,27 @@ typedef struct pair_entities {
 //fieldはENTを交換
 class Field {
 public:
-  Field(const int siz, int *f);
+  Field(const int siz, const int *f);
+  Field(const Field& f);
   ~Field();
-  void print();
-  int getSize();
-  PENT getPair(int num);
-  ENT* getPair(ENT *ent);
-  ENT* get(int x, int y);
-  void rotate(int x, int y, int siz);
-  int toPointCheck(int *from, int *to, int* buf);
-  int toPoint(int *from, int *to);
-  void setConfirm(int x, int y);
-  void setConfirm(int *p);
-  void setConfirm(ENT *ent);
-  void unsetConfirm(int x, int y);
-  void unsetConfirm(int *p);
-  int isConfirm(int x, int y);
-  int isConfirm(int *p);
-  std::vector<std::string> getAnswer();
-  int isEnd();
+  Field& operator=(const Field &f);
+  void print() const;
+  int getSize() const;
+  PENT getPair(const int num) const;
+  ENT* getPair(const ENT *ent) const;
+  ENT* get(const int x, const int y) const;
+  void rotate(const int x, const int y, const int siz);
+  int toPointCheck(const int *from, const int *to, int *buf) const;
+  int toPoint(const int *from, const int *to);
+  void setConfirm(const int x, const int y);
+  void setConfirm(const int *p);
+  void setConfirm(const ENT *ent);
+  void unsetConfirm(const int x, const int y);
+  void unsetConfirm(const int *p);
+  int isConfirm(const int x, const int y) const;
+  int isConfirm(const int *p) const;
+  std::vector<std::string> getAnswer() const;
+  int isEnd() const;
 
 protected:
   int size;

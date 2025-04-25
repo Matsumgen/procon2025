@@ -8,7 +8,9 @@
 #include <sstream>
 #include <cstdlib>
 
-Field::Field(const int siz, int *f){
+Field::Field(const int siz, const int *f)
+: size(siz)
+{
   //コンストラクタ
   //fieldを初期化し、ペアも見つける
 
@@ -16,7 +18,6 @@ Field::Field(const int siz, int *f){
   const int num_size = siz * siz / 2;
   int *len = new int[num_size]{};
 
-  this->size = siz;
   this->pentities = new PENT[num_size];
 
   //ENT*型の2次元配列を用意
@@ -27,26 +28,54 @@ Field::Field(const int siz, int *f){
   //fieldを初期化しながらペアを探す
   for(int y = 0; y < siz; y++){
     this->field[y] = new ENT*[siz];
-    this->confirm[y] = new int[siz];
+    this->confirm[y] = new int[siz]{};
     for(int x = 0; x < siz; x++){
       n = *(f + y * siz + x);
       ent = new ENT;
       ent->p = new int[2]{x, y};
       ent->num = n;
       this->field[y][x] = ent;
-      if(len[n] == 0){
+      if((len[n]++) == 0){
         //初めて出てきた数字
-        this->pentities[n].p1 = ent;  // 最初の要素にしか入ってなさそうだったため修正
-        len[n]++;
+        this->pentities[n].p1 = ent;
       }else {
         //2回目以降の時
-        this->pentities[n].p2 = ent;  // 最初の要素にしか入ってなさそうだったため修正
+        this->pentities[n].p2 = ent;
       }
     }
   }
 
   // 解放
   delete [] len;
+}
+
+Field::Field(const Field& f)
+: size(f.size), answer(f.answer)
+{
+  //コピーコンストラクタ
+  const int num_size = f.size * f.size / 2;
+  std::vector<int> len(num_size, 0);
+  int x, y, n;
+  this->pentities = new PENT[num_size];
+  this->field = new ENT**[f.size];
+  this->confirm = new int*[f.size];
+
+  for(y = 0; y < f.size; y++){
+    this->field[y] = new ENT*[f.size];
+    this->confirm[y] = new int[f.size]{};
+    for(x = 0; x < f.size; x++){
+      ENT *e = new ENT, *ent = f.field[y][x];
+      e->p = new int[2]{ent->p[0], ent->p[1]};
+      e->num = ent->num;
+      this->field[y][x] = e;
+      this->confirm[y][x] = f.confirm[y][x];
+      if((len[e->num]++) == 0){
+        this->pentities[e->num].p1 = ent;
+      }else {
+        this->pentities[e->num].p2 = ent;
+      }
+    }
+  }
 }
 
 Field::~Field(){
@@ -65,24 +94,57 @@ Field::~Field(){
 
 }
 
-int Field::getSize(){
+Field& Field::operator=(const Field &f){
+  //代入演算子"="のoverload
+  if(this == &f)  return (*this); //自分が渡されたら処理しない
+
+  const int fsize = f.getSize();
+  const int num_size = fsize * fsize / 2;
+  std::vector<int> len(num_size, 0);
+  int x, y, n;
+  this->size = fsize;
+  this->answer = f.getAnswer();
+  this->pentities = new PENT[num_size];
+  this->field = new ENT**[fsize];
+  this->confirm = new int*[fsize];
+
+  for(y = 0; y < fsize; y++){
+    this->field[y] = new ENT*[fsize];
+    this->confirm[y] = new int[fsize]{};
+    for(x = 0; x < fsize; x++){
+      ENT *e = new ENT, *ent = f.get(x, y);
+      e->p = new int[2]{ent->p[0], ent->p[1]};
+      e->num = ent->num;
+      this->field[y][x] = e;
+      this->confirm[y][x] = f.isConfirm(x, y);
+      if((len[e->num]++) == 0){
+        this->pentities[e->num].p1 = ent;
+      }else {
+        this->pentities[e->num].p2 = ent;
+      }
+    }
+  }
+  return (*this);
+}
+
+int Field::getSize() const{
   return this->size;
 }
 
-PENT Field::getPair(int num){
+PENT Field::getPair(const int num) const{
   return this->pentities[num];
 }
 
-ENT* Field::getPair(ENT* ent){
+ENT* Field::getPair(const ENT *ent) const{
   PENT pent = this->getPair(ent->num);
-  return (pent.p1 == ent) ? pent.p2 : pent.p1;  // 両方ともentを返しそうだったので修正
+  return (pent.p1 == ent) ? pent.p2 : pent.p1;
 }
 
-ENT* Field::get(int x, int y){
+ENT* Field::get(const int x, const int y) const{
   return this->field[y][x];
 }
 
-void Field::print(){
+void Field::print() const{
   for(int y = 0; y < this->size; y++){
     for(int x = 0; x < this->size; x++){
       if(this->isConfirm(x, y)){
@@ -105,7 +167,7 @@ void Field::print(){
   std::cout << std::endl;
 }
 
-void Field::rotate(int x, int y, int siz){
+void Field::rotate(const int x, const int y, const int siz){
   //sizを2で割った時の商
   int a = siz >> 1;
   //sizを2で割った時のあまり(偶数の時は0、奇数の時は1)
@@ -165,7 +227,7 @@ void Field::rotate(int x, int y, int siz){
 }
 
 //可能なときは1、不可能であれば0
-int Field::toPointCheck(int *from, int *to, int *buf){
+int Field::toPointCheck(const int *from, const int *to, int *buf) const{
   int X = std::abs(to[0] - from[0]);
   int Y = std::abs(to[1] - from[1]);
   int siz = X + Y + 1;
@@ -200,7 +262,7 @@ int Field::toPointCheck(int *from, int *to, int *buf){
 }
 
 //成功1、失敗0
-int Field::toPoint(int *from, int *to){
+int Field::toPoint(const int *from, const int *to){
   int buf[3];
   if(this->toPointCheck(from, to, buf)){
     this->rotate(buf[0], buf[1], buf[2]);
@@ -216,39 +278,39 @@ int Field::toPoint(int *from, int *to){
   }
 }
 
-void Field::setConfirm(int x, int y){
+void Field::setConfirm(const int x, const int y){
   this->confirm[y][x] = 1;
 }
-void Field::setConfirm(int *p){
+void Field::setConfirm(const int *p){
   this->setConfirm(p[0], p[1]);
 }
-void Field::setConfirm(ENT *ent){
+void Field::setConfirm(const ENT *ent){
   this->setConfirm(ent->p[0], ent->p[1]);
 }
-void Field::unsetConfirm(int x, int y){
+void Field::unsetConfirm(const int x, const int y){
   this->confirm[y][x] = 0;
 }
-void Field::unsetConfirm(int *p){
+void Field::unsetConfirm(const int *p){
   this->unsetConfirm(p[0], p[1]);
 }
 
 //確定範囲内にあれば1, なければ0を返す
-int Field::isConfirm(int x, int y){
+int Field::isConfirm(const int x, const int y) const{
   if(0 <= x && x < this->size && 0 <= y && y < this->size){
     return this->confirm[y][x];
   }
   return 1;
 }
-int Field::isConfirm(int *p){
+int Field::isConfirm(const int *p) const{
   return this->isConfirm(p[0], p[1]);
 }
 
-std::vector<std::string> Field::getAnswer(){
+std::vector<std::string> Field::getAnswer() const{
   return this->answer;
 }
 
 //全て揃っているなら1
-int Field::isEnd(){
+int Field::isEnd() const{
   PENT pent;
   for(int i=0; i < this->size * this->size / 2; i++){
     pent = this->getPair(i);
@@ -266,7 +328,7 @@ int Field::isEnd(){
 /* Field* getProblem(){ */
 /* } */
 
-Field* loadProblem(std::string path){
+Field* loadProblem(const std::string path){
   std::ifstream ifs(path);
   std::string str_buf;
   std::vector<std::string> csvdata;
