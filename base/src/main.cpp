@@ -1,6 +1,7 @@
 
 #include <Field.hpp>
 #include <algo.hpp>
+#include <algo1_3.hpp>
 #include <iostream>
 #include <string>
 #include <chrono>
@@ -12,7 +13,8 @@ int main(int argc, char *argv[]){
     startTime = std::chrono::system_clock::now(); // 計測開始時間
     f = loadProblem(argv[i]);
     /* f->print(); */
-    alg1(*f);
+    // alg1(*f);
+    alg1_3(*f);
     /* f->print(); */
     endTime = std::chrono::system_clock::now();  // 計測終了時間
     if(!f->isEnd()){
