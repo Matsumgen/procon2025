@@ -70,10 +70,8 @@ Field::Field(const Field& f)
       this->field[y][x] = e;
       this->confirm[y][x] = f.confirm[y][x];
       if((len[e->num]++) == 0){
-        // this->pentities[e->num].p1 = ent;
         this->pentities[e->num].p1 = e;
       }else {
-        // this->pentities[e->num].p2 = ent;
         this->pentities[e->num].p2 = e;
       }
     }
@@ -120,9 +118,9 @@ Field& Field::operator=(const Field &f){
       this->field[y][x] = e;
       this->confirm[y][x] = f.isConfirm(x, y);
       if((len[e->num]++) == 0){
-        this->pentities[e->num].p1 = ent;
+        this->pentities[e->num].p1 = e;
       }else {
-        this->pentities[e->num].p2 = ent;
+        this->pentities[e->num].p2 = e;
       }
     }
   }
