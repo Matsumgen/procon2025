@@ -66,5 +66,6 @@ void convert_bfs_result(int N, vvvvv_ope &bfs_result);
 void solve(Field &f, vvvvv_ope &bfs_result);
 void set_solve_data_recode(int recode, int N, v_solve_data &solve_data);
 void set_solve_data_colum(int colum, int N, v_solve_data &solve_data);
+int getNextField(Field *f, int cnt, v_solve_data &solve_data, vvvvv_ope &bfs_result, int idx);
 p_ii dfs(Field &f, v_solve_data &solve_data, int cnt, vvvvv_ope &bfs_result, int depth, int max_depth);
 #endif

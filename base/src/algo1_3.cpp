@@ -95,63 +95,21 @@ void solve(Field &f, vvvvv_ope &bfs_result){
     }
 
     rep (i, (int)solve_data.size()){
-        SolveData &now_data = solve_data[i];
-        int x = now_data.base_ent_pos.x, y = now_data.base_ent_pos.y;  // 基準となるエンティティの場所
-        Pos another_ent_pos, diff;  // ペアのエンティティの場所と基準との差分
-        another_ent_pos = (Pos){f.getPair(f.get(x, y))->p[0], f.getPair(f.get(x, y))->p[1]};
-        diff = another_ent_pos - now_data.base_ent_pos;
-
-        // 数手先まで読み最も良かったものを実行する
-        auto exe_dfs = [&](){
-            int best_idx = dfs(f, solve_data, i, bfs_result, 0, 5).second;
-            v_ope &tmp_log = bfs_result[i][another_ent_pos.y][another_ent_pos.x][best_idx];
-            for (Ope ope : tmp_log){
-                f.rotate(ope.x, ope.y, ope.n);
-            }
-        };
-
-        /**
-         * 0: 下
-         * 1: 右(下経由)
-         * 2: 左
-         * 3: 下(横経由)
-         */
-        switch (now_data.type){
-        case 0:
-            if (diff == (Pos){1, 0}){
-                // 1つ右なら3回回転させて揃える
-                rep (j, 3) f.rotate(x, y, 2);
-            } else if (diff != (Pos){0, 1}){
-                // 目的の場所にないなら再帰
-                exe_dfs();
-            }
-            break;
-        case 1:
-            if (diff != (Pos){1, 0}){
-                // 下に揃えてから回転
-                if (diff != (Pos){0, 1}) exe_dfs();
-                f.rotate(x, y, 2);
-            }
-            break;
-        case 2:
-            if (diff == (Pos){0, 1}){
-                // 1つ下なら3回回転させて揃える
-                rep (j, 3) f.rotate(x - 1, y, 2);
-            } else if (diff != (Pos){-1, 0}){
-                // 目的の場所にないなら再帰
-                exe_dfs();
-            }
-            break;
-        case 3:
-            if (diff != (Pos){0, 1}){
-                // 左に揃えてから回転
-                if (diff != (Pos){-1, 0}) exe_dfs();
-                f.rotate(x - 1, y, 2);
-            }
-            break;
+        int best_idx = dfs(f, solve_data, i, bfs_result, 0, 5).second;
+        int move_cnt = getNextField(&f, i, solve_data, bfs_result, best_idx);
+        // std::cout << i << " " << move_cnt << " " << best_idx << std::endl;
+        // rep (i, N) rep (j, N){
+        //     std::cout << f.get(j, i)->num << " \n"[j == N - 1];
+        // }
+        // std::cout << std::endl;
+        std::cout << i << " " << std::flush;
+        if (move_cnt == -1) {
+            std::cout << "Error" << " " << best_idx << std::endl;
+            exit(1);
         }
     }
 
+    std::cout << std::endl;
     // 最後にそろっていない場合は揃える
     if (f.get(0, N - 1)->num == f.get(1, N - 2)->num){
         f.rotate(1, N - 2, 2);
@@ -217,22 +175,29 @@ void set_solve_data_colum(int colum, int N, v_solve_data &solve_data){
 }
 
 /**
- * 内容 : 数手先まで経路を全探索して最も良い経路を計算する関数
- * 引数 : Field &f <- フィールド
- *        v_solve_data &solve_data <- 揃える順番
+ * 内容 : 次の盤面を得る(複数考えられるときはidx番目)
+ * 引数 : Field *f <- フィールド(次の盤面となる)
  *        int cnt <- どこまで進んだか
+ *        v_solve_data &solve_data <- 揃える順番
  *        vvvvv_ope &bfs_result <- 幅優先探索の結果
- *        int depth <- 現在の深さ
- *        int max_depth <- 最大の深さ(探索をやめる深さ)
- * 戻り値 : p_ii <- 探索結果(first : 手数, second : 1番いい手)
+ *        int idx <- 反映する番号
+ * 戻り値 : かかった手数(無効な場合は-1)
  */
-p_ii dfs(Field &f, v_solve_data &solve_data, int cnt, vvvvv_ope &bfs_result, int depth, int max_depth){
-    if (cnt >= solve_data.size()) return std::make_pair(0, -1);
+int getNextField(Field *f, int cnt, v_solve_data &solve_data, vvvvv_ope &bfs_result, int idx){
     SolveData &now_data = solve_data[cnt];
     int x = now_data.base_ent_pos.x, y = now_data.base_ent_pos.y;  // 基準となるエンティティの場所
     Pos another_ent_pos, diff;  // ペアのエンティティの場所と基準との差分
-    another_ent_pos = (Pos){f.getPair(f.get(x, y))->p[0], f.getPair(f.get(x, y))->p[1]};
+    another_ent_pos = (Pos){f->getPair(f->get(x, y))->p[0], f->getPair(f->get(x, y))->p[1]};
     diff = another_ent_pos - now_data.base_ent_pos;
+
+    auto exe_bfs = [&](){
+        if (idx >= bfs_result[cnt][another_ent_pos.y][another_ent_pos.x].size()) return -1;
+        v_ope &tmp_log = bfs_result[cnt][another_ent_pos.y][another_ent_pos.x][idx];
+        for (Ope ope : tmp_log){
+            f->rotate(ope.x, ope.y, ope.n);
+        }
+        return (int)tmp_log.size();
+    };
 
     /**
      * 0: 下
@@ -243,126 +208,117 @@ p_ii dfs(Field &f, v_solve_data &solve_data, int cnt, vvvvv_ope &bfs_result, int
     switch (now_data.type){
     case 0:
         if (diff == (Pos){1, 0}){
-            // 1つ右なら3回回転
-            if (depth == max_depth) return std::make_pair(3, 0);
-            Field tmp_f = f;  // コピー
-            rep (j, 3) tmp_f.rotate(x, y, 2);
-            return std::make_pair(3 + dfs(tmp_f, solve_data, cnt + 1, bfs_result, depth + 1, max_depth).first, 0);
+            if (idx != 0) return -1;
+            // 1つ右なら3回回転させて揃える
+            rep (j, 3) f->rotate(x, y, 2);
+            return 3;
         } else if (diff != (Pos){0, 1}){
-            // 目的の場所にないなら幅優先探索の結果を試す
-            if (depth == max_depth) return std::make_pair(bfs_result[cnt][another_ent_pos.y][another_ent_pos.x][0].size(), 0);
-            int best_idx = -1;
-            int best_result = INT_MAX;
-            rep (i, bfs_result[cnt][another_ent_pos.y][another_ent_pos.x].size()){
-                Field tmp_f = f;  // コピー
-                for (Ope ope : bfs_result[cnt][another_ent_pos.y][another_ent_pos.x][i]) tmp_f.rotate(ope.x, ope.y, ope.n);
-                int tmp_result = bfs_result[cnt][another_ent_pos.y][another_ent_pos.x][i].size() + dfs(tmp_f, solve_data, cnt + 1, bfs_result, depth + 1, max_depth).first;
-                if (tmp_result < best_result){
-                    best_result = tmp_result;
-                    best_idx = i;
-                }
-            }
-            return std::make_pair(best_result, best_idx);
+            // 目的の場所にないならbfs            
+            return exe_bfs();
         } else {
-            // 既にそろっているなら何もしない
-            if (depth == max_depth) return std::make_pair(0, 0);
-            Field tmp_f = f;  // コピー
-            return dfs(tmp_f, solve_data, cnt + 1, bfs_result, depth + 1, max_depth);
+            // 何もしない
+            return idx == 0 ? 0 : -1;
         }
         break;
     case 1:
         if (diff != (Pos){1, 0}){
-            if (diff != (Pos){0, 1}){
-                // 中継地点にないなら幅優先探索の結果を試す -> 回転
-                if (depth == max_depth) return std::make_pair(bfs_result[cnt][another_ent_pos.y][another_ent_pos.x][0].size(), 0);
-                int best_idx;
-                int best_result = INT_MAX;
-                rep (i, bfs_result[cnt][another_ent_pos.y][another_ent_pos.x].size()){
-                    Field tmp_f = f;  // コピー
-                    for (Ope ope : bfs_result[cnt][another_ent_pos.y][another_ent_pos.x][i]) tmp_f.rotate(ope.x, ope.y, ope.n);
-                    tmp_f.rotate(x, y, 2);
-                    int tmp_result = bfs_result[cnt][another_ent_pos.y][another_ent_pos.x][i].size() + 1 + dfs(tmp_f, solve_data, cnt + 1, bfs_result, depth + 1, max_depth).first;
-                    if (tmp_result < best_result){
-                        best_result = tmp_result;
-                        best_idx = i;
-                    }
-                }
-                return std::make_pair(best_result, best_idx);
-            } else{
-                // 既に中継地点にあるなら回転して目標の場所へ
-                if (depth == max_depth) return std::make_pair(1, 0);    
-                Field tmp_f = f;  // コピー
-                tmp_f.rotate(x, y, 2);
-                return std::make_pair(1 + dfs(tmp_f, solve_data, cnt + 1, bfs_result, depth + 1, max_depth).first, 0);
+            // 下に揃えてから回転
+            int move_cnt = 0;
+            if (diff == (Pos){0, 1}){
+                // 中継地点にあるなら何もしない
+                if (idx != 0) return -1;
+            } else {
+                // bfs
+                move_cnt = exe_bfs();
+                if (move_cnt == -1) return -1;
             }
+            // 中継地点 -> 最終目的地
+            f->rotate(x, y, 2);
+            return move_cnt + 1;;
         } else {
-            // 何もしない
-            if (depth == max_depth) return std::make_pair(0, 0);
-            Field tmp_f = f;  // コピー
-            return dfs(tmp_f, solve_data, cnt + 1, bfs_result, depth + 1, max_depth);
+            // 最終目的地にあるなら何もしない
+            return idx == 0 ? 0 : -1;
         }
         break;
     case 2:
         if (diff == (Pos){0, 1}){
-            // 1つ下なら3回回転
-            if (depth == max_depth) return std::make_pair(3, 0);
-            Field tmp_f = f;  // コピー
-            rep (j, 3) tmp_f.rotate(x - 1, y, 2);
-            return std::make_pair(3 + dfs(tmp_f, solve_data, cnt + 1, bfs_result, depth + 1, max_depth).first, 0);
+            // 1つ下なら3回回転させて揃える
+            if (idx != 0) return -1;
+            rep (j, 3) f->rotate(x - 1, y, 2);
+            return 3;
         } else if (diff != (Pos){-1, 0}){
-            // 目的の場所にないなら幅優先探索の結果を試す
-            if (depth == max_depth) return std::make_pair(bfs_result[cnt][another_ent_pos.y][another_ent_pos.x][0].size(), 0);
-            int best_idx;
-            int best_result = INT_MAX;
-            rep (i, bfs_result[cnt][another_ent_pos.y][another_ent_pos.x].size()){
-                Field tmp_f = f;  // コピー
-                for (Ope ope : bfs_result[cnt][another_ent_pos.y][another_ent_pos.x][i]) tmp_f.rotate(ope.x, ope.y, ope.n);
-                int tmp_result = bfs_result[cnt][another_ent_pos.y][another_ent_pos.x][i].size() + dfs(tmp_f, solve_data, cnt + 1, bfs_result, depth + 1, max_depth).first;
-                if (tmp_result < best_result){
-                    best_result = tmp_result;
-                    best_idx = i;
-                }
-            }
-            return std::make_pair(best_result, best_idx);
-        } else {
-            // 既にそろっているなら何もしない
-            if (depth == max_depth) return std::make_pair(0, 0);
-            Field tmp_f = f;  // コピー
-            return dfs(tmp_f, solve_data, cnt + 1, bfs_result, depth + 1, max_depth);
+            // 目的の場所にないならbfs
+            return exe_bfs();
+        } else{
+            // 何もしない
+            return idx == 0 ? 0 : -1;
         }
         break;
     case 3:
         if (diff != (Pos){0, 1}){
-            if (diff != (Pos){-1, 0}){
-                // 中継地点にないなら幅優先探索の結果を試す -> 回転
-                if (depth == max_depth) return std::make_pair(bfs_result[cnt][another_ent_pos.y][another_ent_pos.x][0].size(), 0);
-                int best_idx;
-                int best_result = INT_MAX;
-                rep (i, bfs_result[cnt][another_ent_pos.y][another_ent_pos.x].size()){
-                    Field tmp_f = f;  // コピー
-                    for (Ope ope : bfs_result[cnt][another_ent_pos.y][another_ent_pos.x][i]) tmp_f.rotate(ope.x, ope.y, ope.n);
-                    tmp_f.rotate(x - 1, y, 2);
-                    int tmp_result = bfs_result[cnt][another_ent_pos.y][another_ent_pos.x][i].size() + 1 + dfs(tmp_f, solve_data, cnt + 1, bfs_result, depth + 1, max_depth).first;
-                    if (tmp_result < best_result){
-                        best_result = tmp_result;
-                        best_idx = i;
-                    }
-                }
-                return std::make_pair(best_result, best_idx);
+            // 左に揃えてから回転
+            int move_cnt = 0;
+            if (diff == (Pos){-1, 0}){
+                // 中継地点にあるなら何もしない
+                if (idx != 0) return -1;
             } else {
-                // 既に中継地点にあるなら回転して目標の場所へ
-                if (depth == max_depth) return std::make_pair(1, 0);    
-                Field tmp_f = f;  // コピー
-                tmp_f.rotate(x - 1, y, 2);
-                return std::make_pair(1 + dfs(tmp_f, solve_data, cnt + 1, bfs_result, depth + 1, max_depth).first, 0);
+                // bfs
+                move_cnt = exe_bfs();
+                if (move_cnt == -1) return -1;
             }
+            // 中継地点 -> 最終目的地
+            f->rotate(x - 1, y, 2);
+            return move_cnt + 1;
         } else {
-            // 何もしない
-            if (depth == max_depth) return std::make_pair(0, 0);
-            Field tmp_f = f;  // コピー
-            return dfs(tmp_f, solve_data, cnt + 1, bfs_result, depth + 1, max_depth);
+            // 最終目的地にあるなら何もしない
+            return idx == 0 ? 0 : -1;
         }
         break;
-    }        
-    return std::make_pair(-1, -1);
+    }
+    return -1;
+}
+
+/**
+ * 内容 : 数手先まで経路を全探索して最も良い経路を計算する関数
+ * 引数 : Field &f <- フィールド
+ *        v_solve_data &solve_data <- 揃える順番
+ *        int cnt <- どこまで進んだか
+ *        vvvvv_ope &bfs_result <- 幅優先探索の結果
+ *        int depth <- 現在の深さ
+ *        int max_depth <- 最大の深さ(探索をやめる深さ)
+ * 戻り値 : p_ii <- 探索結果(first : 手数, second : 1番いい手)
+ */
+p_ii dfs(Field &f, v_solve_data &solve_data, int cnt, vvvvv_ope &bfs_result, int depth, int max_depth){
+    if (cnt >= solve_data.size()) return std::make_pair(0, 0);
+    if (depth == max_depth) {
+        Field tmp_field = Field(f);
+        return std::make_pair(getNextField(&tmp_field, cnt, solve_data, bfs_result, 0), 0);
+    }
+    
+    int idx = 0;
+    int best_idx = -1;
+    int best_score = INT_MAX;
+    while (1){
+        Field next_field = Field(f);
+        int move_cnt = getNextField(&next_field, cnt, solve_data, bfs_result, idx);
+        if (move_cnt == -1){
+            if (idx == 0) {
+                std::cout << "Error2" << std::endl;
+                exit(1);
+            }
+            break;
+        }
+        int tmp_score = move_cnt + dfs(next_field, solve_data, cnt + 1, bfs_result, depth + 1, max_depth).first;
+        if (tmp_score < best_score){
+            best_score = tmp_score;
+            best_idx = idx;
+        }
+        if (best_idx == -1) {
+            std::cout << "Error3" << " " << tmp_score << " " << cnt << " " << depth << " " << move_cnt << std::endl;
+            rep (i, (int)f.getSize()) rep (j, (int)f.getSize()) std::cout << f.get(j, i)->num << " \n"[j == f.getSize() - 1];
+            exit(1);
+        }
+        idx++;
+    }
+    return std::make_pair(best_score, best_idx);
 }
