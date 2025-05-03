@@ -43,6 +43,12 @@ public:
   int isConfirm(const int *p) const;
   std::vector<std::string> getAnswer() const;
   int isEnd() const;
+  bool operator <(Field other) const {
+    return answer.size() < other.answer.size();
+  }
+  bool operator >(Field other) const {
+    return answer.size() > other.answer.size();
+  }
 
 protected:
   int size;

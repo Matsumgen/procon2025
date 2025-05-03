@@ -1,6 +1,7 @@
 #include <algo1_3.hpp>
 #include <Field.hpp>
 #include <vector>
+#include <queue>
 #include <iostream>
 
 /**
@@ -94,7 +95,7 @@ void solve(Field &f, vvvvv_ope &bfs_result){
         set_solve_data_colum(N - 2 - i * 2, N, solve_data);
     }
 
-    rep (i, (int)solve_data.size()){
+    /*rep (i, (int)solve_data.size()){
         int best_idx = dfs(f, solve_data, i, bfs_result, 0, 5).second;
         int move_cnt = getNextField(&f, i, solve_data, bfs_result, best_idx);
         // std::cout << i << " " << move_cnt << " " << best_idx << std::endl;
@@ -108,8 +109,10 @@ void solve(Field &f, vvvvv_ope &bfs_result){
             exit(1);
         }
     }
+    std::cout << std::endl;*/
+    std::cout << sizeof(Field) << std::endl;
+    f = beamSearch(f, solve_data, bfs_result, 20);
 
-    std::cout << std::endl;
     // 最後にそろっていない場合は揃える
     if (f.get(0, N - 1)->num == f.get(1, N - 2)->num){
         f.rotate(1, N - 2, 2);
@@ -321,4 +324,40 @@ p_ii dfs(Field &f, v_solve_data &solve_data, int cnt, vvvvv_ope &bfs_result, int
         idx++;
     }
     return std::make_pair(best_score, best_idx);
+}
+
+Field beamSearch(Field &f, v_solve_data &solve_data, vvvvv_ope &bfs_result, int beam_width){
+    std::priority_queue<Field> now_beam;
+    now_beam.push(f);
+    rep (i, (int)solve_data.size()){
+        std::cout << i << " " << std::flush;
+        std::priority_queue<Field> next_beam;
+        while (!now_beam.empty()){
+            Field tmp = now_beam.top();
+            now_beam.pop();
+            int idx = 0;
+            while (1){
+                Field tmp2 = tmp;
+                if (getNextField(&tmp2, i, solve_data, bfs_result, idx) == -1){
+                    break;
+                }
+                addPriorityQueue(next_beam, tmp2, beam_width);
+                idx++;
+            }
+        }
+        now_beam = next_beam;
+    }
+    return now_beam.top();
+}
+
+template<typename T>
+void addPriorityQueue(std::priority_queue<T> &p_queue, T &data, int max_size){
+    if (p_queue.size() < max_size){
+        p_queue.push(data);
+    } else {
+        if (data < p_queue.top()){
+            p_queue.pop();
+            p_queue.push(data);
+        }
+    }
 }

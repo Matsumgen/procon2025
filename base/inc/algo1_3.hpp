@@ -3,6 +3,7 @@
 
 #include <Field.hpp>
 #include <vector>
+#include <queue>
 
 #define rep(i, n) for (int i = 0; i < n; i++)
 
@@ -68,4 +69,8 @@ void set_solve_data_recode(int recode, int N, v_solve_data &solve_data);
 void set_solve_data_colum(int colum, int N, v_solve_data &solve_data);
 int getNextField(Field *f, int cnt, v_solve_data &solve_data, vvvvv_ope &bfs_result, int idx);
 p_ii dfs(Field &f, v_solve_data &solve_data, int cnt, vvvvv_ope &bfs_result, int depth, int max_depth);
+Field beamSearch(Field &f, v_solve_data &solve_data, vvvvv_ope &bfs_result, int beam_width);
+
+template<typename T>
+void addPriorityQueue(std::priority_queue<T> &p_queue, T &data, int max_size);
 #endif
