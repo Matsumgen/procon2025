@@ -4,3 +4,6 @@ exe
 *.o
 venv
 *.exe
+*.db
+__pycache__/
+*.py[cod]
