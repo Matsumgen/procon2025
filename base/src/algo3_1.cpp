@@ -1,4 +1,4 @@
-#include <algo1_3.hpp>
+#include <algo3_1.hpp>
 #include <Field.hpp>
 #include <vector>
 #include <queue>
@@ -95,23 +95,23 @@ void solve(Field &f, vvvvv_ope &bfs_result){
         set_solve_data_colum(N - 2 - i * 2, N, solve_data);
     }
 
-    /*rep (i, (int)solve_data.size()){
+    rep (i, (int)solve_data.size()){
         int best_idx = dfs(f, solve_data, i, bfs_result, 0, 5).second;
         int move_cnt = getNextField(&f, i, solve_data, bfs_result, best_idx);
-        // std::cout << i << " " << move_cnt << " " << best_idx << std::endl;
-        // rep (i, N) rep (j, N){
-        //     std::cout << f.get(j, i)->num << " \n"[j == N - 1];
-        // }
-        // std::cout << std::endl;
+        /*std::cout << i << " " << move_cnt << " " << best_idx << std::endl;
+        rep (i, N) rep (j, N){
+            std::cout << f.get(j, i)->num << " \n"[j == N - 1];
+        }
+        std::cout << std::endl;*/
         std::cout << i << " " << std::flush;
         if (move_cnt == -1) {
             std::cout << "Error" << " " << best_idx << std::endl;
             exit(1);
         }
     }
-    std::cout << std::endl;*/
-    std::cout << sizeof(Field) << std::endl;
-    f = beamSearch(f, solve_data, bfs_result, 20);
+    std::cout << std::endl;
+    // std::cout << sizeof(Field) << std::endl;
+    // f = beamSearch(f, solve_data, bfs_result, 20);
 
     // 最後にそろっていない場合は揃える
     if (f.get(0, N - 1)->num == f.get(1, N - 2)->num){
