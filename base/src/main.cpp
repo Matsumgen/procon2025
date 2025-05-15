@@ -14,7 +14,7 @@ int main(int argc, char *argv[]){
     f = loadProblem(argv[i]);
     /* f->print(); */
     // alg1(*f);
-    alg1_3(*f);
+    alg3_1(*f);
     /* f->print(); */
     endTime = std::chrono::system_clock::now();  // 計測終了時間
     if(!f->isEnd()){

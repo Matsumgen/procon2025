@@ -60,7 +60,7 @@ typedef std::vector<SolveData> v_solve_data;
 
 typedef std::pair<int, int> p_ii;
 
-void alg1_3(Field& f);
+void alg3_1(Field& f);
 void input_bfs_result(vvvvv_ope &out);
 
 void convert_bfs_result(int N, vvvvv_ope &bfs_result);

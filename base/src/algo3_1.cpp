@@ -8,7 +8,7 @@
  * 内容 : 問題を解く関数
  * 引数 : Field& f  <- フィールド
  */
-void alg1_3(Field& f){
+void alg3_1(Field& f){
     vvvvv_ope bfs_result;  // 幅優先探索の結果(手, もう片方のy座標, もう片方のx座標, 列挙した手数の番号, 手数)
     input_bfs_result(bfs_result);
     convert_bfs_result(f.getSize(), bfs_result);
