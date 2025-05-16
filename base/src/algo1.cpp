@@ -300,7 +300,7 @@ void alg1(Field& f){
       if(next_stepF[i])  continue;
       //step数が同じ場合は最も少ない場所を優先する
       pairTo(i, 1);
-      pairP = f.getPair(f.get(tp[i][0], tp[i][1]))->p; //異常あり？
+      pairP = f.getPair(f.get(tp[i][0], tp[i][1]))->p;
       f.setConfirm(tp[i]);
       buf_s = serchShortestStep1(f, pairP, pairToP, buf_step);
       if(buf_s == -1){
