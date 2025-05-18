@@ -171,59 +171,6 @@ namespace algolib1_1{
   /* class TPM2L : BaseTargetPointsManager{ */
   /* } */
 
-
-/*   //TargetPointsがどの方向かを管理。その補正も行う。 */
-/*   //大幅改修。汎用化とconfirmも乗っける */
-/*   class TargetPointsManager{ */
-/*     //TargetPointの一覧・使用可能かどうか管理。X座標の補正も行う */
-/*     class TargetPoints { */
-/*       struct TargetPoint{ */
-/*         TP tp; */
-/*         std::vector<TargetPoint> nextRestriction; */
-
-/*         TargetPoint(Point target, Point to, std::vector<Ope> addOpe, std::vector<TargetPoint> nr); */
-/*         TargetPoint(Point target, Point to, std::vector<Ope> addOpe); */
-/*         TargetPoint(Point target, Point to, std::vector<TargetPoint> nr); */
-/*         TargetPoint(Point target, Point to); */
-/*         std::string toString() const; */
-/*       }; */
-
-/*     public: */
-/*       TargetPoints(); */
-/*       TargetPoints(TargetPointsManager& tpm); */
-/*       TargetPoints(TargetPointsManager& tpm, int x); */
-/*       int getSize() const; */
-/*       std::vector<TP> get() const; */
-/*       void update(TargetPointsManager& tpm, const int index); // tpmのfsize, rwを参照するため */
-/*       bool isLast() const; */
-/*       bool isEnd() const; */
-/*       void print() const; */
-/*       static void setBreadth(int rw); */
-
-/*     private: */
-/*       int x; // 左から何列目か */
-/*       bool lastFlag; */
-/*       bool endFlag; */
-/*       std::vector<bool> enable; */
-/*       std::vector<TargetPoint> next; */
-/*       static std::vector<TargetPoint> tps; */
-/*     }; */
-
-/*   public: */
-/*     TargetPointsManager(int size, int rw); */
-/*     std::vector<TP> get(); */
-/*     void update(int index); */
-/*     bool isLast() const; */
-/*     bool isEnd() const; */
-/*     int getRw() const; */
-/*     void print() const; */
-      
-/*   private: */
-/*     int fsize; */
-/*     int rw; */
-/*     std::array<TargetPoints, 4> tps; */
-/*   }; */
-
   /*  ステップなどを解析した結果を木構造で保存
    *  ポインタの向き：  親<-子
    *  葉はvectorのsizeが0
