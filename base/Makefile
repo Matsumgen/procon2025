@@ -1,5 +1,11 @@
 CC	  = g++
-CFLAGS    = -std=c++17
+
+ifeq ($(DEBUG),1)
+    CFLAGS = -std=c++17 -g -O0
+else
+    CFLAGS = -std=c++17
+endif
+
 INCLUDE   = -I./inc
 
 TARGET    = exe

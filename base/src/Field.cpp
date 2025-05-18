@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
+#include <stdexcept>
 
 ENT::ENT(){}
 ENT::ENT(const int x, const int y, const int n) : num(n){
@@ -37,7 +38,7 @@ ENT::~ENT(){
 }
 
 
-PENT::PENT(){}
+PENT::PENT() : p1(nullptr), p2(nullptr){}
 PENT::PENT(const PENT& fe) : p1(fe.p1), p2(fe.p2){ }
 PENT::PENT(PENT&& fe) : p1(fe.p1), p2(fe.p2){
   fe.p1 = nullptr;
@@ -103,7 +104,6 @@ Field::Field(const int siz, const int *f)
 Field::Field(const Field& f)
 : size(f.size), answer(f.answer)
 {
-  std::cout << "test:copyField" << std::endl;
   //コピーコンストラクタ
   const int num_size = f.size * f.size / 2;
   std::vector<int> len(num_size, 0);
@@ -148,14 +148,13 @@ Field::~Field(){
 Field& Field::operator=(const Field &f){
   //コピー代入演算子
   if(this == &f)  return (*this); //自分が渡されたら処理しない
-  std::cout << "test:copyField" << std::endl;
 
   const int fsize = f.getSize();
   const int num_size = fsize * fsize / 2;
   std::vector<int> len(num_size, 0);
   int x, y, n;
   this->size = fsize;
-  this->answer = f.getAnswer();
+  this->answer = f.getOperate();
   this->pentities = new PENT[num_size];
   this->field = new ENT**[fsize];
   this->confirm = new int*[fsize];
@@ -264,6 +263,10 @@ void Field::print() const{
 }
 
 void Field::rotate(const int x, const int y, const int siz){
+  if(x < 0 || this->size <= x + siz - 1 || y < 0 || this->size <= y + siz - 1){
+    throw std::invalid_argument("rotate: out of range");
+  }
+
   //sizを2で割った時の商
   int a = siz >> 1;
   //sizを2で割った時のあまり(偶数の時は0、奇数の時は1)
@@ -316,10 +319,8 @@ void Field::rotate(const int x, const int y, const int siz){
       this->field[mh][w2] = buf;
     }
   }
-  //取り敢えずでの実装
-  std::stringstream ss;
-  ss << this->answer.size() << ": {" << x << ", " << y << ", " << siz << "}";
-  this->answer.push_back(ss.str());
+
+  this->answer.push_back({x, y, siz});
 }
 
 //可能なときは1、不可能であれば0
@@ -349,10 +350,12 @@ int Field::toPointCheck(const int *from, const int *to, int *buf) const{
   printf("toPointCheck: from={%d, %d} to={%d, %d} X=%d Y=%d siz=%d buf={%d, %d, %d}\n", from[0], from[1], to[0], to[1], X, Y, siz, buf[0], buf[1], buf[2]);
 #endif
 
-  //確定した範囲内であるか判定
-  int _s = siz - 1;
-  if(this->isConfirm(buf) || this->isConfirm(buf[0] + _s, buf[1]) || this->isConfirm(buf[0], buf[1] + _s) || this->isConfirm(buf[0] + _s, buf[1] + _s)){
-    return 0;
+  // 確定した範囲内であるか判定
+  for(int dx = 0; dx < siz; dx++) for(int dy = 0; dy < siz; dy++){
+    // 回転の中心は移動しない
+    if(this->isConfirm(buf[0] + dx, buf[1] + dy) && !(siz%2 == 1 && dx == (siz >> 1) && dy == (siz >> 1))){
+      return 0;
+    }
   }
   return 1;
 }
@@ -375,7 +378,11 @@ int Field::toPoint(const int *from, const int *to){
 }
 
 void Field::setConfirm(const int x, const int y){
-  this->confirm[y][x] = 1;
+  if(0 <= x && x < this->size && 0 <= y && y < this->size){
+    this->confirm[y][x] = 1;
+  }else{
+    throw std::invalid_argument("setConfirm: out of range");
+  }
 }
 void Field::setConfirm(const int *p){
   this->setConfirm(p[0], p[1]);
@@ -384,7 +391,11 @@ void Field::setConfirm(const ENT *ent){
   this->setConfirm(ent->p[0], ent->p[1]);
 }
 void Field::unsetConfirm(const int x, const int y){
-  this->confirm[y][x] = 0;
+  if(0 <= x && x < this->size && 0 <= y && y < this->size){
+    this->confirm[y][x] = 0;
+  }else{
+    throw std::invalid_argument("unsetConfirm: out of range");
+  }
 }
 void Field::unsetConfirm(const int *p){
   this->unsetConfirm(p[0], p[1]);
@@ -402,6 +413,17 @@ int Field::isConfirm(const int *p) const{
 }
 
 std::vector<std::string> Field::getAnswer() const{
+  std::vector<std::string> ret;
+  ret.reserve(this->answer.size());
+  for(auto& ans : this->answer){
+    std::ostringstream oss;
+    oss << "{" << ans[0] << ", " << ans[1] << ", " << ans[2] << "}";
+    ret.push_back(oss.str());
+  }
+  return ret;
+}
+
+std::vector<std::array<int, 3>> Field::getOperate() const{
   return this->answer;
 }
 
@@ -443,7 +465,7 @@ void Field::reflection(const Field *f, const int px, const int py, const int as,
     }
   }
 
-  std::vector<std::string> ans = f->getAnswer();
+  std::vector<std::array<int, 3>> ans = f->getOperate();
   int _as = as == -1 ? this->answer.size() : as;
   int resize_size = ans.size() + _as;
 
@@ -453,5 +475,9 @@ void Field::reflection(const Field *f, const int px, const int py, const int as,
   for (int i = 0; i < ans.size(); ++i) {
     this->answer[_as + i] = ans[i];
   }
+}
+
+std::shared_ptr<Field> Field::clone() const{
+  return std::make_shared<Field>(*this);
 }
 

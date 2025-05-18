@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <memory>
 
 //p = {x, y}
 //pを交換
@@ -42,10 +43,10 @@ public:
   Field(const int siz, const int *f);
   Field(const Field& f);
   Field(Field &&f);
-  ~Field();
+  virtual ~Field();
   Field& operator=(const Field& f);
   Field& operator=(Field&& f);
-  void print() const;
+  virtual void print() const;
   int getSize() const;
   PENT getPair(const int num) const;
   ENT* getPair(const ENT *ent) const;
@@ -60,15 +61,17 @@ public:
   void unsetConfirm(const int *p);
   int isConfirm(const int x, const int y) const;
   int isConfirm(const int *p) const;
-  std::vector<std::string> getAnswer() const;
+  virtual std::vector<std::string> getAnswer() const;
+  virtual std::vector<std::array<int, 3>> getOperate() const;
   int isEnd() const;
   void reflection(const Field *f, const int px, const int py, const int as, std::unordered_map<int, int> corr);
+  virtual std::shared_ptr<Field> clone() const;
 
 protected:
   int size;
   PENT *pentities;
   ENT ***field;
-  std::vector<std::string> answer;
+  std::vector<std::array<int, 3>> answer;
   //confirm[size][size] 確定したら1、そうでないなら0
   int **confirm;
 
@@ -84,12 +87,19 @@ protected:
 // parentはdeleteしない
 class FieldChild : public Field {
 public:
-  FieldChild(Field *f, const int x, const int y, const int n);
+  FieldChild(std::shared_ptr<Field> f, const int x, const int y, const int n);
+  FieldChild(std::shared_ptr<FieldChild> f, const int x, const int y, const int n);
+  FieldChild(const FieldChild& other);
   void reflection();
+  virtual std::shared_ptr<Field> clone() const override;
+  virtual void print() const override;
+  virtual std::vector<std::string> getAnswer() const override;
+  virtual std::vector<std::array<int, 3>> getOperate() const override;
+  std::array<int, 2> getPxy() const;
 protected:
   const int answer_size;
   const int px, py;
-  Field *parent;
+  std::shared_ptr<Field> parent;
   std::unordered_map<int, int> correspondence;
 
 };

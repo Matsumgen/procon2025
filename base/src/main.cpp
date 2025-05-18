@@ -10,9 +10,12 @@ int main(int argc, char *argv[]){
   for(int i = 1; i < argc; i++){
     startTime = std::chrono::system_clock::now(); // 計測開始時間
     Field f = Field::loadProblem(argv[i]);
-    /* f.print(); */
-    alg1(f);
-    /* f.print(); */
+    f.print();
+    /* alg1_1(f, 3, 3, 25); // 586 */
+    /* alg1_1(f, 3, 1, 25); // 586 */
+    /* alg1_1(f, 3, 1, 100); // 566 */
+    alg1_1(f, 2, 2, 100); // 565
+    f.print();
     endTime = std::chrono::system_clock::now();  // 計測終了時間
     if(!f.isEnd()){
       std::cout << "ERROR: is not End" << std::endl;
