@@ -37,6 +37,7 @@ struct PENT {
 class Field {
 public:
   static std::unordered_map<int, int> reallocation(Field &f);
+  static std::unordered_map<int, int> reallocation_map(Field &f);
   static Field loadProblem(std::string path);
   Field();
   Field(const int siz, const int *f);

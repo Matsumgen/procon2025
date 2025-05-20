@@ -1,6 +1,7 @@
 CC	  = g++
 CFLAGS    = -std=c++17
-INCLUDE   = -I./inc
+INCLUDE   = -I./inc -I./lib/lmdb/include
+LIBRARY   = ./lib/lmdb/lib/liblmdb.a
 
 TARGET    = exe
 SRCDIR    = ./src
@@ -15,7 +16,7 @@ all: $(TARGET)
 -include $(addprefix $(DEPDIR)/, $(notdir $(OBJS:.o=.Po)))
 
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ $(LIBRARY)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	${CC} $(CFLAGS) $(INCLUDE) -c $< -o $@
