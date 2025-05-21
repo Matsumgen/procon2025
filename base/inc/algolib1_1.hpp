@@ -183,9 +183,9 @@ namespace algolib1_1{
   public:
     StepAnalysisTree(std::shared_ptr<OpeTree> opt, std::shared_ptr<StepAnalysisTree> parent);
     std::vector<Ope> getOperate();
-    int getStepNum();
-    OpeTree_ptr getOpeTree();
-    SATree_ptr getParent();
+    OpeTree_ptr getOpeTree() const;
+    SATree_ptr getParent() const;
+    int getStepNum() const;
   private:
     OpeTree_ptr opt;
     SATree_ptr parent;
@@ -200,15 +200,15 @@ namespace algolib1_1{
   public:
     StepAnalysisLeaf(std::shared_ptr<Field> f, std::shared_ptr<BaseTargetPointsManager> tpm, SATree_ptr leaf);
     std::vector<SALeaf_ptr> analysis();
-    bool isEnd();
+    bool isEnd() const;
     void setEnd();
-    SATree_ptr getTree();
-    void print();
+    std::shared_ptr<Field> getField() const;
+    SATree_ptr getTree() const;
+    void print() const;
     std::vector<Ope> getOperate();
 
   private:
     std::shared_ptr<Field> f;
-    /* TargetPointsManager tpm; */
     std::shared_ptr<BaseTargetPointsManager> tpm;
     SATree_ptr leaf;
     bool endFlag;

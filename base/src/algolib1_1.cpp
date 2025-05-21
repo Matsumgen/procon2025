@@ -2,7 +2,9 @@
 /* #define DEBUG_ALGO_LIB1_1 */
 /* #define DEBUG_ALGO_LIB1_1_VVV */
 
-#include<algolib1_1.hpp>
+#include <algolib1_1.hpp>
+#include <fielddb.hpp>
+
 #include <iostream>
 #include <algorithm>
 #include <string>
@@ -266,7 +268,10 @@ void TPS::update(int index) {
   int fs = this->getFsize();
   std::fill(enable.begin(), this->enable.end(), false);
   if(fs - 2 <= this->x){
-    if(fs - 2 == this->x)      this->enable[0] = true;
+    if(fs - 2 == this->x){
+      this->enable[0] = true;
+      this->enable[2] = true;
+    }
     else if(fs - 1 == this->x) throw std::logic_error("TargetPoints.x = fsize - 1");
     else                              this->endFlag = true;
     return;
@@ -279,7 +284,7 @@ void TPS::update(int index) {
       this->enable[9] = true;
     }
   }else{
-  int j = 4 + (fs - 2) * 8;
+  int j = 4 + (fs - this->x - 2) * 8;
   for(int i=1; i < j && i < enable.size(); ++i) enable[i] = true;
   }
 }
@@ -405,9 +410,9 @@ std::vector<Ope> StepAnalysisTree::getOperate(){
   }
 }
 
-int StepAnalysisTree::getStepNum() { return this->step_num; }
-SATree_ptr StepAnalysisTree::getParent() { return this->parent; }
-OpeTree_ptr StepAnalysisTree::getOpeTree() { return this->opt; }
+OpeTree_ptr StepAnalysisTree::getOpeTree() const { return this->opt; }
+SATree_ptr StepAnalysisTree::getParent() const { return this->parent; }
+int StepAnalysisTree::getStepNum() const { return this->step_num; }
 
 StepAnalysisLeaf::StepAnalysisLeaf(std::shared_ptr<Field> f, std::shared_ptr<BaseTargetPointsManager> tpm, SATree_ptr leaf)
 : f(f), tpm(tpm), leaf(leaf), endFlag(false) {}
@@ -421,12 +426,20 @@ std::vector<SALeaf_ptr> StepAnalysisLeaf::analysis(){
     this->endFlag = true;
     if(this->f->getSize() == 6){
     }else if(this->f->getSize() == 4){
+      std::shared_ptr<Field> fc = this->f->clone();
+      std::vector<Ope> opes = fdb::getField4(*fc);
+      OpeTree_ptr opt = make_OpeTree_ptr(0, 0, 0, (Point){0, 0}, nullptr);
+      for(auto& ope : opes){
+        fc->rotate(ope[0], ope[1], ope[2]);
+        opt = make_OpeTree_ptr(ope[0], ope[1], ope[2], (Point){0, 0}, opt);
+      }
+      ret.push_back(make_SALeaf_ptr(std::move(fc), this->tpm->clone(), make_SATree_ptr(opt, this->leaf)));
+      ret.back()->setEnd();
     }else{
       std::cout << "f->size = " << f->getSize() << std::endl;
       throw std::logic_error("f->size < 4");
     }
 
-    ret.push_back(std::shared_ptr<SALeaf>(this));
     return ret;
   }
 
@@ -457,7 +470,7 @@ std::vector<SALeaf_ptr> StepAnalysisLeaf::analysis(){
         for (const auto& ope : otp->get()) 
           printf("analysis: rotate(%d, %d, %d)\n", ope[0], ope[1], ope[2]); 
         for (const auto& ope : tp.addOpe)
-          printf("analysis: rotate(%d, %d, %d) addOpe\n", ope[0], ope[1], ope[2]); 
+          printf("analysis: rotate(%d, %d, %d) addOpe\n", ope[0], ope[1], ope[2]); //移動可能かが判断されていない
         fc->print();
         throw std::runtime_error("Numbers not aligned.");
       }
@@ -473,33 +486,50 @@ std::vector<SALeaf_ptr> StepAnalysisLeaf::analysis(){
 #endif
   };
 
-  //confirm情報も入れる？
   std::vector<TP> tps = this->tpm->get();
   for(int tpi = 0; tpi < tps.size(); ++tpi){
     std::vector<OpeTree_ptr> opts = serchShortestStep2(this->f, tps[tpi]);
-    /* this->f->setConfirm(tps[tpi].target.data()); */
-    /* this->f->setConfirm(tps[tpi].to.data()); */
+    std::shared_ptr<Field> fco = this->f->clone();
+    for(auto& p : tps[tpi].unsetConfirmPoints){ fco->unsetConfirm(p.data()); }
+
+    //addOpeが可能かどうか判定
+    bool b = false;
+    for(auto& ope: tps[tpi].addOpe){
+      if(not fco->canRotate(ope[0], ope[1], ope[2])) b = true;
+    }
+    if(b) continue;
+
+    for(auto& p : tps[tpi].setConfirmPoints){ fco->setConfirm(p.data()); }
+
     for(auto& o : opts){
 #ifdef DEBUG_ALGO_LIB1_1
       std::cout << "analysis tps[tpi]: " << tps[tpi].toString() << std::endl;
 #endif
-      std::shared_ptr<Field> fc = this->f->clone();
-      for(auto& p : tps[tpi].unsetConfirmPoints){
-        fc->unsetConfirm(p.data());
-      }
-      for(auto& p : tps[tpi].setConfirmPoints){
-        fc->setConfirm(p.data());
-      }
+      std::shared_ptr<Field> fc = fco->clone();
       processOperation(fc, tps[tpi], o);
       if(this->tpm->isLast()){
         //Fieldを一回り小さくする
-        int ns = this->f->getSize() - 4;
-        std::shared_ptr<BaseTargetPointsManager> tpmc = this->tpm->clone(ns);
-        std::shared_ptr<FieldChild> _fc = std::make_shared<FieldChild>(fc, 2, 2, ns);
-        ret.push_back(make_SALeaf_ptr(_fc, tpmc, make_SATree_ptr(o, this->leaf)));
-        //一時的に追加・ここで最終版の処理を行う？
-        if(ns <= 6){
-          ret.back()->setEnd();
+        try{
+          int ns = this->f->getSize() - 4;
+          std::shared_ptr<BaseTargetPointsManager> tpmc = this->tpm->clone(ns);
+          std::shared_ptr<FieldChild> _fc = std::make_shared<FieldChild>(fc, 2, 2, ns);
+          if(ns == 4){
+            std::vector<Ope> opes = fdb::getField4(*_fc);
+            for(Ope& ope : opes){
+              o = make_OpeTree_ptr(ope[0], ope[1], ope[2], (Point){0,0}, o);
+              _fc->rotate(ope[0], ope[1], ope[2]);
+            }
+          }else if(ns == 6){
+            //そのうち実装する
+          }
+          ret.push_back(make_SALeaf_ptr(_fc, tpmc, make_SATree_ptr(o, this->leaf)));
+          //一時的に6以下で終了とする
+          if(ns <= 6) ret.back()->setEnd();
+        }catch(const std::logic_error e){
+          std::cerr << e.what() << std::endl;
+          for(auto& ope: this->getOperate())
+            std::cerr << ope[0] << ' ' << ope[1] << ' ' << ope[2] << std::endl;
+          throw e;
         }
       }else{
         std::shared_ptr<BaseTargetPointsManager> tpmc = this->tpm->clone();
@@ -507,23 +537,11 @@ std::vector<SALeaf_ptr> StepAnalysisLeaf::analysis(){
         ret.push_back(make_SALeaf_ptr(std::move(fc), tpmc, make_SATree_ptr(o, this->leaf)));
       }
     }
-    /* this->f->unsetConfirm(tps[tpi].target.data()); */
-    /* this->f->unsetConfirm(tps[tpi].to.data()); */
-    if(this->tpm->isLast()){
-      int ns = this->f->getSize() - 4;
-      if(ns <= 6){
-        /* std::cout << "Not implemented" << std::endl; */
-        if(ns == 4){
-        }else{
-        }
-        this->endFlag = true;
-      }
-    }
   }
   return ret;
 }
 
-void StepAnalysisLeaf::print(){
+void StepAnalysisLeaf::print() const {
   std::cout << "StepAnalysisLeaf: endFlag=" << endFlag << std::endl;
   std::cout << "Field: " << std::endl;
   this->f->print();
@@ -535,9 +553,10 @@ std::vector<Ope> StepAnalysisLeaf::getOperate(){
   return this->f->getOperate();
 }
 
-bool StepAnalysisLeaf::isEnd(){ return this->endFlag; }
+bool StepAnalysisLeaf::isEnd() const { return this->endFlag; }
 void StepAnalysisLeaf::setEnd(){ this->endFlag = true; }
-SATree_ptr StepAnalysisLeaf::getTree(){ return this->leaf; }
+std::shared_ptr<Field> StepAnalysisLeaf::getField() const { return this->f; }
+SATree_ptr StepAnalysisLeaf::getTree() const { return this->leaf; }
 
 /* x, y: 移動先の座標
  * sn: step数, ep: 目的地, o:  親
@@ -580,11 +599,16 @@ bool sss2(const int x, const int y, const int sn, const Point ep
 std::vector<OpeTree_ptr> algolib1_1::serchShortestStep2(std::shared_ptr<Field>& f, TP& tp){
   if(f->isConfirm(tp.target.data()) || f->isConfirm(tp.to.data())) return std::vector<OpeTree_ptr>();
   int *_from = f->getPair(f->get(tp.target[0], tp.target[1]))->p;
+  std::vector<OpeTree_ptr> leaf, leaf_buf;
   Point from = {_from[0], _from[1]};
-  std::vector<OpeTree_ptr> leaf(1), leaf_buf;
-  std::vector<std::vector<int>> step(f->getSize(), std::vector<int>(f->getSize(), 8));
+  leaf.push_back(make_OpeTree_ptr(0, 0, 0, from, nullptr));
 
-  leaf[0] = make_OpeTree_ptr(0, 0, 0, from, nullptr);
+  //すでに揃っている時
+  if(from[0] == tp.to[0] && from[1] == tp.to[1]){
+    return leaf;
+  }
+
+  std::vector<std::vector<int>> step(f->getSize(), std::vector<int>(f->getSize(), 8));
   f->setConfirm(tp.target[0], tp.target[1]);
   for(int y = 0; y < f->getSize(); y++)
     for(int x = 0; x < f->getSize(); x++)

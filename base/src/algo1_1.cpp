@@ -100,23 +100,17 @@ void buildTree(const std::vector<SATree_ptr>& leaves) {
 void printSALeaf(std::vector<SALeaf_ptr> leaves){
   std::vector<SATree_ptr> lvs;
   lvs.reserve(leaves.size());
-  for(auto& l : leaves){
-    lvs.push_back(l->getTree());
-  }
+  for(auto& l : leaves)    lvs.push_back(l->getTree());
+
   std::cout << leaves.size() << std::endl;
   buildTree(lvs);
 }
 #endif
 
-// rootの次を保持しておく
-//leavesの中でstep数の少ない上位いくつかに対してanalysis()を行い、それ以外は破棄
+// ビームサーチ
 void alg1_1(Field& f, int rw=1, int deep=1, int leaves_limit=100){
   std::vector<SALeaf_ptr> leaves = {make_SALeaf_ptr(std::make_shared<Field>(f), createTPM4<TPS>(f.getSize(), rw), nullptr)};
   std::vector<SALeaf_ptr> leaves_buf;
-
-/* #ifdef DEBUG_ALGO1_1 */
-/*   printSALeaf(leaves); */
-/* #endif */
 
   bool endFlag = false;
   do{
@@ -126,7 +120,7 @@ void alg1_1(Field& f, int rw=1, int deep=1, int leaves_limit=100){
       for(auto& l : leaves){
         /* l->print(); */
         if(l->isEnd()){
-          leaves_buf.push_back(std::move(l));
+          leaves_buf.push_back(l);
         }else{
           std::vector<SALeaf_ptr> lret = l->analysis();
           std::move(lret.begin(), lret.end(), std::back_inserter(leaves_buf));
@@ -138,11 +132,12 @@ void alg1_1(Field& f, int rw=1, int deep=1, int leaves_limit=100){
         throw std::logic_error("leaves is empty.");
       }
       leaves = std::move(leaves_buf);
+      if(endFlag) break;
     }
 
     // leaves_limit個のみを残す
+    std::sort(leaves.begin(), leaves.end(), [](SALeaf_ptr& a, SALeaf_ptr& b){ return a->getTree()->getStepNum() < b->getTree()->getStepNum(); });
     if(leaves.size() > leaves_limit){
-      std::sort(leaves.begin(), leaves.end(), [](SALeaf_ptr& a, SALeaf_ptr& b){ return a->getTree()->getStepNum() < b->getTree()->getStepNum(); });
       leaves.erase(leaves.begin() + leaves_limit, leaves.end());
     }
 #ifdef DEBUG_ALGO1_1
@@ -152,6 +147,7 @@ void alg1_1(Field& f, int rw=1, int deep=1, int leaves_limit=100){
   }while(!endFlag);
 
 #ifdef DEBUG_ALGO1_1
+  std::cout << "end algo1_1" << std::endl;
   printSALeaf(leaves);
   leaves[0]->print();
   std::cout << "step num: " << leaves[0]->getOperate().size() << std::endl;

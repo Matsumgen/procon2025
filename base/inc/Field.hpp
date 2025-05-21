@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
+#define PRINT_SEPARATOR ' '
 
 //p = {x, y}
 //pを交換
@@ -38,6 +39,7 @@ struct PENT {
 class Field {
 public:
   static std::unordered_map<int, int> reallocation(Field &f);
+  static std::unordered_map<int, int> reallocation_map(Field &f);
   static Field loadProblem(std::string path);
   Field();
   Field(const int siz, const int *f);
@@ -52,6 +54,7 @@ public:
   ENT* getPair(const ENT *ent) const;
   ENT* get(const int x, const int y) const;
   void rotate(const int x, const int y, const int siz);
+  int canRotate(const int x, const int y, const int siz) const;
   int toPointCheck(const int *from, const int *to, int *buf) const;
   int toPoint(const int *from, const int *to);
   void setConfirm(const int x, const int y);

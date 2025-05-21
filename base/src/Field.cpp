@@ -238,10 +238,15 @@ void Field::print() const{
   for(int y = 0; y < this->size; y++){
     for(int x = 0; x < this->size; x++){
       if(this->isConfirm(x, y)){
-        std::cout << "\x1b[33m" << this->field[y][x]->num << "\t\x1b[m";
+        std::cout << "\x1b[33m" << this->field[y][x]->num << "\x1b[m";
       }else{
-        std::cout << this->field[y][x]->num << '\t';
+        std::cout << this->field[y][x]->num;
       }
+#ifdef PRINT_SEPARATOR
+        std::cout << PRINT_SEPARATOR;
+#else
+        std::cout << '\t';
+#endif
     }
     std::cout << std::endl;
   }
@@ -323,6 +328,17 @@ void Field::rotate(const int x, const int y, const int siz){
   this->answer.push_back({x, y, siz});
 }
 
+// 確定した範囲内であるか判定
+int Field::canRotate(const int x, const int y, const int siz) const{
+  for(int dx = 0; dx < siz; dx++) for(int dy = 0; dy < siz; dy++){
+    // 回転の中心は移動しない
+    if(this->isConfirm(x+dx, y+dy) && !(siz%2 == 1 && dx == (siz >> 1) && dy == (siz >> 1))){
+      return 0;
+    }
+  }
+  return 1;
+}
+
 //可能なときは1、不可能であれば0
 int Field::toPointCheck(const int *from, const int *to, int *buf) const{
   int X = std::abs(to[0] - from[0]);
@@ -350,14 +366,7 @@ int Field::toPointCheck(const int *from, const int *to, int *buf) const{
   printf("toPointCheck: from={%d, %d} to={%d, %d} X=%d Y=%d siz=%d buf={%d, %d, %d}\n", from[0], from[1], to[0], to[1], X, Y, siz, buf[0], buf[1], buf[2]);
 #endif
 
-  // 確定した範囲内であるか判定
-  for(int dx = 0; dx < siz; dx++) for(int dy = 0; dy < siz; dy++){
-    // 回転の中心は移動しない
-    if(this->isConfirm(buf[0] + dx, buf[1] + dy) && !(siz%2 == 1 && dx == (siz >> 1) && dy == (siz >> 1))){
-      return 0;
-    }
-  }
-  return 1;
+  return this->canRotate(buf[0], buf[1], buf[2]);
 }
 
 //成功1、失敗0

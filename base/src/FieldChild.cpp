@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <stdexcept>
 
 FieldChild::FieldChild(std::shared_ptr<Field> f, const int x, const int y, const int n)
 : parent(f), answer_size(f->getAnswer().size()), px(x), py(y)
@@ -22,17 +23,26 @@ FieldChild::FieldChild(std::shared_ptr<Field> f, const int x, const int y, const
       this->confirm[dy][dx] = f->isConfirm(x + dx, y + dy);
     }
   }
-  this->correspondence = Field::reallocation(*this); //ここ？
+  this->correspondence = Field::reallocation(*this);
   const int numSize = correspondence.size();
-  this->pentities = new PENT[numSize]();
+  if(numSize != n*n/2){
+    std::cout << "numSize: " << numSize << "n*n/2: " << n*n/2 << std::endl;
+    f->print();
+    throw std::logic_error("don't problem");
+  }
+  this->pentities = new PENT[numSize]{};
   int nn;
   for(int dy = 0; dy < n; dy++){
     for(int dx = 0; dx < n; dx++){
       nn = this->field[dy][dx]->num;
       if(this->pentities[nn].p1 == nullptr){
         this->pentities[nn].p1 = this->field[dy][dx];
-      }else{
+      }else if (this->pentities[nn].p2 == nullptr){
         this->pentities[nn].p2 = this->field[dy][dx];
+      }else{
+        std::cout << "nn: " << nn << std::endl;
+        f->print();
+        /* throw std::logic_error("don'tproblem"); */
       }
     }
   }
