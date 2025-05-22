@@ -8,6 +8,59 @@
 #include <sstream>
 #include <cstdlib>
 
+ENT::ENT(){}
+ENT::ENT(const int x, const int y, const int n) : num(n){
+  this->p = new int[2]{x, y};
+}
+ENT::ENT(const ENT& fe) : num(fe.num){
+  this->p = new int[2]{fe.p[0], fe.p[1]};
+}
+ENT::ENT(ENT&& fe) : num(fe.num), p(fe.p){
+  fe.p = nullptr;
+}
+ENT& ENT::operator=(const ENT& fe){
+  if(this == &fe) return *this;
+  this->p = new int[2]{fe.p[0], fe.p[1]};
+  this->num = fe.num;
+  return *this;
+}
+ENT& ENT::operator=(ENT&& fe){
+  if(this == &fe) return *this;
+  if(fe.p)  delete [] fe.p;
+  this->p = fe.p;
+  this->num = fe.num;
+  fe.p = nullptr;
+  return *this;
+}
+ENT::~ENT(){
+  if(this->p) delete [] this->p;
+}
+
+
+PENT::PENT(){}
+PENT::PENT(const PENT& fe) : p1(fe.p1), p2(fe.p2){ }
+PENT::PENT(PENT&& fe) : p1(fe.p1), p2(fe.p2){
+  fe.p1 = nullptr;
+  fe.p2 = nullptr;
+}
+PENT& PENT::operator=(const PENT& fe){
+  if(this == &fe) return *this;
+  this->p1 = fe.p1;
+  this->p2 = fe.p2;
+  return *this;
+}
+PENT& PENT::operator=(PENT&& fe){
+  if(this == &fe) return *this;
+  this->p1 = fe.p1;
+  this->p2 = fe.p2;
+  fe.p1 = nullptr;
+  fe.p2 = nullptr;
+  return *this;
+}
+PENT::~PENT(){ }
+
+
+Field::Field(){}
 Field::Field(const int siz, const int *f)
 : size(siz)
 {
@@ -31,9 +84,7 @@ Field::Field(const int siz, const int *f)
     this->confirm[y] = new int[siz]{};
     for(int x = 0; x < siz; x++){
       n = *(f + y * siz + x);
-      ent = new ENT;
-      ent->p = new int[2]{x, y};
-      ent->num = n;
+      ent = new ENT(x, y, n);
       this->field[y][x] = ent;
       if((len[n]++) == 0){
         //初めて出てきた数字
@@ -52,6 +103,7 @@ Field::Field(const int siz, const int *f)
 Field::Field(const Field& f)
 : size(f.size), answer(f.answer)
 {
+  std::cout << "test:copyField" << std::endl;
   //コピーコンストラクタ
   const int num_size = f.size * f.size / 2;
   std::vector<int> len(num_size, 0);
@@ -64,9 +116,8 @@ Field::Field(const Field& f)
     this->field[y] = new ENT*[f.size];
     this->confirm[y] = new int[f.size]{};
     for(x = 0; x < f.size; x++){
-      ENT *e = new ENT, *ent = f.field[y][x];
-      e->p = new int[2]{ent->p[0], ent->p[1]};
-      e->num = ent->num;
+      ENT *e = new ENT;
+      *e = *(f.field[y][x]);
       this->field[y][x] = e;
       this->confirm[y][x] = f.confirm[y][x];
       if((len[e->num]++) == 0){
@@ -78,25 +129,26 @@ Field::Field(const Field& f)
   }
 }
 
+Field::Field(Field&& f)
+: size(f.size), pentities(f.pentities), field(f.field),
+  answer(std::move(f.answer)), confirm(f.confirm)
+{
+  // ムーブコンストラクタ
+  f.pentities = nullptr;
+  f.field = nullptr;
+  f.confirm = nullptr;
+  f.size = 0;
+}
+
 Field::~Field(){
   //デストラクター
-  delete [] this->pentities;
-  for(int y = 0; y < this->size; y++){
-    for(int x = 0; x < this->size; x++){
-      delete [] this->field[y][x]->p;
-      delete this->field[y][x];
-    }
-    delete [] this->field[y];
-    delete [] confirm[y];
-  }
-  delete [] this->field;
-  delete [] confirm;
-
+  this->cleanup();
 }
 
 Field& Field::operator=(const Field &f){
-  //代入演算子"="のoverload
+  //コピー代入演算子
   if(this == &f)  return (*this); //自分が渡されたら処理しない
+  std::cout << "test:copyField" << std::endl;
 
   const int fsize = f.getSize();
   const int num_size = fsize * fsize / 2;
@@ -112,9 +164,8 @@ Field& Field::operator=(const Field &f){
     this->field[y] = new ENT*[fsize];
     this->confirm[y] = new int[fsize]{};
     for(x = 0; x < fsize; x++){
-      ENT *e = new ENT, *ent = f.get(x, y);
-      e->p = new int[2]{ent->p[0], ent->p[1]};
-      e->num = ent->num;
+      ENT *e = new ENT;
+      *e = *(f.get(x, y));
       this->field[y][x] = e;
       this->confirm[y][x] = f.isConfirm(x, y);
       if((len[e->num]++) == 0){
@@ -125,6 +176,46 @@ Field& Field::operator=(const Field &f){
     }
   }
   return (*this);
+}
+
+Field& Field::operator=(Field&& f) {
+  //ムーブ代入演算子
+  if (this == &f) return *this;
+
+  this->cleanup();
+
+  size = f.size;
+  pentities = f.pentities;
+  field = f.field;
+  answer = std::move(f.answer);
+  confirm = f.confirm;
+
+  f.pentities = nullptr;
+  f.field = nullptr;
+  f.confirm = nullptr;
+  f.size = 0;
+  return *this;
+}
+
+void Field::cleanup(){
+  //動的確保したメモリの解放
+  if(this->pentities){
+    delete [] this->pentities;
+  }
+  if(this->field){
+    for(int y = 0; y < this->size; y++){
+      for(int x = 0; x < this->size; x++){
+        delete this->field[y][x];
+      }
+      delete [] this->field[y];
+    }
+    delete [] this->field;
+  }
+
+  if(this->confirm){
+    for(int y = 0; y < this->size; y++){ delete [] this->confirm[y]; }
+    delete [] this->confirm;
+  }
 }
 
 int Field::getSize() const{
@@ -162,6 +253,11 @@ void Field::print() const{
     for (int j = 0; j < this->size; j++){
       printf("(%d, %d)%c", this->field[i][j]->p[0], this->field[i][j]->p[1], " \n"[j == this->size - 1]);
     }
+  }
+
+  // pentities示
+  for(int i = 0; i < this->size * this->size / 2; i++){
+    printf("%d: p1={%d, %d, %d}, p2={%d, %d, %d}\n", i, this->pentities[i].p1->p[0], this->pentities[i].p1->p[1], this->pentities[i].p1->num, this->pentities[i].p2->p[0], this->pentities[i].p2->p[1], this->pentities[i].p2->num);
   }
 #endif
   std::cout << std::endl;
@@ -325,29 +421,37 @@ int Field::isEnd() const{
   return 1;
 }
 
-/* Field* getProblem(){ */
-/* } */
 
-Field* loadProblem(const std::string path){
-  std::ifstream ifs(path);
-  std::string str_buf;
-  std::vector<std::string> csvdata;
-  while (getline(ifs, str_buf)) {
-    csvdata.push_back(str_buf);
-  }
-  const int siz = csvdata.size();
-  int *field = new int[siz * siz];
+// 引数のFieldを自分に反映する
+void Field::reflection(const Field *f, const int px, const int py, const int as, std::unordered_map<int, int> corr){
 
-  for(int y = 0, x; y < siz; y++){
-    std::stringstream csvd{csvdata[y]};
-    x = 0;
-    while(getline(csvd, str_buf, ',')){
-      field[y*siz + x] = stoi(str_buf);
-      x++;
+  int x, y, n;
+  for(int dy = 0; dy < f->getSize(); dy++){
+    y = py + dy;
+    for(int dx = 0; dx < f->getSize(); dx++){
+      x = px + dx;
+      *(this->field[y][x]) = *(f->get(dx, dy));
+      this->field[y][x]->num = corr[this->field[y][x]->num];
+      this->confirm[y][x] = f->isConfirm(dx, dy);
+      n = this->field[y][x]->num;
+      if(this->pentities[n].p2 == nullptr){
+        this->pentities[n].p2 = this->field[y][x];
+      }else{
+        this->pentities[n].p1 = this->field[y][x];
+        this->pentities[n].p2 = nullptr;
+      }
     }
   }
-  return new Field(siz, field);
+
+  std::vector<std::string> ans = f->getAnswer();
+  int _as = as == -1 ? this->answer.size() : as;
+  int resize_size = ans.size() + _as;
+
+  if(this->answer.size() < resize_size){
+    this->answer.resize(resize_size);
+  }
+  for (int i = 0; i < ans.size(); ++i) {
+    this->answer[_as + i] = ans[i];
+  }
 }
 
-void postAnswer(){
-}
