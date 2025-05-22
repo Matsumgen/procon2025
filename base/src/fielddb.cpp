@@ -1,4 +1,4 @@
-#define DEBUG_FIELD_DB
+/* #define DEBUG_FIELD_DB */
 #include <fielddb.hpp>
 #include <lmdb.h>
 #include <iostream>
