@@ -63,6 +63,12 @@ public:
   int isConfirm(const int *p) const;
   std::vector<std::string> getAnswer() const;
   int isEnd() const;
+  bool operator <(Field other) const {
+    return answer.size() < other.answer.size();
+  }
+  bool operator >(Field other) const {
+    return answer.size() > other.answer.size();
+  }
   void reflection(const Field *f, const int px, const int py, const int as, std::unordered_map<int, int> corr);
 
 protected:
