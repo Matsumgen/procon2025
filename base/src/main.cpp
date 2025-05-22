@@ -1,18 +1,25 @@
-
 #include <Field.hpp>
 #include <algo.hpp>
 #include <iostream>
 #include <string>
 #include <chrono>
 
+#include <fielddb.hpp>
+
 int main(int argc, char *argv[]){
+
+  fdb::field4_init("./field4.db");
   std::chrono::system_clock::time_point  startTime, endTime;
   for(int i = 1; i < argc; i++){
     startTime = std::chrono::system_clock::now(); // 計測開始時間
     Field f = Field::loadProblem(argv[i]);
-    /* f.print(); */
-    alg1(f);
-    /* f.print(); */
+    f.print();
+    /* alg1(f); */
+    std::vector<std::array<int, 3>> opes = fdb::getField4(f);
+    for(auto& o : opes){
+      f.rotate(o[0], o[1], o[2]);
+    }
+    f.print();
     endTime = std::chrono::system_clock::now();  // 計測終了時間
     if(!f.isEnd()){
       std::cout << "ERROR: is not End" << std::endl;
@@ -32,5 +39,6 @@ int main(int argc, char *argv[]){
     /*   std::cout << ans << std::endl; */
     /* } */
   }
+  fdb::field4_deinit();
   return 0;
 }

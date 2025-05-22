@@ -26,6 +26,17 @@ std::unordered_map<int, int> Field::reallocation(Field &f){
   return dic;
 }
 
+// 数字の置き換え対応の取得
+// map[前] = 後
+std::unordered_map<int, int> Field::reallocation_map(Field &f){
+  std::unordered_map<int, int> dic;
+  for(int y = 0; y < f.getSize(); ++y)  for(int x = 0; x < f.getSize(); ++x){
+    ENT *ent = f.get(x, y);
+    if(dic.find(ent->num) == dic.end()) dic[ent->num] = dic.size();
+  }
+  return dic;
+}
+
 // csvファイルから問題を読み込み
 Field Field::loadProblem(const std::string path){
   std::ifstream ifs(path);
