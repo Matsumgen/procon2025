@@ -67,6 +67,12 @@ public:
   virtual std::vector<std::string> getAnswer() const;
   virtual std::vector<std::array<int, 3>> getOperate() const;
   int isEnd() const;
+  bool operator <(Field other) const {
+    return answer.size() < other.answer.size();
+  }
+  bool operator >(Field other) const {
+    return answer.size() > other.answer.size();
+  }
   void reflection(const Field *f, const int px, const int py, const int as, std::unordered_map<int, int> corr);
   virtual std::shared_ptr<Field> clone() const;
 
