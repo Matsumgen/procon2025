@@ -309,13 +309,12 @@ def process_layer(db, target, data_len, num, fsize):
           ope = [x, y, n]
           key, value = putDB(txn, f, ope)
 
-          if key and key not in seen:
+          if key:
             seen.add(key)
             txn.put(key, value)
 
-      next_targets = list(seen)
-      data_len[num + 1] = len(next_targets)
-      return next_targets
+      data_len[num + 1] = len(seen)
+      return seen
 
     except KeyboardInterrupt:
       print(f"\nInterrupted at depth {num}, saved {len(seen)} keys.")
