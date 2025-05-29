@@ -3,7 +3,7 @@ from field6lib import *
 import numpy as np
 import lmdb
 import time
-# {0: 36, 1: 328, 2: 2971, 3: 24159, 4: 165377, 5: 735203, 6: 1015876, 7: 83075}
+from tqdm import tqdm
 # {0:  0, 1:  84, 2:  751, 3:  6057, 4:  41418, 5: 184080, 6:  254742, 7: 21133}
 
 if __name__ == "__main__":
@@ -39,32 +39,8 @@ if __name__ == "__main__":
   print("deep:", num)
 
   num += 1
-  fLL = len(target)
-  with db4.begin(write=True) as txn:
-    while fLL != 0:
-      print(f"[{nowT()}]\ttarget: {len(target)}\tdeep: {num}")
-      _target = target
-      target = []
-      for i, bfield in enumerate(_target):
-        field = decodeField(bfield, 4)
-        for y, x, n in product(range(3), range(3), range(2, 4)): # y, x, n
-          if max(y+n, x+n) > 4:
-            continue
-          f = field.copy()
-          rotate(f, x, y, n, rev=True)
-          if isEnd(f):
-            continue
-
-          ope = [x, y, n]
-          key, value = putDB(txn, f, ope)
-          if key is not None:
-            target.append(key)
-            txn.put(key, value)
-        if i % 10000 == 0 and i != 0:
-          print(f"{i/fLL*100:.4f}%\t{i}/{fLL}\tinserted: {len(target)}")
-      num += 1
-      fLL = len(target)
-
-
-
-
+  data_len = {0: len(target)}
+  while target:
+    print(f"[{nowT()}] Depth {num}, targets: {len(target)}")
+    target = process_layer(db4, target, data_len, num, 4)
+    num += 1

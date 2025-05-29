@@ -1,6 +1,9 @@
 # deep=4 84% 7.6G
 # {2: 2M, 3: 80M} 
-# deep: 3, 9.9897%	 installed: {0: 1712, 1: 73132, 2: 2501253, 3: 2501253}
+
+# isEnd無し
+# deep: 4, 2.3458%	 installed: {0: 1712, 1: 73132, 2: 2501253, 3: 83674211, 4: 83674211}
+
 from itertools import product
 from field6lib import *
 import numpy as np
@@ -39,44 +42,11 @@ if __name__ == "__main__":
   print(f"inserted: {len(target)}")
   print("deep:", num)
 
-  fLL = len(target)
-  data_len = {0: fLL}
   num += 1
-  while fLL != 0:
-    print(f"[{nowT()}]\tdeep: {num}\ttarget: {len(target)}")
-    _target = target
-    target = []
-    with db6.begin(write=True) as txn:
-      try:
-        for i, bfield in enumerate(_target):
-          field = decodeField(bfield, 6)
-          field = np.array(field).reshape((6, 6))
-          for y, x, n in product(range(5), range(5), range(2, 6)): # y, x, n
-            if max(y+n, x+n) > 6:
-              continue
-            f = field.copy()
-            rotate(f, x, y, n, rev=True)
-            ope = [x, y, n]
-            key, value = putDB(txn, f, ope)
-            if key is not None:
-              target.append(key)
-              txn.put(key, value)
-          if i % 10000 == 0 and i != 0:
-            print(f"{i/fLL*100:2.4f}%\t{i}/{fLL}\tinserted: {len(target)}")
-        fLL = len(target)
-        data_len[num] = fLL
-        num += 1
-      except KeyboardInterrupt:
-        data_len[num] = fLL
-        print()
-        print(f"deep: {num}, {i/fLL*100:2.4f}%\t installed: {data_len}")
-        fLL = 0
-      except Exception as e:
-        data_len[num] = fLL
-        print(e)
-        print(f"deep: {num}, {i/fLL*100:2.4f}%\t installed: {data_len}")
-        fLL = 0
-
-
-
+  data_len = {0: len(target)}
+  while target:
+    print(f"[{nowT()}] Depth {num}, targets: {len(target)}")
+    target = process_layer(db6, target, data_len, num, 6)
+    num += 1
+  print(f"[{nowT()}] Depth {num}, targets: {len(target)}")
 

@@ -1,5 +1,7 @@
 import numpy as np
 import math
+from tqdm import tqdm
+from itertools import product
 
 # 数字の振り直し
 def reallocation(field):
@@ -283,11 +285,43 @@ def resolve(dbs:list, field):
       result = r
   return result.get()
 
+def process_layer(db, target, data_len, num, fsize):
+  data_len[num] = len(target)
+  seen = set()
+  xy_len = fsize - 1
 
+  with db.begin(write=True) as txn:
+    try:
+      for bfield in tqdm(target, desc=f"Depth {num}"):
+        field = decodeField(bfield, fsize)
+        field = np.array(field, dtype=np.uint8).reshape((fsize, fsize))
 
+        for y, x, n in product(range(xy_len), range(xy_len), range(2, fsize)):
+          if max(y + n, x + n) > fsize:
+            continue
 
+          f = field.copy()
+          rotate(f, x, y, n, rev=True)
 
-  
+          if isEnd(f):
+            continue
 
+          ope = [x, y, n]
+          key, value = putDB(txn, f, ope)
 
+          if key and key not in seen:
+            seen.add(key)
+            txn.put(key, value)
+
+      next_targets = list(seen)
+      data_len[num + 1] = len(next_targets)
+      return next_targets
+
+    except KeyboardInterrupt:
+      print(f"\nInterrupted at depth {num}, saved {len(seen)} keys.")
+      return []
+
+    except Exception as e:
+      print(f"\nError at depth {num}: {e}")
+      return []
 

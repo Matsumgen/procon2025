@@ -2,8 +2,10 @@ import random
 import numpy as np
 from field6lib import *
 import lmdb
+from tqdm import tqdm
 
 db4 = lmdb.open('field4.db', map_size=int(1e8))
+db6 = lmdb.open('_field6.db', map_size=int(1e8))
 
 def printBytes(b:bytes):
   print(' '.join(format(bb, '08b') for bb in b))
@@ -54,14 +56,14 @@ def test2(fsize=4):
   print(f"mean:{np.mean(steps)}, min:{np.min(steps)}, max:{np.max(steps)}, median:{np.median(steps)}, std:{np.std(steps)}")
 
 #現在登録済みの盤面一覧
-def test3(fsize=4):
+def test3(db, fsize=4):
   count = 0
   step = { i: 0 for i in range(fsize*fsize//2) }
   b = {}
-  with db4.begin() as txn:
+  with db.begin() as txn:
     with txn.cursor() as cursor:
-      for key, value in cursor:
-        opes = resolve([db4], decodeField(key, fsize))
+      for key, value in tqdm(cursor):
+        opes = resolve([db], decodeField(key, fsize))
         if len(key) in b.keys():
           b[len(key)] += 1
         else:
@@ -86,4 +88,4 @@ def test3(fsize=4):
 
 
 
-test3()
+test3(db6)
