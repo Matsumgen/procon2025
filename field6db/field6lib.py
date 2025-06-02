@@ -2,6 +2,9 @@ import numpy as np
 import math
 from tqdm import tqdm
 from itertools import product
+import tempfile
+import io
+import struct
 
 # 数字の振り直し
 def reallocation(field):
@@ -285,42 +288,73 @@ def resolve(dbs:list, field):
       result = r
   return result.get()
 
-def process_layer(db, target, data_len, num, fsize):
-  data_len[num] = len(target)
-  seen = set()
+# target: [データ長][fieldデータ]の形式で保存されたファイルのパス
+# 返り値: (一時ファイルのパス, 追加されたデータ数)
+READ_BATCH_SIZE = 1024 * 1024 # 1MB
+def process_layer(db, target_path:str, max_input:int, fsize:int):
+  leftover = b''
+  def read_batch(fin):
+    nonlocal leftover
+    target = []
+    total_read = 0
+    data = leftover + fin.read(READ_BATCH_SIZE)
+    if data == b'':
+      return target
+
+    mv = memoryview(data)
+    pos = 0
+    while pos < len(mv):
+      if pos + 1 > len(mv):
+        break
+      length = mv[pos]
+      pos += 1
+
+      if pos + length > len(mv):
+        pos -= 1
+        break
+      bfield = mv[pos:pos+length].tobytes()
+      pos += length
+
+      target.append(bfield)
+      total_read += 1
+
+    leftover = data[pos:]
+    return target
+
   xy_len = fsize - 1
+  count = 0
+  with  tqdm(total=max_input) as pbar, \
+        open(target_path, 'rb') as fin,  \
+        tempfile.NamedTemporaryFile(delete=False) as raw_fout:
+    with io.BufferedWriter(raw_fout, buffer_size=256 * 1024) as fout:
+      while True:
+        # 一定数のデータ読み込み
+        target = read_batch(fin)
+        if not target:
+          return fout.name, count
 
-  with db.begin(write=True) as txn:
-    try:
-      for bfield in tqdm(target, desc=f"Depth {num}"):
-        field = decodeField(bfield, fsize)
-        field = np.array(field, dtype=np.uint8).reshape((fsize, fsize))
+        with db.begin(write=True) as txn:
+          try:
+            for bfield in target:
+              field = decodeField(bfield, fsize)
+              field = np.array(field, dtype=np.uint8).reshape((fsize, fsize))
+              for y, x, n in product(range(xy_len), range(xy_len), range(2, fsize)):
+                if max(y + n, x + n) > fsize: continue
+                f = field.copy()
+                rotate(f, x, y, n, rev=True)
+                if isEnd(f): continue
+                key, value = putDB(txn, f, [x, y, n])
+                if key:
+                  fout.write(struct.pack('B', len(key)))
+                  fout.write(key)
+                  txn.put(key, value)
+                  count += 1
+              pbar.update(1)
+          except KeyboardInterrupt:
+            print(f"\nsaved {count} keys.")
+            return None, count
 
-        for y, x, n in product(range(xy_len), range(xy_len), range(2, fsize)):
-          if max(y + n, x + n) > fsize:
-            continue
-
-          f = field.copy()
-          rotate(f, x, y, n, rev=True)
-
-          if isEnd(f):
-            continue
-
-          ope = [x, y, n]
-          key, value = putDB(txn, f, ope)
-
-          if key:
-            seen.add(key)
-            txn.put(key, value)
-
-      data_len[num + 1] = len(seen)
-      return seen
-
-    except KeyboardInterrupt:
-      print(f"\nInterrupted at depth {num}, saved {len(seen)} keys.")
-      return []
-
-    except Exception as e:
-      print(f"\nError at depth {num}: {e}")
-      return []
+          except Exception as e:
+            print(f"\nsaved {count} keys.\nError : {e}")
+            return None, count
 

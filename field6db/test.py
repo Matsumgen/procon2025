@@ -88,4 +88,4 @@ def test3(db, fsize=4):
 
 
 
-test3(db6)
+test3(db6, fsize=6)
