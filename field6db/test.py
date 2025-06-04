@@ -5,7 +5,7 @@ import lmdb
 from tqdm import tqdm
 
 db4 = lmdb.open('field4.db', map_size=int(1e8))
-db6 = lmdb.open('_field6.db', map_size=int(1e8))
+db6 = lmdb.open('_field6.db', map_size=int(1e12))
 
 def printBytes(b:bytes):
   print(' '.join(format(bb, '08b') for bb in b))
@@ -61,8 +61,9 @@ def test3(db, fsize=4):
   step = { i: 0 for i in range(fsize*fsize//2) }
   b = {}
   with db.begin() as txn:
-    with txn.cursor() as cursor:
-      for key, value in tqdm(cursor):
+    print("stat:", txn.stat())
+    with txn.cursor() as cursor, tqdm(total=txn.stat()["entries"]) as pbar:
+      for key, value in cursor:
         opes = resolve([db], decodeField(key, fsize))
         if len(key) in b.keys():
           b[len(key)] += 1
@@ -73,6 +74,7 @@ def test3(db, fsize=4):
           print(key, value)
         step[len(opes)] += 1
         count += 1
+        pbar.update(1)
 
   print("total:", count)
   print("step: ", step)
