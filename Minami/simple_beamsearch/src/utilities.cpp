@@ -1,41 +1,5 @@
 #include "../inc/all.hpp"
 
-TrieNode* TrieNode::getChild(int idx) {
-    return this->next[idx];
-}
-
-void TrieNode::setChild(int idx, TrieNode *child) {
-    this->next[idx] = child;
-}
-
-Trie::Trie(int array_size, int type): array_size(array_size), type(type){
-    this->top = new TrieNode(0);
-}
-
-void Trie::insert(char *array) {
-    TrieNode *tmp = top;
-    rep (i, N) {
-        if (tmp->getChild(array[i]) == NULL) {
-            tmp->setChild(array[i], new TrieNode(i + 1));
-        }
-        tmp = tmp->getChild(array[i]);
-    }
-}
-
-bool Trie::find(char *array) {
-    TrieNode *tmp = top;
-    rep (i, N) {
-        if (tmp->getChild(array[i]) == NULL) return false;
-        tmp = tmp->getChild(array[i]);
-    }
-    return true;
-}
-
-TrieNode::TrieNode(int depth): depth(depth){
-    this->next = new TrieNode*[N * N / 2];
-    rep (i, N * N / 2) next[i] = NULL;
-}
-
 void input_data(vv_ent &field, vv_pos &ent_pos, char* file_name){
     if (file_name == NULL){
         cin >> N;
@@ -158,11 +122,19 @@ void exe_ope(State &s, v_ope &ope_list, v_bool &is_exe) {
     }
 }
 
-uint8_t* stateToChar(State &s) {
-    uint8_t *res = new uint8_t[N * N];
+void stateToChar(State &s, uint8_t *out) {
     // out = vv_int(N, v_int(N));
-    rep (i, N) rep (j, N) res[i * N + j] = (uint8_t)s.field[i][j].val;
-    return res;
+    // rep (i, N) rep (j, N) res[i * N + j] = (uint8_t)s.field[i][j].val;
+    uint8_t convert[N * N / 2];
+    rep (i, N * N / 2) convert[i] = 255;
+    uint8_t next_group = 0;
+    rep (i, N) rep (j, N) {
+        if (convert[s.field[i][j].val] == 255) {
+            convert[s.field[i][j].val] = next_group;
+            next_group++;
+        }
+        out[i * N + j] = convert[s.field[i][j].val];
+    }
 }
 
 int getPairCnt(vv_pos &ent_pos){
@@ -309,4 +281,29 @@ void addPriorityQueue(priority_queue<BeamNode2> &p_queue, BeamNode2 data, int ma
             delete data.p;
         }
     }
+}
+
+uint8_t popcount(unsigned long long int x){
+    unsigned char cnt=0;
+    while (x!=0){
+        cnt+=(x&1);
+        x=x>>1;
+    }
+    return cnt;
+}
+
+int getMaxBit(unsigned long long int x){
+	int cnt=0;
+	while (((unsigned long long int)1<<(cnt+1))<=x){
+		cnt++;
+	}
+	return cnt;
+}
+
+int getMinBit(unsigned long long int x){
+	int cnt=0;
+	while (getBit(x, cnt)==0){
+		cnt++;
+	}
+	return cnt;
 }

@@ -14,6 +14,8 @@ v_ope solve(State &s){
     cout << endl << tmp->score << " " << tmp->ope_list.size() << endl;
     v_ope ope_log = tmp->ope_list;
     eraseOpe(s, ope_log);
+    // int start_clock = clock();
+    // while ((double)(clock() - start_clock) / CLOCKS_PER_SEC <= 10);
     return ope_log;
 }
 
@@ -60,11 +62,14 @@ BeamNode* beamSearch(State &s, v_ope &ope_list, int (*score_func)(State &s), int
     now_beam.push((BeamNode2){createNewBeamNode(s)});
     priority_queue<BeamNode2> next_beam;
     set<SetNode> appear_list;
+    // Trie trie(0, 0);
+    int debug = 0;
+    uint8_t *big_array = new uint8_t[1LL << 31]{};
+    uint8_t *p_big_array = big_array;
     rep (i, depth) {
         // cout << i << " " << flush;
-        printf("(%d, %lld) ", i, appear_list.size());
-        cout << flush;
         shuffle(ope_list);
+        int insert_cnt = 0, delete_cnt = 0;
         while (!now_beam.empty()){
             BeamNode2 tmp = now_beam.top();
             if (isEnd(tmp.p->s)) return tmp.p;
@@ -77,20 +82,35 @@ BeamNode* beamSearch(State &s, v_ope &ope_list, int (*score_func)(State &s), int
                 rotate(tmp2->s, ope);
                 tmp2->ope_list.push_back(ope);
                 tmp2->score = -score_func(tmp2->s);
-                uint8_t *p_array = stateToChar(tmp2->s);
-                // addPriorityQueue(next_beam, (BeamNode2){tmp2}, beam_width);
-                if (appear_list.find((SetNode){p_array}) == appear_list.end()) {
-                    appear_list.insert((SetNode){p_array});
+                /*uint8_t array_s[N * N];
+                stateToChar(tmp2->s, array_s);
+                if (trie.insert(array_s)) {
                     addPriorityQueue(next_beam, (BeamNode2){tmp2}, beam_width);
+                    insert_cnt++;
+                } else {
+                    delete tmp2;
+                    delete_cnt++;
+                }*/
+                // addPriorityQueue(next_beam, (BeamNode2){tmp2}, beam_width);
+                stateToChar(tmp2->s, p_big_array);
+                if (appear_list.find((SetNode){p_big_array}) == appear_list.end()) {
+                    appear_list.insert((SetNode){p_big_array});
+                    addPriorityQueue(next_beam, (BeamNode2){tmp2}, beam_width);
+                    insert_cnt++;
+                    p_big_array += N * N;
                 } else {
                     // cout << "find" << " ";
-                    delete p_array;
+                    // delete p_array;
                     delete tmp2;
+                    delete_cnt++;
                 }
             }
             delete tmp.p;
         }
         now_beam = move(next_beam);
+        printf("(%d, %lld, %d, %d, %d) ", i, appear_list.size(), insert_cnt, delete_cnt, insert_cnt + delete_cnt);
+        // printf("(%d, %lld, %d, %d, %d) ", i, trie.size(), insert_cnt, delete_cnt, insert_cnt + delete_cnt);
+        cout << flush;
     }
     // cout << endl;
     /*BeamNode *best_state = now_beam.top().p;
