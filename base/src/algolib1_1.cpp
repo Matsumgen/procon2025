@@ -157,9 +157,8 @@ TPS::TPS(int fsize, int rw, int mode=0) : BaseTargetPoints(fsize, rw, mode) {
   int nowRw = 1 + (TPS::tps.size() - 4)/8;
   if(nowRw < rw){
     std::vector<Point> sc = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
-    for(int i = nowRw+1, j; i <= rw; i++){ // i = size - 1
+    for(int i = nowRw+1; i <= rw; i++){ // i = size - 1
       std::vector<Point> usc = {{0, i}, {0, i-1}, {1, i}, {1, i-1}};
-      j = 4 + (i - 2) * 8;
       std::vector<TargetPoint> tmp = {
           TargetPoint(TP({1,i}, {1,i-1}, {{0, 0, i+1}}, sc, usc)),
           TargetPoint(TP({1,i-1}, {1,i}, {{0, 0, i+1}}, sc, usc)),
@@ -203,7 +202,7 @@ void TPS::setup(const int mode=0) {
   if(mode == 1){
     this->enable[0] = false;
     this->enable[2] = false;
-    for(int i=4; i < this->enable.size(); i+=8){ // x=1もこうでは？
+    for(unsigned int i=4; i < this->enable.size(); i+=8){
       this->enable[i] = false;
       this->enable[i+1] = false;
       this->enable[i+2] = false;
@@ -213,7 +212,7 @@ void TPS::setup(const int mode=0) {
     }
   }
   if(fs < this->rw+1){
-    for(int i=4+(fs-2)*8; i < this->enable.size(); ++i){
+    for(unsigned int i=4+(fs-2)*8; i < this->enable.size(); ++i){
       this->enable[i] = false;
     }
   }
@@ -223,13 +222,13 @@ std::vector<TP> TPS::get(int d=0) const {
   std::vector<TP> ret;
   if(!this->next.empty()){
     ret.resize(this->next.size());
-    for(int i = 0; i < this->next.size(); ++i){
+    for(unsigned int i = 0; i < this->next.size(); ++i){
       ret[i] = this->next[i].tp;
       ret[i].reflectCorrectionX(this->x);
       ret[i].reflectCorrectionR(d, this->fsize);
     }
   }else{
-    for(int i = 0; i < enable.size(); i++){
+    for(unsigned int i = 0; i < enable.size(); i++){
       if(enable[i]){
         TP tp = TPS::tps[i].tp;
         tp.reflectCorrectionX(this->x);
@@ -244,10 +243,10 @@ std::vector<TP> TPS::get(int d=0) const {
 
 // enableを更新する
 // fsize: 揃える長さ
-void TPS::update(int index) {
+void TPS::update(unsigned int index) {
   if(this->next.empty()){
     // 実際のindex取得
-    int i=0, j=0;
+    unsigned int i=0, j=0;
     for(i = 0, j = 0; i < this->enable.size(); ++i) if(this->enable[i] && j++ == index) break;
 
     if(!TPS::tps[i].next.empty()){
@@ -284,8 +283,8 @@ void TPS::update(int index) {
       this->enable[9] = true;
     }
   }else{
-  int j = 4 + (fs - this->x - 2) * 8;
-  for(int i=1; i < j && i < enable.size(); ++i) enable[i] = true;
+  unsigned int j = 4 + (fs - this->x - 2) * 8;
+  for(unsigned int i=1; i < j && i < enable.size(); ++i) enable[i] = true;
   }
 }
 
@@ -313,7 +312,7 @@ std::string TPS::toString() const{
   }
   oss << "}" << std::endl;
   oss << "\tenable = {";
-  for(int i=0; i<this->enable.size(); i++){
+  for(unsigned int i=0; i<this->enable.size(); i++){
     oss << (this->enable[i] ? "true" : "false");
     if (i != enable.size() - 1) oss << ", ";
   }
@@ -427,7 +426,7 @@ std::vector<SALeaf_ptr> StepAnalysisLeaf::analysis(){
     if(this->f->getSize() == 6){
     }else if(this->f->getSize() == 4){
       std::shared_ptr<Field> fc = this->f->clone();
-      std::vector<Ope> opes = fdb::getField4(*fc);
+      std::vector<std::array<std::uint8_t, 3>> opes = fdb::getField4(*fc);
       OpeTree_ptr opt = make_OpeTree_ptr(0, 0, 0, (Point){0, 0}, nullptr);
       for(auto& ope : opes){
         fc->rotate(ope[0], ope[1], ope[2]);
@@ -487,7 +486,7 @@ std::vector<SALeaf_ptr> StepAnalysisLeaf::analysis(){
   };
 
   std::vector<TP> tps = this->tpm->get();
-  for(int tpi = 0; tpi < tps.size(); ++tpi){
+  for(unsigned int tpi = 0; tpi < tps.size(); ++tpi){
     std::vector<OpeTree_ptr> opts = serchShortestStep2(this->f, tps[tpi]);
     std::shared_ptr<Field> fco = this->f->clone();
     for(auto& p : tps[tpi].unsetConfirmPoints){ fco->unsetConfirm(p.data()); }
@@ -514,8 +513,8 @@ std::vector<SALeaf_ptr> StepAnalysisLeaf::analysis(){
           std::shared_ptr<BaseTargetPointsManager> tpmc = this->tpm->clone(ns);
           std::shared_ptr<FieldChild> _fc = std::make_shared<FieldChild>(fc, 2, 2, ns);
           if(ns == 4){
-            std::vector<Ope> opes = fdb::getField4(*_fc);
-            for(Ope& ope : opes){
+            std::vector<std::array<std::uint8_t, 3>> opes = fdb::getField4(*_fc);
+            for(auto& ope : opes){
               o = make_OpeTree_ptr(ope[0], ope[1], ope[2], (Point){0,0}, o);
               _fc->rotate(ope[0], ope[1], ope[2]);
             }
@@ -585,11 +584,14 @@ bool sss2(const int x, const int y, const int sn, const Point ep
     if(ep[0] == x && ep[1] == y){
       return true;
     }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wbitwise-instead-of-logical"
     return  sss2(x - 1, y, sn, ep, parent, f, steps, leaf)
           | sss2(x + 1, y, sn, ep, parent, f, steps, leaf)
           | sss2(x, y - 1, sn, ep, parent, f, steps, leaf)
           | sss2(x, y + 1, sn, ep, parent, f, steps, leaf);
   }
+#pragma GCC diagnostic pop
   return false;
 }
 
@@ -620,11 +622,14 @@ std::vector<OpeTree_ptr> algolib1_1::serchShortestStep2(std::shared_ptr<Field>& 
   int sn = 1;
   while(!endFlag && !leaf.empty()){
     for(auto& l : leaf){
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wbitwise-instead-of-logical"
       endFlag = endFlag
               | sss2(l->to[0]-1, l->to[1], sn, tp.to, l, f, step, leaf_buf)
               | sss2(l->to[0]+1, l->to[1], sn, tp.to, l, f, step, leaf_buf)
               | sss2(l->to[0], l->to[1]-1, sn, tp.to, l, f, step, leaf_buf)
               | sss2(l->to[0], l->to[1]+1, sn, tp.to, l, f, step, leaf_buf);
+#pragma GCC diagnostic pop
     }
     leaf = std::move(leaf_buf);
     ++sn;

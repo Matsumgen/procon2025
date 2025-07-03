@@ -100,7 +100,7 @@ namespace algolib1_1{
     virtual ~BaseTargetPoints() = default;
     virtual void setup(const int mode) = 0;
     virtual std::vector<TP> get(int d) const = 0;
-    virtual void update(int index) = 0;
+    virtual void update(unsigned int index) = 0;
     virtual int size() const = 0;
     virtual std::string toString() const = 0;
     virtual std::shared_ptr<BaseTargetPoints> clone() const = 0;
@@ -124,7 +124,7 @@ namespace algolib1_1{
     TPS(int fsize, int rw, int mode);
     virtual void setup(const int mode) override;
     virtual std::vector<TP> get(int d) const override;
-    virtual void update(int index) override;
+    virtual void update(unsigned int index) override;
     virtual int size() const override;
     virtual int getFsize() const override;
     virtual std::string toString() const override;

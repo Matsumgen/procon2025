@@ -108,7 +108,7 @@ void printSALeaf(std::vector<SALeaf_ptr> leaves){
 #endif
 
 // ビームサーチ
-void alg1_1(Field& f, int rw=1, int deep=1, int leaves_limit=100){
+void alg1_1(Field& f, int rw=1, int deep=1, unsigned int leaves_limit=100){
   std::vector<SALeaf_ptr> leaves = {make_SALeaf_ptr(std::make_shared<Field>(f), createTPM4<TPS>(f.getSize(), rw), nullptr)};
   std::vector<SALeaf_ptr> leaves_buf;
 

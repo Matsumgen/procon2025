@@ -106,9 +106,9 @@ public:
   virtual std::vector<std::array<int, 3>> getOperate() const override;
   std::array<int, 2> getPxy() const;
 protected:
+  std::shared_ptr<Field> parent;
   const int answer_size;
   const int px, py;
-  std::shared_ptr<Field> parent;
   std::unordered_map<int, int> correspondence;
 
 };
