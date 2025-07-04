@@ -107,7 +107,7 @@ Field::Field(const Field& f)
   //コピーコンストラクタ
   const int num_size = f.size * f.size / 2;
   std::vector<int> len(num_size, 0);
-  int x, y, n;
+  int x, y;
   this->pentities = new PENT[num_size];
   this->field = new ENT**[f.size];
   this->confirm = new int*[f.size];
@@ -152,7 +152,7 @@ Field& Field::operator=(const Field &f){
   const int fsize = f.getSize();
   const int num_size = fsize * fsize / 2;
   std::vector<int> len(num_size, 0);
-  int x, y, n;
+  int x, y;
   this->size = fsize;
   this->answer = f.getOperate();
   this->pentities = new PENT[num_size];
@@ -475,13 +475,13 @@ void Field::reflection(const Field *f, const int px, const int py, const int as,
   }
 
   std::vector<std::array<int, 3>> ans = f->getOperate();
-  int _as = as == -1 ? this->answer.size() : as;
-  int resize_size = ans.size() + _as;
+  unsigned int _as = as == -1 ? this->answer.size() : as;
+  unsigned int resize_size = ans.size() + _as;
 
   if(this->answer.size() < resize_size){
     this->answer.resize(resize_size);
   }
-  for (int i = 0; i < ans.size(); ++i) {
+  for (unsigned int i = 0; i < ans.size(); ++i) {
     this->answer[_as + i] = ans[i];
   }
 }

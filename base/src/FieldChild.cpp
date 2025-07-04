@@ -11,7 +11,6 @@ FieldChild::FieldChild(std::shared_ptr<Field> f, const int x, const int y, const
   this->size = n;
   this->field = new ENT**[n];
   this->confirm = new int*[n];
-  ENT *ent;
   for(int dy = 0; dy < n; dy++){
     this->field[dy] = new ENT*[n];
     this->confirm[dy] = new int[n]{};
@@ -54,7 +53,7 @@ FieldChild::FieldChild(std::shared_ptr<Field> f, const int x, const int y, const
 /* : FieldChild(std::static_pointer_cast<Field>(f), x + f->px, y + f->py, n){ } */
 
 FieldChild::FieldChild(const FieldChild& other)
-  : Field(other), answer_size(other.answer_size), px(other.px), py(other.py), parent(other.parent), correspondence(other.correspondence) { }
+  : Field(other), parent(other.parent), answer_size(other.answer_size), px(other.px), py(other.py), correspondence(other.correspondence) { }
 
 // 親Fieldに自身を反映させる
 void FieldChild::reflection(){

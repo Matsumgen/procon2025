@@ -2,6 +2,7 @@ pro
 .DS_Store
 exe
 *.o
+*.d
 venv
 *.exe
 *.db
