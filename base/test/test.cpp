@@ -47,11 +47,21 @@ void test_BField(int argc, char *argv[]) {
 }
 
 /*
+BFieldを用いた場合
 測定日:       2025/7/3 10:36
 max_loop:     10000000
 合計時間[ms]: 39595.6
 時間平均[ms]: 0.00395956
 平均:         5.47318
+最大値:       7
+最小値:       0
+
+RBFieldを用いた場合
+測定日:       2025/7/11 13:21
+max_loop:     10000000
+合計時間[ms]: 37464.7
+時間平均[ms]: 0.00374647
+平均:         5.47245
 最大値:       7
 最小値:       0
 */
@@ -69,7 +79,7 @@ void test_db4(int argc, char *argv[]) {
   statistics.reserve(max_loop);
   fdb::field4_init("./field4.db");
   for(unsigned int i = 0; i < max_loop; ++i ){
-    BField f(BitField::randomField(4));
+    RBField f(BitField::randomField(4));
     /* f.print(); */
     startTime = std::chrono::system_clock::now(); // 計測開始時間
     std::vector<std::array<std::uint8_t, 3>> opes = fdb::getField4(f);
