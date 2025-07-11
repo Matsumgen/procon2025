@@ -84,18 +84,18 @@ namespace bf {
     std::uint8_t size;
   };
 
-  // 履歴保持と確定箇所の設定を追加した子クラス
-  // 手戻りは考慮されない。
-  class BField : public BitField {
+
+  // 履歴保持を可能にした子クラス
+  class RBField : public BitField {
   public:
-    static BField loadCsv(const std::string& path);
-    BField(const std::vector<std::uint16_t> f, const std::uint8_t size);
-    BField(BitField& f);
-    BField(BitField&& f);
-    BField(BField& f);
-    BField& operator =(BField& f);
-    bool operator <(const BField& f) const;
-    bool operator >(const BField& f) const;
+    static RBField loadCsv(const std::string& path);
+    RBField(const std::vector<std::uint16_t> f, const std::uint8_t size);
+    RBField(BitField& f);
+    RBField(BitField&& f);
+    RBField(RBField& f);
+    RBField& operator =(RBField& f);
+    bool operator <(const RBField& f) const;
+    bool operator >(const RBField& f) const;
 
     virtual void print() const override;
     virtual void print(const char sep) const override;
@@ -114,6 +114,31 @@ namespace bf {
     Point getPair(const std::uint8_t x, const std::uint8_t y) const;
     std::uint16_t getPairIndex(const std::uint16_t index) const;
 
+    virtual void rotate(const std::uint8_t x, const std::uint8_t y, const std::uint8_t siz) override;
+    virtual void rotate(const Ope ope) override;
+     
+
+  protected:
+    std::vector<PENT> pent;
+    std::shared_ptr<OperateHist> operate;
+
+
+  };
+
+  // 履歴保持と確定箇所の設定を追加した子クラス
+  // 手戻りは考慮されない。
+  class BField : public RBField {
+  public:
+    using RBField::print;
+    static BField loadCsv(const std::string& path);
+    BField(const std::vector<std::uint16_t> f, const std::uint8_t size);
+    BField(BitField& f);
+    BField(BitField&& f);
+    BField(BField& f);
+    BField& operator =(BField& f);
+
+    virtual void print(const char sep, const bool show_pair) const override;
+
     void setConfirm(const std::uint16_t i);
     void setConfirm(const std::uint8_t x, const std::uint8_t y);
     void setConfirm(const Point p);
@@ -124,13 +149,7 @@ namespace bf {
     bool isConfirm(const std::uint8_t x, const std::uint8_t y) const;
     bool isConfirm(const Point p) const;
 
-    virtual void rotate(const std::uint8_t x, const std::uint8_t y, const std::uint8_t siz) override;
-    virtual void rotate(const Ope ope) override;
-     
-
   protected:
-    std::vector<PENT> pent;
-    std::shared_ptr<OperateHist> operate;
     std::vector<bool> confirm;
 
   };
