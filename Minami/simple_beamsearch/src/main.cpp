@@ -24,19 +24,16 @@ int main(int argc, char** argv){
         }
     }
 
-    vv_ent field;
-    vv_pos ent_pos;
-    input_data(field, ent_pos, input_file_name);
-    
-    State s = (State){field, ent_pos};
+    State s;
+    input_data(s, input_file_name);
     v_ope ans = solve(s);
     print_ans(ans, output_file_name);
 
-#ifdef IS_DEBUG_B
     cout << ans.size() << endl;
-    rep (i, N) rep (j, N){
-        cout << field[i][j].val << " \n"[j == N - 1];
-    }
-#endif
+    s.printState();
+    // rep (i, N) rep (j, N){
+    //     // cout << field[i][j].val << " \n"[j == N - 1];
+    //     cout << s.field[i][j].val << " \n"[j == N - 1];
+    // }
     return 0;
 }

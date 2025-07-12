@@ -1,69 +1,52 @@
 #include "../inc/all.hpp"
 
-void input_data(vv_ent &field, vv_pos &ent_pos, char* file_name){
+void input_data(State &s, char* file_name){
     if (file_name == NULL){
         cin >> N;
-        field = vv_ent(N, v_ent(N));
-        ent_pos = vv_pos(N * N / 2, v_pos(0));
-#ifndef IS_DEBUG_A
+        s.field = new Ent*[N];
+        rep (i, N) s.field[i] = new Ent[N];
+        s.ent_pos = new Pos*[N * N / 2];
+        rep (i, N) s.ent_pos[i] = new Pos[2];
+        int cnt[N * N / 2];
+        rep (i, N * N / 2) cnt[i] = 0;
         rep (i, N) rep (j, N){
             int val;
             cin >> val;
-            field[i][j].val = val;
-            field[i][j].num = ent_pos[val].size();
-            ent_pos[val].push_back((Pos){j, i});
+            s.field[i][j].val = val;
+            s.field[i][j].num = cnt[val];
+            s.ent_pos[val][cnt[val]] = (Pos){j, i};
+            cnt[val]++;
         }
-#else
-        rep (i, N) rep (j, N){
-            int val = (i * N + j) / 2;
-            field[i][j].val = val;
-            field[i][j].num = ent_pos[val].size();
-            ent_pos[val].push_back((Pos){j, i});
-        }
-#endif
     }else{
-        input_file(field, ent_pos, file_name);
+        input_file(s, file_name);
     }
 }
 
-void input_file(vv_ent &field, vv_pos &ent_pos, char* file_name){
-    /*
-    int cnt = 0;
-    int* tmp_array = (int*)malloc(sizeof(int) * 1024);
-    FILE* fp = fopen(file_name, "r");
-    if (fp == NULL){
-        cout << "File Open Error" << endl;
-        exit(1);
-    }
-    while (fscanf(fp, "%d", tmp_array + cnt) != EOF) cnt++;
-    fclose(fp);
-    
-    N = (int)sqrt(cnt);
-    cnt = 0;
-    field = vv_ent(N, v_ent(N));
-    ent_pos = vv_pos(N * N / 2);
-    rep (i, N) rep (j, N){
-        int val = tmp_array[i * N + j];
-        field[i][j].val = val;
-        field[i][j].num = ent_pos[val].size();
-        ent_pos[val].push_back((Pos){j, i});
-    }
-    free(tmp_array);
-    */
+void input_file(State &s, char* file_name){
     FILE* fp = fopen(file_name, "r");
     if (fp == NULL){
         cout << "File Open Error" << endl;
         exit(1);
     }
     fscanf(fp, "%d", &N);
-    field = vv_ent(N, v_ent(N));
-    ent_pos = vv_pos(N * N / 2);
+    s.size = N;
+    Ent *ent_mem = new Ent[N * N];
+    s.field = new Ent*[N];
+    rep (i, N) s.field[i] = ent_mem + (i * N);
+
+    Pos *pos_mem = new Pos[N * N];
+    s.ent_pos = new Pos*[N * N / 2];
+    rep (i, N * N / 2) s.ent_pos[i] = pos_mem + 2 * i;
+
+    int cnt[N * N / 2];
+    rep (i, N * N / 2) cnt[i] = 0;
     rep (i, N) rep (j, N){
         int val;
         fscanf(fp, "%d", &val);
-        field[i][j].val = val;
-        field[i][j].num = ent_pos[val].size();
-        ent_pos[val].push_back((Pos){j, i});
+        s.field[i][j].val = val;
+        s.field[i][j].num = cnt[val];
+        s.ent_pos[val][cnt[val]] = (Pos){j, i};
+        cnt[val]++;
     }
     fclose(fp);
 }
@@ -256,7 +239,7 @@ int getSum(vv_int &sum_array, int x1, int y1, int x2, int y2) {
 
 BeamNode* createNewBeamNode(State &s){
     BeamNode *res = new BeamNode();
-    res->s = s;
+    s.getClone(res->s);
     res->score = 0;
     res->ope_list.clear();
     return res;
@@ -264,7 +247,9 @@ BeamNode* createNewBeamNode(State &s){
 
 BeamNode* getBeamNodeCopy(BeamNode *origin){
     BeamNode *res = new BeamNode();
-    *res = *origin;
+    origin->s.getClone(res->s);
+    res->score = origin->score;
+    res->ope_list = origin->ope_list;
     return res;
 }
 

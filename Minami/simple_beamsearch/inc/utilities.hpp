@@ -2,8 +2,8 @@
 #define UTILITIES_HPP 0
 #include "main.hpp"
 
-void input_data(vv_ent &field, vv_pos &ent_pos, char* file_name);
-void input_file(vv_ent &field, vv_pos &ent_pos, char* file_name);
+void input_data(State &s, char* file_name);
+void input_file(State &s, char* file_name);
 void input_bfs_result(vvvvv_ope &out);
 void set_pos(Pos *base_ent_pos, vv_ent &field, vv_pos &ent_pos, int *val, Pos *another_ent_pos, Pos *diff);
 void rotate(State &s, Ope &ope);
