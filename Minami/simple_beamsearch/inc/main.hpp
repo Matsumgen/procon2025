@@ -18,13 +18,13 @@ typedef struct _ope{
 } Ope;
 
 typedef struct _ent{
-    int val;  // 値
-    int num;  // 番号
+    short val;  // 値
+    uint8_t num;  // 番号
 } Ent;
 
 typedef struct _pos{
-    int x;
-    int y;
+    uint8_t x;
+    uint8_t y;
 
     _pos operator + (_pos other) const {
         return (_pos){x + other.x, y + other.y};
@@ -72,8 +72,35 @@ typedef vector<v_bool> vv_bool;
 typedef vector<vv_bool> vvv_bool;
 
 typedef struct _state {
-    vv_ent field;
-    vv_pos ent_pos;
+    int size;
+    Ent **field;
+    Pos **ent_pos;
+
+    void getClone(_state &res) {
+        res.size = this->size;
+        Ent *ent_mem = new Ent[this->size * this->size];
+        res.field = new Ent*[this->size];
+        rep (i, this->size) res.field[i] = ent_mem + (i * this->size);
+
+        Pos *pos_mem = new Pos[this->size * this->size];
+        res.ent_pos = new Pos*[this->size * this->size / 2];
+        rep (i, this->size * this->size / 2) res.ent_pos[i] = pos_mem + 2 * i;
+
+        memcpy(ent_mem, this->field[0], this->size * this->size * sizeof(Ent));
+        memcpy(pos_mem, this->ent_pos[0], this->size * this->size * sizeof(Pos));
+    }
+
+    ~_state() {
+        delete this->field[0];
+        delete this->field;
+        delete this->ent_pos[0];
+        delete this->ent_pos;
+    }
+
+    void printState() {
+        rep (i, this->size) rep (j, this->size) cout << this->field[i][j].val << " \n"[j == N - 1];
+        cout << endl;
+    }
 } State;
 
 typedef struct _beam_node {
@@ -97,7 +124,6 @@ struct SetNode {
     
     bool operator < (const SetNode &other) const {
         rep (i, N * N) {
-            // if (this->p->at(i)[j] == other.p->at(i)[j]) return true;
             if (this->p[i] < other.p[i]) {
                 return true;
             }
@@ -107,22 +133,5 @@ struct SetNode {
         }
         return false;
     }
-    /*bool operator > (const SetNode &other) const {
-        rep (i, N) rep (j, N) {
-            if (this->p->at(i)[j] < other.p->at(i)[j]) {
-                return false;
-            }
-            if (this->p->at(i)[j] > other.p->at(i)[j]) {
-                return true;
-            }
-        }
-        return false;
-    }
-    bool operator == (const SetNode &other) const {
-        rep (i, N) rep (j, N) {
-            if (this->p->at(i)[j] != other.p->at(i)[j]) return false;
-        }
-        return true;
-    }*/
 };
 #endif

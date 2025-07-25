@@ -1,105 +1,52 @@
 #include "../inc/all.hpp"
 
-TrieNode* TrieNode::getChild(int idx) {
-    return this->next[idx];
-}
-
-void TrieNode::setChild(int idx, TrieNode *child) {
-    this->next[idx] = child;
-}
-
-Trie::Trie(int array_size, int type): array_size(array_size), type(type){
-    this->top = new TrieNode(0);
-}
-
-void Trie::insert(char *array) {
-    TrieNode *tmp = top;
-    rep (i, N) {
-        if (tmp->getChild(array[i]) == NULL) {
-            tmp->setChild(array[i], new TrieNode(i + 1));
-        }
-        tmp = tmp->getChild(array[i]);
-    }
-}
-
-bool Trie::find(char *array) {
-    TrieNode *tmp = top;
-    rep (i, N) {
-        if (tmp->getChild(array[i]) == NULL) return false;
-        tmp = tmp->getChild(array[i]);
-    }
-    return true;
-}
-
-TrieNode::TrieNode(int depth): depth(depth){
-    this->next = new TrieNode*[N * N / 2];
-    rep (i, N * N / 2) next[i] = NULL;
-}
-
-void input_data(vv_ent &field, vv_pos &ent_pos, char* file_name){
+void input_data(State &s, char* file_name){
     if (file_name == NULL){
         cin >> N;
-        field = vv_ent(N, v_ent(N));
-        ent_pos = vv_pos(N * N / 2, v_pos(0));
-#ifndef IS_DEBUG_A
+        s.field = new Ent*[N];
+        rep (i, N) s.field[i] = new Ent[N];
+        s.ent_pos = new Pos*[N * N / 2];
+        rep (i, N) s.ent_pos[i] = new Pos[2];
+        int cnt[N * N / 2];
+        rep (i, N * N / 2) cnt[i] = 0;
         rep (i, N) rep (j, N){
             int val;
             cin >> val;
-            field[i][j].val = val;
-            field[i][j].num = ent_pos[val].size();
-            ent_pos[val].push_back((Pos){j, i});
+            s.field[i][j].val = val;
+            s.field[i][j].num = cnt[val];
+            s.ent_pos[val][cnt[val]] = (Pos){j, i};
+            cnt[val]++;
         }
-#else
-        rep (i, N) rep (j, N){
-            int val = (i * N + j) / 2;
-            field[i][j].val = val;
-            field[i][j].num = ent_pos[val].size();
-            ent_pos[val].push_back((Pos){j, i});
-        }
-#endif
     }else{
-        input_file(field, ent_pos, file_name);
+        input_file(s, file_name);
     }
 }
 
-void input_file(vv_ent &field, vv_pos &ent_pos, char* file_name){
-    /*
-    int cnt = 0;
-    int* tmp_array = (int*)malloc(sizeof(int) * 1024);
-    FILE* fp = fopen(file_name, "r");
-    if (fp == NULL){
-        cout << "File Open Error" << endl;
-        exit(1);
-    }
-    while (fscanf(fp, "%d", tmp_array + cnt) != EOF) cnt++;
-    fclose(fp);
-    
-    N = (int)sqrt(cnt);
-    cnt = 0;
-    field = vv_ent(N, v_ent(N));
-    ent_pos = vv_pos(N * N / 2);
-    rep (i, N) rep (j, N){
-        int val = tmp_array[i * N + j];
-        field[i][j].val = val;
-        field[i][j].num = ent_pos[val].size();
-        ent_pos[val].push_back((Pos){j, i});
-    }
-    free(tmp_array);
-    */
+void input_file(State &s, char* file_name){
     FILE* fp = fopen(file_name, "r");
     if (fp == NULL){
         cout << "File Open Error" << endl;
         exit(1);
     }
     fscanf(fp, "%d", &N);
-    field = vv_ent(N, v_ent(N));
-    ent_pos = vv_pos(N * N / 2);
+    s.size = N;
+    Ent *ent_mem = new Ent[N * N];
+    s.field = new Ent*[N];
+    rep (i, N) s.field[i] = ent_mem + (i * N);
+
+    Pos *pos_mem = new Pos[N * N];
+    s.ent_pos = new Pos*[N * N / 2];
+    rep (i, N * N / 2) s.ent_pos[i] = pos_mem + 2 * i;
+
+    int cnt[N * N / 2];
+    rep (i, N * N / 2) cnt[i] = 0;
     rep (i, N) rep (j, N){
         int val;
         fscanf(fp, "%d", &val);
-        field[i][j].val = val;
-        field[i][j].num = ent_pos[val].size();
-        ent_pos[val].push_back((Pos){j, i});
+        s.field[i][j].val = val;
+        s.field[i][j].num = cnt[val];
+        s.ent_pos[val][cnt[val]] = (Pos){j, i};
+        cnt[val]++;
     }
     fclose(fp);
 }
@@ -158,11 +105,19 @@ void exe_ope(State &s, v_ope &ope_list, v_bool &is_exe) {
     }
 }
 
-uint8_t* stateToChar(State &s) {
-    uint8_t *res = new uint8_t[N * N];
+void stateToChar(State &s, uint8_t *out) {
     // out = vv_int(N, v_int(N));
-    rep (i, N) rep (j, N) res[i * N + j] = (uint8_t)s.field[i][j].val;
-    return res;
+    // rep (i, N) rep (j, N) res[i * N + j] = (uint8_t)s.field[i][j].val;
+    uint8_t convert[N * N / 2];
+    rep (i, N * N / 2) convert[i] = 255;
+    uint8_t next_group = 0;
+    rep (i, N) rep (j, N) {
+        if (convert[s.field[i][j].val] == 255) {
+            convert[s.field[i][j].val] = next_group;
+            next_group++;
+        }
+        out[i * N + j] = convert[s.field[i][j].val];
+    }
 }
 
 int getPairCnt(vv_pos &ent_pos){
@@ -284,7 +239,7 @@ int getSum(vv_int &sum_array, int x1, int y1, int x2, int y2) {
 
 BeamNode* createNewBeamNode(State &s){
     BeamNode *res = new BeamNode();
-    res->s = s;
+    s.getClone(res->s);
     res->score = 0;
     res->ope_list.clear();
     return res;
@@ -292,7 +247,9 @@ BeamNode* createNewBeamNode(State &s){
 
 BeamNode* getBeamNodeCopy(BeamNode *origin){
     BeamNode *res = new BeamNode();
-    *res = *origin;
+    origin->s.getClone(res->s);
+    res->score = origin->score;
+    res->ope_list = origin->ope_list;
     return res;
 }
 
@@ -309,4 +266,29 @@ void addPriorityQueue(priority_queue<BeamNode2> &p_queue, BeamNode2 data, int ma
             delete data.p;
         }
     }
+}
+
+uint8_t popcount(unsigned long long int x){
+    unsigned char cnt=0;
+    while (x!=0){
+        cnt+=(x&1);
+        x=x>>1;
+    }
+    return cnt;
+}
+
+int getMaxBit(unsigned long long int x){
+	int cnt=0;
+	while (((unsigned long long int)1<<(cnt+1))<=x){
+		cnt++;
+	}
+	return cnt;
+}
+
+int getMinBit(unsigned long long int x){
+	int cnt=0;
+	while (getBit(x, cnt)==0){
+		cnt++;
+	}
+	return cnt;
 }

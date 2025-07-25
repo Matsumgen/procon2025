@@ -3,4 +3,6 @@
 #include "main.hpp"
 #include "algo.hpp"
 #include "utilities.hpp"
+#include "segment_tree"
+#include "trie.hpp"
 #endif

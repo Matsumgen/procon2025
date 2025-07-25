@@ -1,0 +1,125 @@
+#ifndef segment_tree_h
+#define segment_tree_h 0
+
+#include <stdlib.h>
+
+#define getBit(x, y) (((x)>>(y))&1)
+#define setBit(x, y) ((x)|((unsigned long long int)1<<(y)))
+#define resetBit(x, y) ((x)&(~((unsigned long long int)1<<(y))))
+#define reverseBit(x, y) ((x)^((unsigned long long int)1<<(y)))
+
+template<typename T>
+struct Seg{
+    T* array;
+    const int capacity;
+    const int start_idx;
+    const int height;
+    const T reset_data;
+    int size;
+    T (*callback_func)(T l, T r);
+    void set(int idx, T value);
+    void remove(int idx);
+    T get(int idx);
+    T get2(int real_idx);
+    T get3(int y, int x);
+    T top();
+    T getInterval(int l, int r);
+    void check(int check_idx);
+};
+
+template<typename T>
+Seg<T> createSegTree(int size, T reset_data, T (*callback)(T, T)){
+    int c=1;
+    int height=0;
+    while (c<size){
+        c*=2;
+        height++;
+    }
+    c*=2;
+    height++;
+    T* array_ptr=(T*)malloc(c*sizeof(T));
+    T* p=array_ptr;
+    for (int i=0;i<c;i++){
+        *p=reset_data;
+        p++;
+    }
+    Seg<T> tmp={array_ptr, c, c/2-1, height, reset_data, size, callback};
+    return tmp;
+}
+
+template<typename T>
+void Seg<T>::set(int idx, T value){
+    array[start_idx+idx]=value;
+    check(start_idx+idx);
+}
+
+template<typename T>
+void Seg<T>::remove(int idx){
+    array[start_idx+idx]=reset_data;
+    check(start_idx+idx);
+}
+
+template<typename T>
+T Seg<T>::get(int idx){
+    return array[start_idx+idx];
+}
+
+template<typename T>
+T Seg<T>::get2(int real_idx){
+    return array[real_idx];
+}
+
+template<typename T>
+T Seg<T>::get3(int y, int x){
+    return get2((1<<y)-1+x);
+}
+
+template<typename T>
+T Seg<T>::top(){
+    return array[0];
+}
+
+template<typename T>
+T Seg<T>::getInterval(int l, int r){
+	T res=reset_data;
+	while (l<r){
+		int x, y, d;
+		if (l==0){
+			int bit_cnt=getMaxBit(r);
+			x=0;
+			y=height-1-bit_cnt;
+			d=1<<bit_cnt;
+		}else {
+			int bit_cnt=getMinBit(l);
+			d=1<<bit_cnt;
+			x=l/d;
+			y=height-1-bit_cnt;
+			if (l+d>r){
+				int sub=r-l;
+				int bit_cnt2=getMaxBit(sub);
+				d=1<<bit_cnt2;
+				x=l/d;
+				y=height-1-bit_cnt2;
+			}
+		}
+		T tmp=get3(y, x);
+		res=callback_func(res, tmp);
+		l+=d;
+	}
+	return res;
+}
+
+template<typename T>
+void Seg<T>::check(int check_idx){
+    if (check_idx==0){
+        return;
+    }
+    if (check_idx%2==1){
+        array[(check_idx-1)/2]=callback_func(array[check_idx], array[check_idx+1]);
+    }else{
+        array[(check_idx-1)/2]=callback_func(array[check_idx-1], array[check_idx]);
+    }
+    check_idx=(check_idx-1)/2;
+    check(check_idx);
+}
+#endif

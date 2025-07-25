@@ -5,5 +5,6 @@
 v_ope solve(State &s);
 v_ope greedy(State &s, v_ope &ope_list);
 BeamNode* beamSearch(State &s, v_ope &ope_list, int (*score_func)(State &s), int depth, int beam_width);
+v_ope bfs(State &s, v_ope &ope_list, int (*score_func)(State &s), int goal_score);
 void eraseOpe(State &first, v_ope &ope_log);
 #endif

@@ -9,17 +9,44 @@ v_ope solve(State &s){
         }
     }
     cout << ope_list.size() << endl;
-
+    
+    /*
+    // コピーの時間テスト
+    rep (i, 10000) {
+        for (Ope &ope : ope_list) {
+            State tmp_s = s.getClone();
+            rotate(tmp_s, ope);
+            int tmp = getScore2(s);
+            tmp++;
+        }
+        if (i % 100 == 0) cout << "." << flush;
+    }
+    exit(0);*/
+    
     BeamNode *tmp = beamSearch(s, ope_list, getScore2, 256, 1000);
     cout << endl << tmp->score << " " << tmp->ope_list.size() << endl;
     v_ope ope_log = tmp->ope_list;
     eraseOpe(s, ope_log);
+
+    /*
+    // bfs
+    v_ope ope_log;
+    while (1) {
+        int now_score = getScore2(s);
+        v_ope res = bfs(s, ope_list, getScore2, min(50, now_score + 1));
+        for (Ope &ope : res) {
+            rotate(s, ope);
+            ope_log.push_back(ope);
+        }
+        cout << getScore2(s) << " " << res.size() << endl;
+        if (isEnd(s)) break;
+    }*/
     return ope_log;
 }
 
 v_ope greedy(State &s, v_ope &ope_list) {
     v_ope ope_log;
-    int now_pair_cnt = getPairCnt(s.ent_pos);
+    int now_pair_cnt = getScore2(s);
     int equal_cnt = 0;
     int loop_cnt = 0;
     while (1){
@@ -29,10 +56,8 @@ v_ope greedy(State &s, v_ope &ope_list) {
         for (Ope ope : ope_list){
             State tmp_s = s;
             rotate(tmp_s, ope);
-            // int tmp_pair_cnt = getPairCnt(tmp_s.ent_pos);
             int tmp_pair_cnt = getScore1(tmp_s);
             if (tmp_pair_cnt > best_pair_cnt){
-                // cout << now_pair_cnt << " " << tmp_pair_cnt << endl;
                 best_pair_cnt = tmp_pair_cnt;
                 best_ope = ope;
             }
@@ -48,7 +73,7 @@ v_ope greedy(State &s, v_ope &ope_list) {
         if (loop_cnt % 10 == 0) cout << loop_cnt << " " << best_pair_cnt << endl;
         ope_log.push_back(best_ope);
         rotate(s, best_ope);
-        now_pair_cnt = getPairCnt(s.ent_pos);
+        now_pair_cnt = getScore2(s);
         if (now_pair_cnt == N * N / 2) break;
     }
     cout << getScore1(s) << endl;
@@ -60,13 +85,16 @@ BeamNode* beamSearch(State &s, v_ope &ope_list, int (*score_func)(State &s), int
     now_beam.push((BeamNode2){createNewBeamNode(s)});
     priority_queue<BeamNode2> next_beam;
     set<SetNode> appear_list;
+    int debug = 0;
+    uint8_t *big_array = new uint8_t[1LL << 31]{};
+    uint8_t *p_big_array = big_array;
     rep (i, depth) {
-        // cout << i << " " << flush;
-        printf("(%d, %lld) ", i, appear_list.size());
-        cout << flush;
         shuffle(ope_list);
+        int insert_cnt = 0, delete_cnt = 0;
+        int max_score = 0;
         while (!now_beam.empty()){
             BeamNode2 tmp = now_beam.top();
+            max_score = max(max_score, -tmp.p->score);
             if (isEnd(tmp.p->s)) return tmp.p;
             now_beam.pop();
             // vv_int sum_array = setOK2x2(tmp.p->s);
@@ -77,38 +105,101 @@ BeamNode* beamSearch(State &s, v_ope &ope_list, int (*score_func)(State &s), int
                 rotate(tmp2->s, ope);
                 tmp2->ope_list.push_back(ope);
                 tmp2->score = -score_func(tmp2->s);
-                uint8_t *p_array = stateToChar(tmp2->s);
-                // addPriorityQueue(next_beam, (BeamNode2){tmp2}, beam_width);
-                if (appear_list.find((SetNode){p_array}) == appear_list.end()) {
-                    appear_list.insert((SetNode){p_array});
+                addPriorityQueue(next_beam, (BeamNode2){tmp2}, beam_width);
+                /*stateToChar(tmp2->s, p_big_array);
+                if (appear_list.find((SetNode){p_big_array}) == appear_list.end()) {
+                    appear_list.insert((SetNode){p_big_array});
                     addPriorityQueue(next_beam, (BeamNode2){tmp2}, beam_width);
+                    insert_cnt++;
+                    p_big_array += N * N;
                 } else {
                     // cout << "find" << " ";
-                    delete p_array;
+                    // delete p_array;
                     delete tmp2;
-                }
+                    delete_cnt++;
+                }*/
             }
             delete tmp.p;
         }
         now_beam = move(next_beam);
+        printf("(%d, %lld, %d, %d, %d, %d) ", i, appear_list.size(), insert_cnt, delete_cnt, insert_cnt + delete_cnt, max_score);
+        // printf("(%d, %lld, %d, %d, %d) ", i, trie.size(), insert_cnt, delete_cnt, insert_cnt + delete_cnt);
+        cout << flush;
     }
-    // cout << endl;
-    /*BeamNode *best_state = now_beam.top().p;
-    v_ope ope_log;
-    rep (i, (int)solve_data.size()) getNextField(&s, i, solve_data, bfs_result, best_state->idx_list[i], &ope_log);
-    cout << "Best : " << best_state->ope_cnt << endl;
-    return ope_log;*/
     while (now_beam.size() > 1){
         delete now_beam.top().p;
         now_beam.pop();
     }
+    delete big_array;
     return now_beam.top().p;
+}
+
+v_ope bfs(State &s, v_ope &ope_list, int (*score_func)(State &s), int goal_score) {
+    queue<BeamNode2> todo;
+    set<SetNode> appear_list;
+    static uint8_t *big_array = new uint8_t[1LL << 31]{};
+    uint8_t *p_big_array = big_array;
+    int insert_cnt = 0, delete_cnt = 0;
+    BeamNode *first_node = createNewBeamNode(s);
+    first_node->score = score_func(s);
+    todo.push((BeamNode2){first_node});
+    v_ope res;
+    bool is_finish = false;
+    int max_dist = 0;
+    int cnt = 0;
+    while (!todo.empty()) {
+        BeamNode2 tmp = todo.front();
+        todo.pop();
+        if (tmp.p->ope_list.size() > max_dist) {
+            max_dist = tmp.p->ope_list.size();
+            cout << ". " << todo.size() << " " << appear_list.size() << endl;
+            cnt = 0;
+        }
+        cnt++;
+        if (cnt % 1000 == 0) cout << "." << flush;
+        if (is_finish) {
+            delete tmp.p;
+            continue;
+        }
+        for (Ope &ope : ope_list) {
+            BeamNode *tmp2 = getBeamNodeCopy(tmp.p);
+            rotate(tmp2->s, ope);
+            tmp2->ope_list.push_back(ope);
+            tmp2->score = score_func(tmp2->s);
+            if (tmp2->score < tmp.p->score) {
+                delete tmp2;
+                delete_cnt++;
+                continue;
+            }
+            if (tmp2->score >= goal_score) {
+                res = tmp2->ope_list;
+                is_finish = true;
+                delete tmp2;
+                continue;
+            }
+            // todo.push((BeamNode2){tmp2});
+            stateToChar(tmp2->s, p_big_array);
+            if (appear_list.find((SetNode){p_big_array}) == appear_list.end()) {
+                appear_list.insert((SetNode){p_big_array});
+                todo.push((BeamNode2){tmp2});
+                insert_cnt++;
+                p_big_array += N * N;
+            } else {
+                delete tmp2;
+                delete_cnt++;
+            }
+        }
+        delete tmp.p;
+    }
+    cout << endl;
+    return res;
 }
 
 void eraseOpe(State &first, v_ope &ope_log) {
     v_bool is_exe(ope_log.size(), true);
     for (int i = ope_log.size() - 1; i >= 0; i--) {
-        State tmp = first;
+        State tmp;
+        first.getClone(tmp);
         is_exe[i] = false;
         exe_ope(tmp, ope_log, is_exe);
         is_exe[i] = !isEnd(tmp);
