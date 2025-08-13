@@ -22,7 +22,7 @@ void setSum(vv_int &array);
 int getSum(vv_int &sum_array, int x1, int y1, int x2, int y2);
 BeamNode* createNewBeamNode(State &s);
 BeamNode* getBeamNodeCopy(BeamNode *origin);
-void addPriorityQueue(priority_queue<BeamNode2> &p_queue, BeamNode2 data, int max_size);
+bool addPriorityQueue(priority_queue<BeamNode2> &p_queue, BeamNode2 data, int max_size);
 uint8_t popcount(unsigned long long int x);
 int getMaxBit(unsigned long long int x);
 int getMinBit(unsigned long long int x);

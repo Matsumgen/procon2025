@@ -81,57 +81,85 @@ v_ope greedy(State &s, v_ope &ope_list) {
 }
 
 BeamNode* beamSearch(State &s, v_ope &ope_list, int (*score_func)(State &s), int depth, int beam_width){
+    BeamNode *beam_node_mem[2];
+    Ent *ent_mem[2];
+    Pos *pos_mem[2];
+    rep (i, 2) {
+        beam_node_mem[i] = new BeamNode[600000]{};
+        ent_mem[i] = new Ent[600000 * s.size * s.size]{};
+        pos_mem[i] = new Pos[600000 * s.size * s.size]{};
+    }
+
     priority_queue<BeamNode2> now_beam;
-    now_beam.push((BeamNode2){createNewBeamNode(s)});
+    beam_node_mem[1]->init(s);
+    now_beam.push((BeamNode2){beam_node_mem[1]});
     priority_queue<BeamNode2> next_beam;
-    set<SetNode> appear_list;
+    // set<SetNode> appear_list;
     int debug = 0;
-    uint8_t *big_array = new uint8_t[1LL << 31]{};
-    uint8_t *p_big_array = big_array;
+    // uint8_t *big_array = new uint8_t[1LL << 31]{};
+    // uint8_t *p_big_array = big_array;
     rep (i, depth) {
         shuffle(ope_list);
-        int insert_cnt = 0, delete_cnt = 0;
         int max_score = 0;
+        int mem_idx = 0;
         while (!now_beam.empty()){
             BeamNode2 tmp = now_beam.top();
             max_score = max(max_score, -tmp.p->score);
-            if (isEnd(tmp.p->s)) return tmp.p;
+            if (i == 95 && mem_idx == 0) {
+                tmp.p->s.printState();
+                tmp.p->s.printPosState();
+            }
+            if (isEnd(tmp.p->s)) {
+                BeamNode *res = new BeamNode();
+                tmp.p->getClone(*res);
+                // delete[] big_array;
+                rep (i, 2) {
+                    delete[] beam_node_mem[i];
+                    delete[] ent_mem[i];
+                    delete[] pos_mem[i];
+                }
+                return res;
+            }
             now_beam.pop();
             // vv_int sum_array = setOK2x2(tmp.p->s);
             // setSum(sum_array);
             for (Ope &ope : ope_list) {
                 // if (ope.y % 2 == 0 && ope.x % 2 == 0 && ope.n % 2 == 0 && getSum(sum_array, ope.x / 2, ope.y / 2, (ope.x + ope.n) / 2 - 1, (ope.y + ope.n) / 2 - 1) == ope.n * ope.n / 4) continue;
-                BeamNode *tmp2 = getBeamNodeCopy(tmp.p);
+                BeamNode *tmp2 = beam_node_mem[i % 2] + mem_idx;
+                tmp.p->getClone(*tmp2, ent_mem[i % 2] + mem_idx * (s.size * s.size), pos_mem[i % 2] + mem_idx * (s.size * s.size));
                 rotate(tmp2->s, ope);
                 tmp2->ope_list.push_back(ope);
                 tmp2->score = -score_func(tmp2->s);
-                addPriorityQueue(next_beam, (BeamNode2){tmp2}, beam_width);
+                mem_idx += addPriorityQueue(next_beam, (BeamNode2){tmp2}, beam_width);
                 /*stateToChar(tmp2->s, p_big_array);
                 if (appear_list.find((SetNode){p_big_array}) == appear_list.end()) {
                     appear_list.insert((SetNode){p_big_array});
                     addPriorityQueue(next_beam, (BeamNode2){tmp2}, beam_width);
-                    insert_cnt++;
                     p_big_array += N * N;
                 } else {
                     // cout << "find" << " ";
                     // delete p_array;
-                    delete tmp2;
-                    delete_cnt++;
+                    // delete tmp2;
                 }*/
             }
-            delete tmp.p;
         }
         now_beam = move(next_beam);
-        printf("(%d, %lld, %d, %d, %d, %d) ", i, appear_list.size(), insert_cnt, delete_cnt, insert_cnt + delete_cnt, max_score);
-        // printf("(%d, %lld, %d, %d, %d) ", i, trie.size(), insert_cnt, delete_cnt, insert_cnt + delete_cnt);
+        printf("(%d, %lld, %d) ", i, now_beam.size(), max_score);
         cout << flush;
     }
     while (now_beam.size() > 1){
-        delete now_beam.top().p;
         now_beam.pop();
     }
-    delete big_array;
-    return now_beam.top().p;
+
+    BeamNode *res = new BeamNode();
+    now_beam.top().p->getClone(*res);
+    // delete[] big_array;
+    rep (i, 2) {
+        delete[] beam_node_mem[i];
+        delete[] ent_mem[i];
+        delete[] pos_mem[i];
+    }
+    return res;
 }
 
 v_ope bfs(State &s, v_ope &ope_list, int (*score_func)(State &s), int goal_score) {
