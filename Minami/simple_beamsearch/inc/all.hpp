@@ -5,4 +5,5 @@
 #include "utilities.hpp"
 #include "segment_tree"
 #include "trie.hpp"
+#include "eval_func.hpp"
 #endif

@@ -33,7 +33,7 @@ v_ope solve(State &s){
     v_ope ope_log;
     while (1) {
         int now_score = getScore2(s);
-        v_ope res = bfs(s, ope_list, getScore2, min(50, now_score + 1));
+        v_ope res = bfs(s, ope_list, getScore2, min(N * N / 2, now_score + 1));
         for (Ope &ope : res) {
             rotate(s, ope);
             ope_log.push_back(ope);
@@ -100,15 +100,11 @@ BeamNode* beamSearch(State &s, v_ope &ope_list, int (*score_func)(State &s), int
     // uint8_t *p_big_array = big_array;
     rep (i, depth) {
         shuffle(ope_list);
-        int max_score = 0;
+        int max_score = INT_MIN;
         int mem_idx = 0;
         while (!now_beam.empty()){
             BeamNode2 tmp = now_beam.top();
             max_score = max(max_score, -tmp.p->score);
-            if (i == 95 && mem_idx == 0) {
-                tmp.p->s.printState();
-                tmp.p->s.printPosState();
-            }
             if (isEnd(tmp.p->s)) {
                 BeamNode *res = new BeamNode();
                 tmp.p->getClone(*res);

@@ -5,6 +5,7 @@ vvv_ope grid_ope;
 vvvvv_ope move_list;
 
 int main(int argc, char** argv){
+    srand(0);
     int start_clock = clock();
     char* input_file_name = NULL;
     char* output_file_name = NULL;

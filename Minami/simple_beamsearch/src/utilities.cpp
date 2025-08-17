@@ -120,31 +120,6 @@ int getPairCnt(vv_pos &ent_pos){
     return res;
 }
 
-int getScore1(State &s){
-    int score = 0;
-    for (int i = 0; i < N; i += 2) for (int j = 0; j < N; j += 2) {
-        bool a, b, c, d;
-        a = s.getEnt(i, j).val == s.getEnt(i, j + 1).val;
-        b = s.getEnt(i + 1, j).val == s.getEnt(i + 1, j + 1).val;
-        c = s.getEnt(i, j).val == s.getEnt(i + 1, j).val;
-        d = s.getEnt(i, j + 1).val == s.getEnt(i + 1, j + 1).val;
-        if (a && b || c && d){
-            score += 1000;
-        } else {
-            score += a || b || c || d;
-        }
-    }
-    return score;
-}
-
-int getScore2(State &s){
-    int res = 0;
-    rep (i, N * N / 2){
-        res += manhattan(s.getEntPos(i, 0), s.getEntPos(i, 1)) == 1;
-    }
-    return res;
-}
-
 bool isEnd(State &s) {
     rep (i, s.size * s.size / 2) {
         if (manhattan(s.getEntPos(i, 0), s.getEntPos(i, 1)) != 1) return false;

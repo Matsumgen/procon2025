@@ -10,8 +10,6 @@ void rotate(State &s, Ope &ope);
 void exe_ope(State &s, v_ope &ope_list, v_bool &is_exe);
 void stateToChar(State &s, uint8_t *out);
 int getPairCnt(vv_pos &ent_pos);
-int getScore1(State &s);
-int getScore2(State &s);
 bool isEnd(State &s);
 int manhattan(Pos &p1, Pos &p2);
 void shuffle(v_ope &ope_list);
