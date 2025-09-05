@@ -27,19 +27,19 @@ typedef struct _pos{
     uint8_t y;
 
     _pos operator + (_pos other) const {
-        return (_pos){x + other.x, y + other.y};
+        return (_pos){static_cast<uint8_t>(this->x + other.x), static_cast<uint8_t>(this->y + other.y)};
     }
 
     _pos operator - (_pos other) const {
-        return (_pos){x - other.x, y - other.y};
+        return (_pos){static_cast<uint8_t>(this->x - other.x), static_cast<uint8_t>(this->y - other.y)};
     }
 
     bool operator == (_pos other) const {
-        return x == other.x && y == other.y;
+        return this->x == other.x && this->y == other.y;
     }
 
     bool operator != (_pos other) const {
-        return x != other.x || y != other.y;
+        return this->x != other.x || this->y != other.y;
     }
 } Pos;
 
@@ -73,41 +73,77 @@ typedef vector<vv_bool> vvv_bool;
 
 typedef struct _state {
     int size;
-    Ent **field;
-    Pos **ent_pos;
+    uint8_t x_hosei;
+    uint8_t y_hosei;
+    Ent *field;
+    Pos *ent_pos;
 
     void getClone(_state &res) {
         res.size = this->size;
-        Ent *ent_mem = new Ent[this->size * this->size];
-        res.field = new Ent*[this->size];
-        rep (i, this->size) res.field[i] = ent_mem + (i * this->size);
-
-        Pos *pos_mem = new Pos[this->size * this->size];
-        res.ent_pos = new Pos*[this->size * this->size / 2];
-        rep (i, this->size * this->size / 2) res.ent_pos[i] = pos_mem + 2 * i;
-
-        memcpy(ent_mem, this->field[0], this->size * this->size * sizeof(Ent));
-        memcpy(pos_mem, this->ent_pos[0], this->size * this->size * sizeof(Pos));
+        res.x_hosei = this->x_hosei;
+        res.y_hosei = this->y_hosei;
+        res.field = new Ent[this->size * this->size];
+        res.ent_pos = new Pos[this->size * this->size];
+        memcpy(res.field, this->field, this->size * this->size * sizeof(Ent));
+        memcpy(res.ent_pos, this->ent_pos, this->size * this->size * sizeof(Pos));
     }
 
-    ~_state() {
-        delete this->field[0];
-        delete this->field;
-        delete this->ent_pos[0];
-        delete this->ent_pos;
+    void getClone(_state &res, Ent *ent_mem, Pos *pos_mem) {
+        res.size = this->size;
+        res.x_hosei = this->x_hosei;
+        res.y_hosei = this->y_hosei;
+        res.field = ent_mem;
+        res.ent_pos = pos_mem;
+        memcpy(ent_mem, this->field, this->size * this->size * sizeof(Ent));
+        memcpy(pos_mem, this->ent_pos, this->size * this->size * sizeof(Pos));
     }
 
     void printState() {
-        rep (i, this->size) rep (j, this->size) cout << this->field[i][j].val << " \n"[j == N - 1];
+        rep (i, this->size) rep (j, this->size) cout << this->getEnt(i, j).val << " \n"[j == N - 1];
         cout << endl;
+    }
+
+    void printPosState() {
+        rep (i, this->size * this->size / 2) printf("%d: (%d, %d), (%d, %d)\n", i, this->getEntPos(i, 0).y, this->getEntPos(i, 0).x, this->getEntPos(i, 1).y, this->getEntPos(i, 1).x);
+        cout << endl;
+    }
+
+    Ent &getEnt(int y, int x) {
+        return this->field[y * this->size + x];
+    }
+
+    Pos &getEntPos(int val, int num) {
+        return this->ent_pos[val * 2 + num];
     }
 } State;
 
-typedef struct _beam_node {
-    State s;
-    int score;
-    v_ope ope_list;
-} BeamNode;
+class BeamNode {
+    public:
+        State s;
+        int score;
+        v_ope ope_list;
+
+        BeamNode() {
+        }
+
+        void init(State &s) {
+            s.getClone(this->s);
+            this->score = 0;
+            this->ope_list.clear();
+        }
+
+        void getClone(BeamNode &out) {
+            this->s.getClone(out.s);
+            out.score = this->score;
+            out.ope_list = this->ope_list;
+        }
+
+        void getClone(BeamNode &out, Ent *ent_mem, Pos *pos_mem) {
+            this->s.getClone(out.s, ent_mem, pos_mem);
+            out.score = this->score;
+            out.ope_list = this->ope_list;
+        }
+};
 
 typedef struct _beam_node2{
     BeamNode *p;

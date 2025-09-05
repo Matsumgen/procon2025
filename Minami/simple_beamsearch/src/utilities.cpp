@@ -3,18 +3,18 @@
 void input_data(State &s, char* file_name){
     if (file_name == NULL){
         cin >> N;
-        s.field = new Ent*[N];
-        rep (i, N) s.field[i] = new Ent[N];
-        s.ent_pos = new Pos*[N * N / 2];
-        rep (i, N) s.ent_pos[i] = new Pos[2];
+        s.size = N;
+        s.x_hosei = s.y_hosei = 0;
+        s.field = new Ent[N * N];
+        s.ent_pos = new Pos[N * N];
         int cnt[N * N / 2];
         rep (i, N * N / 2) cnt[i] = 0;
         rep (i, N) rep (j, N){
             int val;
             cin >> val;
-            s.field[i][j].val = val;
-            s.field[i][j].num = cnt[val];
-            s.ent_pos[val][cnt[val]] = (Pos){j, i};
+            s.getEnt(i, j).val = val;
+            s.getEnt(i, j).num = cnt[val];
+            s.getEntPos(val, cnt[val]) = (Pos){(uint8_t)j, (uint8_t)i};
             cnt[val]++;
         }
     }else{
@@ -30,22 +30,18 @@ void input_file(State &s, char* file_name){
     }
     fscanf(fp, "%d", &N);
     s.size = N;
-    Ent *ent_mem = new Ent[N * N];
-    s.field = new Ent*[N];
-    rep (i, N) s.field[i] = ent_mem + (i * N);
-
-    Pos *pos_mem = new Pos[N * N];
-    s.ent_pos = new Pos*[N * N / 2];
-    rep (i, N * N / 2) s.ent_pos[i] = pos_mem + 2 * i;
+    s.x_hosei = s.y_hosei = 0;
+    s.field = new Ent[N * N];
+    s.ent_pos = new Pos[N * N];
 
     int cnt[N * N / 2];
     rep (i, N * N / 2) cnt[i] = 0;
     rep (i, N) rep (j, N){
         int val;
         fscanf(fp, "%d", &val);
-        s.field[i][j].val = val;
-        s.field[i][j].num = cnt[val];
-        s.ent_pos[val][cnt[val]] = (Pos){j, i};
+        s.getEnt(i, j).val = val;
+        s.getEnt(i, j).num = cnt[val];
+        s.getEntPos(val, cnt[val]) = (Pos){(uint8_t)j, (uint8_t)i};
         cnt[val]++;
     }
     fclose(fp);
@@ -67,14 +63,14 @@ void rotate(State &s, Ope &ope){
         h2 = ope.n - h1 - 1;
         for(w1 = 0; w1 < a; w1++){
             w2 = ope.n - w1 - 1;
-            buf = s.field[ope.y + h1][ope.x + w1];
+            buf = s.getEnt(ope.y + h1, ope.x + w1);
     
             int dy[4] = {h1, w2, h2, w1};
             int dx[4] = {w1, h1, w2, h2};
             rep (i, 4){
-                Pos setting = (Pos){ope.x + dx[i], ope.y + dy[i]};
-                s.field[setting.y][setting.x] = i == 3 ? buf : s.field[ope.y + dy[i + 1]][ope.x + dx[i + 1]];
-                s.ent_pos[s.field[setting.y][setting.x].val][s.field[setting.y][setting.x].num] = setting;
+                Pos setting = (Pos){static_cast<uint8_t>(ope.x + dx[i]), static_cast<uint8_t>(ope.y + dy[i])};
+                s.getEnt(setting.y, setting.x) = i == 3 ? buf : s.getEnt(ope.y + dy[i + 1], ope.x + dx[i + 1]);
+                s.getEntPos(s.getEnt(setting.y, setting.x).val, s.getEnt(setting.y, setting.x).num) = setting;
             }
         }
     }
@@ -86,14 +82,14 @@ void rotate(State &s, Ope &ope){
             w2 = ope.x + ope.n - i - 1;
             h1 = ope.y + i;
             h2 = ope.y + ope.n - i - 1;
-            buf = s.field[h1][mw];
+            buf = s.getEnt(h1, mw);
     
             int dy[4] = {h1, mh, h2, mh};
             int dx[4] = {mw, w1, mw, w2};
             rep (j, 4){
-                Pos setting = (Pos){dx[j], dy[j]};
-                s.field[setting.y][setting.x] = j == 3 ? buf : s.field[dy[j + 1]][dx[j + 1]];
-                s.ent_pos[s.field[setting.y][setting.x].val][s.field[setting.y][setting.x].num] = setting;
+                Pos setting = (Pos){static_cast<uint8_t>(dx[j]), static_cast<uint8_t>(dy[j])};
+                s.getEnt(setting.y, setting.x) = j == 3 ? buf : s.getEnt(dy[j + 1], dx[j + 1]);
+                s.getEntPos(s.getEnt(setting.y, setting.x).val, s.getEnt(setting.y, setting.x).num) = setting;
             }
         }
     }
@@ -106,17 +102,16 @@ void exe_ope(State &s, v_ope &ope_list, v_bool &is_exe) {
 }
 
 void stateToChar(State &s, uint8_t *out) {
-    // out = vv_int(N, v_int(N));
-    // rep (i, N) rep (j, N) res[i * N + j] = (uint8_t)s.field[i][j].val;
     uint8_t convert[N * N / 2];
     rep (i, N * N / 2) convert[i] = 255;
     uint8_t next_group = 0;
     rep (i, N) rep (j, N) {
-        if (convert[s.field[i][j].val] == 255) {
-            convert[s.field[i][j].val] = next_group;
+        int val = s.getEnt(i, j).val;
+        if (convert[val] == 255) {
+            convert[val] = next_group;
             next_group++;
         }
-        out[i * N + j] = convert[s.field[i][j].val];
+        out[i * N + j] = convert[val];
     }
 }
 
@@ -128,34 +123,9 @@ int getPairCnt(vv_pos &ent_pos){
     return res;
 }
 
-int getScore1(State &s){
-    int score = 0;
-    for (int i = 0; i < N; i += 2) for (int j = 0; j < N; j += 2) {
-        bool a, b, c, d;
-        a = s.field[i][j].val == s.field[i][j + 1].val;
-        b = s.field[i + 1][j].val == s.field[i + 1][j + 1].val;
-        c = s.field[i][j].val == s.field[i + 1][j].val;
-        d = s.field[i][j + 1].val == s.field[i + 1][j + 1].val;
-        if (a && b || c && d){
-            score += 1000;
-        } else {
-            score += a || b || c || d;
-        }
-    }
-    return score;
-}
-
-int getScore2(State &s){
-    int res = 0;
-    rep (i, N * N / 2){
-        res += manhattan(s.ent_pos[i][0], s.ent_pos[i][1]) == 1;
-    }
-    return res;
-}
-
 bool isEnd(State &s) {
-    rep (i, N * N / 2) {
-        if (manhattan(s.ent_pos[i][0], s.ent_pos[i][1]) != 1) return false;
+    rep (i, s.size * s.size / 2) {
+        if (manhattan(s.getEntPos(i, 0), s.getEntPos(i, 1)) != 1) return false;
     }
     return true;
 }
@@ -208,10 +178,10 @@ vv_int setOK2x2(State &s) {
     vv_int res(N / 2, v_int(N / 2));
     for (int i = 0; i < N; i += 2) for (int j = 0; j < N; j += 2) {
         bool a, b, c, d;
-        a = s.field[i][j].val == s.field[i][j + 1].val;
-        b = s.field[i + 1][j].val == s.field[i + 1][j + 1].val;
-        c = s.field[i][j].val == s.field[i + 1][j].val;
-        d = s.field[i][j + 1].val == s.field[i + 1][j + 1].val;
+        a = s.getEnt(i, j).val == s.getEnt(i, j + 1).val;
+        b = s.getEnt(i + 1, j).val == s.getEnt(i + 1, j + 1).val;
+        c = s.getEnt(i, j).val == s.getEnt(i + 1, j).val;
+        d = s.getEnt(i, j + 1).val == s.getEnt(i + 1, j + 1).val;
         res[i / 2][j / 2] = a && b || c && d;
     }
     return res;
@@ -253,17 +223,18 @@ BeamNode* getBeamNodeCopy(BeamNode *origin){
     return res;
 }
 
-void addPriorityQueue(priority_queue<BeamNode2> &p_queue, BeamNode2 data, int max_size){
+bool addPriorityQueue(priority_queue<BeamNode2> &p_queue, BeamNode2 data, int max_size){
     if (p_queue.size() < max_size){
         p_queue.push(data);
+        return true;
     } else {
         BeamNode2 tmp = p_queue.top();
         if (data < tmp){
             p_queue.pop();
             p_queue.push(data);
-            delete tmp.p;
+            return true;
         } else {
-            delete data.p;
+            return false;
         }
     }
 }
