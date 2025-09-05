@@ -27,19 +27,19 @@ typedef struct _pos{
     uint8_t y;
 
     _pos operator + (_pos other) const {
-        return (_pos){x + other.x, y + other.y};
+        return (_pos){static_cast<uint8_t>(this->x + other.x), static_cast<uint8_t>(this->y + other.y)};
     }
 
     _pos operator - (_pos other) const {
-        return (_pos){x - other.x, y - other.y};
+        return (_pos){static_cast<uint8_t>(this->x - other.x), static_cast<uint8_t>(this->y - other.y)};
     }
 
     bool operator == (_pos other) const {
-        return x == other.x && y == other.y;
+        return this->x == other.x && this->y == other.y;
     }
 
     bool operator != (_pos other) const {
-        return x != other.x || y != other.y;
+        return this->x != other.x || this->y != other.y;
     }
 } Pos;
 
@@ -73,11 +73,15 @@ typedef vector<vv_bool> vvv_bool;
 
 typedef struct _state {
     int size;
+    uint8_t x_hosei;
+    uint8_t y_hosei;
     Ent *field;
     Pos *ent_pos;
 
     void getClone(_state &res) {
         res.size = this->size;
+        res.x_hosei = this->x_hosei;
+        res.y_hosei = this->y_hosei;
         res.field = new Ent[this->size * this->size];
         res.ent_pos = new Pos[this->size * this->size];
         memcpy(res.field, this->field, this->size * this->size * sizeof(Ent));
@@ -86,6 +90,8 @@ typedef struct _state {
 
     void getClone(_state &res, Ent *ent_mem, Pos *pos_mem) {
         res.size = this->size;
+        res.x_hosei = this->x_hosei;
+        res.y_hosei = this->y_hosei;
         res.field = ent_mem;
         res.ent_pos = pos_mem;
         memcpy(ent_mem, this->field, this->size * this->size * sizeof(Ent));

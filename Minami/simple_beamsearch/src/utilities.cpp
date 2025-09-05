@@ -3,6 +3,8 @@
 void input_data(State &s, char* file_name){
     if (file_name == NULL){
         cin >> N;
+        s.size = N;
+        s.x_hosei = s.y_hosei = 0;
         s.field = new Ent[N * N];
         s.ent_pos = new Pos[N * N];
         int cnt[N * N / 2];
@@ -12,7 +14,7 @@ void input_data(State &s, char* file_name){
             cin >> val;
             s.getEnt(i, j).val = val;
             s.getEnt(i, j).num = cnt[val];
-            s.getEntPos(val, cnt[val]) = (Pos){j, i};
+            s.getEntPos(val, cnt[val]) = (Pos){(uint8_t)j, (uint8_t)i};
             cnt[val]++;
         }
     }else{
@@ -28,6 +30,7 @@ void input_file(State &s, char* file_name){
     }
     fscanf(fp, "%d", &N);
     s.size = N;
+    s.x_hosei = s.y_hosei = 0;
     s.field = new Ent[N * N];
     s.ent_pos = new Pos[N * N];
 
@@ -38,7 +41,7 @@ void input_file(State &s, char* file_name){
         fscanf(fp, "%d", &val);
         s.getEnt(i, j).val = val;
         s.getEnt(i, j).num = cnt[val];
-        s.getEntPos(val, cnt[val]) = (Pos){j, i};
+        s.getEntPos(val, cnt[val]) = (Pos){(uint8_t)j, (uint8_t)i};
         cnt[val]++;
     }
     fclose(fp);
@@ -65,7 +68,7 @@ void rotate(State &s, Ope &ope){
             int dy[4] = {h1, w2, h2, w1};
             int dx[4] = {w1, h1, w2, h2};
             rep (i, 4){
-                Pos setting = (Pos){ope.x + dx[i], ope.y + dy[i]};
+                Pos setting = (Pos){static_cast<uint8_t>(ope.x + dx[i]), static_cast<uint8_t>(ope.y + dy[i])};
                 s.getEnt(setting.y, setting.x) = i == 3 ? buf : s.getEnt(ope.y + dy[i + 1], ope.x + dx[i + 1]);
                 s.getEntPos(s.getEnt(setting.y, setting.x).val, s.getEnt(setting.y, setting.x).num) = setting;
             }
@@ -84,7 +87,7 @@ void rotate(State &s, Ope &ope){
             int dy[4] = {h1, mh, h2, mh};
             int dx[4] = {mw, w1, mw, w2};
             rep (j, 4){
-                Pos setting = (Pos){dx[j], dy[j]};
+                Pos setting = (Pos){static_cast<uint8_t>(dx[j]), static_cast<uint8_t>(dy[j])};
                 s.getEnt(setting.y, setting.x) = j == 3 ? buf : s.getEnt(dy[j + 1], dx[j + 1]);
                 s.getEntPos(s.getEnt(setting.y, setting.x).val, s.getEnt(setting.y, setting.x).num) = setting;
             }

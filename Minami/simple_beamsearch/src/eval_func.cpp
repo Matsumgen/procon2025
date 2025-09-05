@@ -62,7 +62,7 @@ int getScore5(State &s) {
 int getScore6(State &s) {
     int score1 = 0;
     int score2 = 0;
-    Pos center = (Pos){N / 4, N / 4};
+    Pos center = (Pos){static_cast<uint8_t>(N / 4), static_cast<uint8_t>(N / 4)};
     for (int i = 0; i < N; i += 2) for (int j = 0; j < N; j += 2) {
         bool a, b, c, d;
         a = s.getEnt(i, j).val == s.getEnt(i, j + 1).val;
@@ -71,7 +71,7 @@ int getScore6(State &s) {
         d = s.getEnt(i, j + 1).val == s.getEnt(i + 1, j + 1).val;
         score1 += a + b + c + d;
         if (!(a && b || c && d)) {
-            Pos p1 = (Pos){j / 2, i / 2};
+            Pos p1 = (Pos){static_cast<uint8_t>(j / 2), static_cast<uint8_t>(i / 2)};
             score2 += manhattan(p1, center);
         }
     }
