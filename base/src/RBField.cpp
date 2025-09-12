@@ -103,40 +103,22 @@ RBField::RBField(const std::vector<std::uint16_t> f, const std::uint8_t size)
   }
 
 }
+RBField::RBField(const std::vector<std::uint16_t> f, const std::uint8_t size, std::vector<PENT> pent, std::shared_ptr<OperateHist> operate)
+: BitField(f, size), pent(pent), operate(operate) { }
 
 RBField::RBField(BitField& f) : RBField(f.getField(), f.getSize()) { }
 RBField::RBField(BitField&& f) : RBField(f.getField(), f.getSize()) { }
 
-// コピーコンストラクタ
-RBField::RBField(RBField& f)
-: BitField(f), pent(f.pent) {
-  if (f.operate->operate.size() != 0){
-    this->operate = std::make_shared<OperateHist>();
-    this->operate->before = f.operate;
-    f.operate = std::make_shared<OperateHist>();
-    f.operate->before = this->operate->before;
-  }else {
-    this->operate = f.operate->clone();
-  }
-}
+// コピー関数
+RBField RBField::copy() {
+  std::shared_ptr<OperateHist> new_ope = std::make_shared<OperateHist>();
+  new_ope->before = this->operate;
+  this->operate = std::make_shared<OperateHist>();
+  this->operate->before = new_ope->before;
 
-// コピー代入演算子
-RBField& RBField::operator=(RBField& f) {
-  if (this == &f) return *this;  // 自己代入チェック
+  RBField f(this->field, this->size, this->pent, new_ope);
 
-  BitField::operator=(f);       // 基底クラスの代入演算子呼び出し
-  this->pent = f.pent;
-
-  if (f.operate->operate.size() != 0) {
-    this->operate = std::make_shared<OperateHist>();
-    this->operate->before = f.operate;
-    f.operate = std::make_shared<OperateHist>();
-    f.operate->before = this->operate->before;
-  } else {
-    this->operate = f.operate->clone();
-  }
-
-  return *this;
+  return f;
 }
 
 void RBField::print() const { this->print(' ', false); }

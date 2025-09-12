@@ -4,9 +4,41 @@
 #include <algorithm>
 #include <numeric>
 #include <chrono>
+#include <omp.h>
+#include <algo1_2.hpp>
 
 using namespace bf;
 
+
+// bus error出たら十中八九GC_LIMIT超えた
+void test_beam(int argc, char *argv[]){
+  if(argc < 1){
+    std::cout << "No file passed" << std::endl;
+  }
+  omp_set_num_threads(8);
+  RBField f;
+  std::cout << "OpenMP enabled? " << omp_get_max_threads() << " threads\n";
+
+  //スレッド作成を前倒し
+  /* #pragma omp parallel */
+  /* { */
+  /*   int tid = omp_get_thread_num(); */
+  /*   std::cout << "thlead num:" << tid << std::endl; */
+  /* } */
+
+  f = RBField::loadCsv(argv[1]);
+
+  /* #pragma omp parallel */
+  /* { */
+    f = algo1_2::run(f, 1, 1000);
+  /* } */
+  std::cout << "end algo" << std::endl;
+  f.print();
+
+  for(auto ans : f.getAnswer())
+    std::cout << ans << std::endl;
+
+}
 
 void test_BField(int argc, char *argv[]) {
   if(argc < 1){
@@ -118,5 +150,5 @@ void test_db4(int argc, char *argv[]) {
 
 
 int main(int argc, char *argv[]) {
-  test_db4(argc, argv);
+  test_beam(argc, argv);
 }
