@@ -10,7 +10,9 @@ else
 endif
 
 INCLUDE  = -Iinc -Isrc -Ilib/lmdb/include
+INCLUDE_OMP = -Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include
 LIBRARY  = lib/lmdb/lib/liblmdb.a
+LIBRARY_OMP = -lomp -L/opt/homebrew/opt/libomp/lib
 
 # ディレクトリ
 SRCDIR  = src
@@ -44,23 +46,23 @@ TEST_DEP  = $(DEPDIR)/test.Po
 all: $(MAIN_TARGET)
 
 $(MAIN_TARGET): $(OBJS) $(MAIN_OBJ)
-	$(CC) -o $@ $^ $(LIBRARY)
+	$(CC) -o $@ $^ $(LIBRARY) $(LIBRARY_OMP)
 
 # テストターゲット
 test: $(TEST_TARGET)
 
 $(TEST_TARGET): $(OBJS) $(TEST_OBJ)
-	$(CC) -o $@ $^ $(LIBRARY)
+	$(CC) -o $@ $^ $(LIBRARY) $(LIBRARY_OMP)
 
 # 個々のオブジェクトファイルルール
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	$(CC) $(CFLAGS) $(INCLUDE) -MMD -MP -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDE) $(INCLUDE_OMP) -MMD -MP -c $< -o $@
 
 $(OBJDIR)/main.o: $(MAIN_SRC)
-	$(CC) $(CFLAGS) $(INCLUDE) -MMD -MP -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDE) $(INCLUDE_OMP) -MMD -MP -c $< -o $@
 
 $(OBJDIR)/test.o: $(TEST_SRC)
-	$(CC) $(CFLAGS) $(INCLUDE) -MMD -MP -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDE) $(INCLUDE_OMP) -MMD -MP -c $< -o $@
 
 # 依存関係を含める
 -include $(wildcard $(DEPDIR)/*.Po)

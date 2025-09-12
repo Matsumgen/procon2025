@@ -53,6 +53,7 @@ namespace bf {
     static BitField loadCsv(const std::string& path);
     static BitField randomField(const std::uint8_t size);
     BitField(const std::vector<std::uint16_t> f, const std::uint8_t size);
+    BitField() = default;
     virtual ~BitField() = default;
 
     virtual void print() const;
@@ -86,17 +87,21 @@ namespace bf {
 
 
   // 履歴保持を可能にした子クラス
+  // コピー代入演算子やコピーコンストラクタは削除。代わりにcopy関数を使う
   class RBField : public BitField {
   public:
     static RBField loadCsv(const std::string& path);
     RBField(const std::vector<std::uint16_t> f, const std::uint8_t size);
+    RBField(const std::vector<std::uint16_t> f, const std::uint8_t size, std::vector<PENT> pent, std::shared_ptr<OperateHist> operate);
     RBField(BitField& f);
     RBField(BitField&& f);
-    RBField(RBField& f);
-    RBField& operator =(RBField& f);
+    RBField(const RBField& f) = default;
+    RBField() = default;
+    RBField& operator =(const RBField& f) = default;
     bool operator <(const RBField& f) const;
     bool operator >(const RBField& f) const;
 
+    RBField copy();
     virtual void print() const override;
     virtual void print(const char sep) const override;
     virtual void print(const bool show_pair) const;
