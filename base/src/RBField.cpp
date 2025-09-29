@@ -88,7 +88,7 @@ RBField RBField::loadCsv(const std::string& path) {
 // コンストラクタ
 RBField::RBField(const std::vector<std::uint16_t> f, const std::uint8_t size)
 : BitField(f, size) {
-  std::uint16_t num_size = size * size / 2;
+  std::uint16_t num_size = f.size() / 2;
   this->operate = std::make_shared<OperateHist>();
 
   std::uint16_t num;
@@ -222,10 +222,10 @@ void RBField::rotate(const std::uint8_t x, const std::uint8_t y, const std::uint
   }
 
   if(siz & 1){
-    i0 = x+siz_half+1 + (y+h) * this->size;
-    i1 = x + (siz - 1 - h) + (y + siz_half + 1) * this->size;
-    i2 = x + (siz - 2 - siz_half) + (y + siz - 1 - h) * this->size;
-    i3 = x + h + (y + siz - 2 - siz_half) * this->size;
+    i0 = x+siz_half + (y+0) * this->size;
+    i1 = x + (siz - 1 - 0) + (y + siz_half) * this->size;
+    i2 = x + (siz - 1 - siz_half) + (y + siz - 1 - 0) * this->size;
+    i3 = x + 0 + (y + siz - 1 - siz_half) * this->size;
     for(h = 0; h < siz_half; ++h) {
       buf = this->field[i0];
       updatePent(this->field[i3], i3, i0);

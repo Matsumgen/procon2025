@@ -1,10 +1,12 @@
 # コンパイラとフラグ
 CC       = g++
 CFLAGS   = -std=c++17 -Wall -Wextra
+ASAN_FLAGS = -fsanitize=address
 DEBUG    ?= 0
 
 ifeq ($(DEBUG), 1)
-    CFLAGS += -g -O2
+    CFLAGS += -g -O0 $(ASAN_FLAGS)
+    LDFLAGS += $(ASAN_FLAGS)
 else
     CFLAGS += -O3
 endif
@@ -46,13 +48,13 @@ TEST_DEP  = $(DEPDIR)/test.Po
 all: $(MAIN_TARGET)
 
 $(MAIN_TARGET): $(OBJS) $(MAIN_OBJ)
-	$(CC) -o $@ $^ $(LIBRARY) $(LIBRARY_OMP)
+	$(CC) -o $@ $^ $(LDFLAGS) $(LIBRARY) $(LIBRARY_OMP)
 
 # テストターゲット
 test: $(TEST_TARGET)
 
 $(TEST_TARGET): $(OBJS) $(TEST_OBJ)
-	$(CC) -o $@ $^ $(LIBRARY) $(LIBRARY_OMP)
+	$(CC) -o $@ $^ $(LDFLAGS) $(LIBRARY) $(LIBRARY_OMP)
 
 # 個々のオブジェクトファイルルール
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp

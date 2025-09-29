@@ -5,38 +5,35 @@
 #include <numeric>
 #include <chrono>
 #include <omp.h>
-#include <algo1_2.hpp>
+#include <algo1_4.hpp>
 
 using namespace bf;
 
+/*
+14 * 14
+処理時間: 709541605 マイクロ秒
+Operate history size: 71
 
-// bus error出たら十中八九GC_LIMIT超えた
-void test_beam(int argc, char *argv[]){
+12 * 12
+処理時間: 63900058 マイクロ秒
+Operate history size: 55
+
+*/
+void test_algo1_4(int argc, char *argv[]){
   if(argc < 1){
     std::cout << "No file passed" << std::endl;
   }
-  omp_set_num_threads(8);
-  RBField f;
-  std::cout << "OpenMP enabled? " << omp_get_max_threads() << " threads\n";
-
-  //スレッド作成を前倒し
-  /* #pragma omp parallel */
-  /* { */
-  /*   int tid = omp_get_thread_num(); */
-  /*   std::cout << "thlead num:" << tid << std::endl; */
-  /* } */
-
-  f = RBField::loadCsv(argv[1]);
-
-  /* #pragma omp parallel */
-  /* { */
-    f = algo1_2::run(f, 1, 1000);
-  /* } */
+  BField f = BField::loadCsv(argv[1]);
+  auto start = std::chrono::high_resolution_clock::now();
+  algo1_4::algo1_4(f);
+  auto end = std::chrono::high_resolution_clock::now();
   std::cout << "end algo" << std::endl;
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "処理時間: " << duration.count() << " マイクロ秒" << std::endl;
   f.print();
-
   for(auto ans : f.getAnswer())
     std::cout << ans << std::endl;
+
 
 }
 
@@ -150,5 +147,5 @@ void test_db4(int argc, char *argv[]) {
 
 
 int main(int argc, char *argv[]) {
-  test_beam(argc, argv);
+  test_algo1_4(argc, argv);
 }
