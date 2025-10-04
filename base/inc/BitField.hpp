@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <array>
 #include <vector>
+#include <functional>
 
 namespace bf {
   #define PENT_NULL 1024
@@ -17,6 +18,8 @@ namespace bf {
 
     Point(const std::uint8_t x, const std::uint8_t y);
     Point(const std::uint16_t i, const std::uint8_t siz);
+    bool operator==(const Point& other) const;
+    bool operator<(const Point& other) const;
 
     std::array<std::uint8_t, 2> toArr() const;
     std::uint16_t toi(const std::uint8_t siz) const;
@@ -53,6 +56,7 @@ namespace bf {
     static BitField loadCsv(const std::string& path);
     static BitField randomField(const std::uint8_t size);
     BitField(const std::vector<std::uint16_t> f, const std::uint8_t size);
+    BitField() = default;
     virtual ~BitField() = default;
 
     virtual void print() const;
@@ -63,7 +67,7 @@ namespace bf {
     std::uint16_t get(const std::uint8_t x, const std::uint8_t y) const;
     std::vector<std::uint16_t> getField() const;
 
-    bool inField(const std::uint8_t x, const std::uint8_t y) const;
+    virtual bool inField(const std::uint8_t x, const std::uint8_t y) const;
     virtual bool isEnd() const;
     virtual bool isIndexAdjacent(const std::uint16_t i) const;
     virtual bool isIndexAdjacent(const std::uint8_t x, const std::uint8_t y) const;
@@ -86,17 +90,21 @@ namespace bf {
 
 
   // 履歴保持を可能にした子クラス
+  // コピー代入演算子やコピーコンストラクタは削除。代わりにcopy関数を使う
   class RBField : public BitField {
   public:
     static RBField loadCsv(const std::string& path);
     RBField(const std::vector<std::uint16_t> f, const std::uint8_t size);
+    RBField(const std::vector<std::uint16_t> f, const std::uint8_t size, std::vector<PENT> pent, std::shared_ptr<OperateHist> operate);
     RBField(BitField& f);
     RBField(BitField&& f);
-    RBField(RBField& f);
-    RBField& operator =(RBField& f);
+    RBField(const RBField& f) = default;
+    RBField() = default;
+    RBField& operator =(const RBField& f) = default;
     bool operator <(const RBField& f) const;
     bool operator >(const RBField& f) const;
 
+    RBField copy();
     virtual void print() const override;
     virtual void print(const char sep) const override;
     virtual void print(const bool show_pair) const;
@@ -109,10 +117,10 @@ namespace bf {
     virtual bool isNumAdjacent(const std::uint16_t num) const;
     /* virtual bool canRotate(const std::uint8_t x, const std::uint8_t y, const std::uint8_t siz) const; */
 
-    PENT getPent(const std::uint16_t num) const;
-    Point getPair(const Point p) const;
-    Point getPair(const std::uint8_t x, const std::uint8_t y) const;
-    std::uint16_t getPairIndex(const std::uint16_t index) const;
+    virtual PENT getPent(const std::uint16_t num) const;
+    virtual Point getPair(const Point p) const;
+    virtual Point getPair(const std::uint8_t x, const std::uint8_t y) const;
+    virtual std::uint16_t getPairIndex(const std::uint16_t index) const;
 
     virtual void rotate(const std::uint8_t x, const std::uint8_t y, const std::uint8_t siz) override;
     virtual void rotate(const Ope ope) override;
@@ -158,6 +166,17 @@ namespace bf {
   std::uint16_t rotatePointIndex(const std::uint16_t i, const uint8_t size, const std::uint8_t x, const std::uint8_t y, const std::uint8_t n);
   Point rotatePoint(const Point p, const Ope ope);
   Point rotatePoint(const Point p, const std::uint8_t x, const std::uint8_t y, const std::uint8_t n);
+}
+
+namespace std {
+  template <>
+  struct hash<bf::Point> {
+    std::size_t operator()(const bf::Point& p) const noexcept {
+      std::size_t h1 = std::hash<std::uint8_t>()(p.x);
+      std::size_t h2 = std::hash<std::uint8_t>()(p.y);
+      return h1 ^ (h2 << 1); // boost::hash_combine風
+    }
+  };
 }
 
 #endif

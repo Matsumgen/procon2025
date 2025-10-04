@@ -4,9 +4,38 @@
 #include <algorithm>
 #include <numeric>
 #include <chrono>
+#include <omp.h>
+#include <algo1_4.hpp>
 
 using namespace bf;
 
+/*
+14 * 14
+処理時間: 709541605 マイクロ秒
+Operate history size: 71
+
+12 * 12
+処理時間: 63900058 マイクロ秒
+Operate history size: 55
+
+*/
+void test_algo1_4(int argc, char *argv[]){
+  if(argc < 1){
+    std::cout << "No file passed" << std::endl;
+  }
+  BField f = BField::loadCsv(argv[1]);
+  auto start = std::chrono::high_resolution_clock::now();
+  algo1_4::algo1_4(f);
+  auto end = std::chrono::high_resolution_clock::now();
+  std::cout << "end algo" << std::endl;
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "処理時間: " << duration.count() << " マイクロ秒" << std::endl;
+  f.print();
+  for(auto ans : f.getAnswer())
+    std::cout << ans << std::endl;
+
+
+}
 
 void test_BField(int argc, char *argv[]) {
   if(argc < 1){
@@ -118,5 +147,5 @@ void test_db4(int argc, char *argv[]) {
 
 
 int main(int argc, char *argv[]) {
-  test_db4(argc, argv);
+  test_algo1_4(argc, argv);
 }

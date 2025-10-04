@@ -57,6 +57,15 @@ BitField BitField::randomField(const std::uint8_t size) {
 
 Point::Point(const std::uint8_t x, const std::uint8_t y) : x(x), y(y) {}
 Point::Point(const std::uint16_t i, const std::uint8_t siz) : x(i%siz), y(i/siz) {}
+
+bool Point::operator==(const Point& other) const {
+  return this->x == other.x && this->y == other.y;
+}
+
+bool Point::operator<(const Point& other) const {
+  return (x < other.x) || (x == other.x && y < other.y);
+}
+
 std::array<std::uint8_t, 2> Point::toArr() const {
   std::array<std::uint8_t, 2> arr{this->x, this->y};
   return arr;

@@ -88,7 +88,7 @@ RBField RBField::loadCsv(const std::string& path) {
 // コンストラクタ
 RBField::RBField(const std::vector<std::uint16_t> f, const std::uint8_t size)
 : BitField(f, size) {
-  std::uint16_t num_size = size * size / 2;
+  std::uint16_t num_size = f.size() / 2;
   this->operate = std::make_shared<OperateHist>();
 
   std::uint16_t num;
@@ -103,40 +103,22 @@ RBField::RBField(const std::vector<std::uint16_t> f, const std::uint8_t size)
   }
 
 }
+RBField::RBField(const std::vector<std::uint16_t> f, const std::uint8_t size, std::vector<PENT> pent, std::shared_ptr<OperateHist> operate)
+: BitField(f, size), pent(pent), operate(operate) { }
 
 RBField::RBField(BitField& f) : RBField(f.getField(), f.getSize()) { }
 RBField::RBField(BitField&& f) : RBField(f.getField(), f.getSize()) { }
 
-// コピーコンストラクタ
-RBField::RBField(RBField& f)
-: BitField(f), pent(f.pent) {
-  if (f.operate->operate.size() != 0){
-    this->operate = std::make_shared<OperateHist>();
-    this->operate->before = f.operate;
-    f.operate = std::make_shared<OperateHist>();
-    f.operate->before = this->operate->before;
-  }else {
-    this->operate = f.operate->clone();
-  }
-}
+// コピー関数
+RBField RBField::copy() {
+  std::shared_ptr<OperateHist> new_ope = std::make_shared<OperateHist>();
+  new_ope->before = this->operate;
+  this->operate = std::make_shared<OperateHist>();
+  this->operate->before = new_ope->before;
 
-// コピー代入演算子
-RBField& RBField::operator=(RBField& f) {
-  if (this == &f) return *this;  // 自己代入チェック
+  RBField f(this->field, this->size, this->pent, new_ope);
 
-  BitField::operator=(f);       // 基底クラスの代入演算子呼び出し
-  this->pent = f.pent;
-
-  if (f.operate->operate.size() != 0) {
-    this->operate = std::make_shared<OperateHist>();
-    this->operate->before = f.operate;
-    f.operate = std::make_shared<OperateHist>();
-    f.operate->before = this->operate->before;
-  } else {
-    this->operate = f.operate->clone();
-  }
-
-  return *this;
+  return f;
 }
 
 void RBField::print() const { this->print(' ', false); }
@@ -240,10 +222,10 @@ void RBField::rotate(const std::uint8_t x, const std::uint8_t y, const std::uint
   }
 
   if(siz & 1){
-    i0 = x+siz_half+1 + (y+h) * this->size;
-    i1 = x + (siz - 1 - h) + (y + siz_half + 1) * this->size;
-    i2 = x + (siz - 2 - siz_half) + (y + siz - 1 - h) * this->size;
-    i3 = x + h + (y + siz - 2 - siz_half) * this->size;
+    i0 = x+siz_half + (y+0) * this->size;
+    i1 = x + (siz - 1 - 0) + (y + siz_half) * this->size;
+    i2 = x + (siz - 1 - siz_half) + (y + siz - 1 - 0) * this->size;
+    i3 = x + 0 + (y + siz - 1 - siz_half) * this->size;
     for(h = 0; h < siz_half; ++h) {
       buf = this->field[i0];
       updatePent(this->field[i3], i3, i0);
