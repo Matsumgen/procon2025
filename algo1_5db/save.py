@@ -1,7 +1,7 @@
 from lib import *
 from tqdm import tqdm
 import lmdb
-FIELD_SIZE = 24
+FIELD_SIZE = 18
 X_SIZE = FIELD_SIZE * 2 - 2
 
 def dkey(depth):

@@ -1,7 +1,8 @@
 from lib import *
 import lmdb
 
-db = lmdb.open('algo1_5_2_16.db', map_size=16 * 1024 * 1024 * 1024)
+# db = lmdb.open('algo1_5_2_16.db', map_size=16 * 1024 * 1024 * 1024)
+db = lmdb.open('save2/algo1_5_2_8.db', map_size=16 * 1024 * 1024 * 1024)
 
 def test1():
   f = createfield()
@@ -147,5 +148,14 @@ def test2():
           count = 0
           printf(field)
 
+def test3():
+  with db.begin() as txn:
+    with txn.cursor() as cursor:
+      for key, value in cursor:
+        if value == b'':  continue
+        # print(len(key), len(value), key, value)
+        print(parseKey(key), decodeOperate(value, True))
+        # print()
 
-test2()
+
+test3()

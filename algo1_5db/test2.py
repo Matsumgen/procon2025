@@ -1,9 +1,8 @@
 from lib import *
 import lmdb
-import random
 
-db = lmdb.open('algo1_5_2_24.db', map_size=16 * 1024 * 1024 * 1024)
-FIELD_SIZE = 24
+db = lmdb.open('algo1_5_2_16.db', map_size=16 * 1024 * 1024 * 1024)
+FIELD_SIZE = 16
 
 field = randomField(FIELD_SIZE)
 start_field = field.copy()
@@ -14,9 +13,9 @@ start_key = bytearray([ x1 >> 2, (x1 & 0x3) << 6 , 0, 0, 0, 0, 0 ])
 t_x, t_y, t_p, mode = 0, 0, 0, 0
 count = 0
 
-result_opes = list()
+opes = list()
 
-# print("t_x, t_y, t_p, mode =", t_x, t_y, t_p, mode)
+print("t_x, t_y, t_p, mode =", t_x, t_y, t_p, mode)
 while not isEnd(field):
   with db.begin() as txn:
     with txn.cursor() as cursor:
@@ -49,27 +48,20 @@ while not isEnd(field):
         
         if checkBox(field, p1, p2, p3, p4):
           # print(parseKey(key))
-          _opes = decodeOperate(value, True)
-          
-          opes = list()
-          for ope in _opes
-            ope[0] = ope[0] + _x1 - x1
-            ope[1] += t_p
+          ope = list(decodeOperate(value))
 
-            if mode == 1:
-              _ope = list(rotateR(ope, FIELD_SIZE))
-              ope[0] = _ope[0]
-              ope[1] = _ope[1] + t_p + 2
+          ope[0] -= x1
+          ope[1] += t_p
+          if mode == 1:
+            ope = list(rotateR(ope, FIELD_SIZE))
+            ope[1] += t_p + 2
 
-            if ope[0] < 0 or ope[1] + ope[2] > field.shape[1]:
-              continue
-            opes.append(ope)
+          if ope[0] < 0 or ope[1] + ope[2] > field.shape[1]:
+            continue
 
-          ope = random.choice(opes) # とりあえずランダムに選ぶ
-
-          # print("depth:", d, ope)
+          print("depth:", d, ope)
           rotate(field, ope[0], ope[1], ope[2])
-          result_opes.append((d, ope))
+          opes.append((d, ope))
           flag = True
           count += 1
           break
@@ -97,10 +89,10 @@ while not isEnd(field):
         t_y += 2
         x1 -= 2
         x2 -= 2
-    # print(f"clear box {count}")
-    # print("fsize, x1, x2, t_x, t_y, t_p, mode =", fsize, x1, x2, t_x, t_y, t_p, mode)
+    print(f"clear box {count}")
+    print("fsize, x1, x2, t_x, t_y, t_p, mode =", fsize, x1, x2, t_x, t_y, t_p, mode)
     count = 0
-    # printf(field)
+    printf(field)
 
   if count > 6:
     print("error")
