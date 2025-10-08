@@ -1,4 +1,4 @@
-#ifndef CONNECTION_HPP
+﻿#ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
 #include "state.hpp"

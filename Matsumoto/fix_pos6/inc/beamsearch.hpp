@@ -1,14 +1,14 @@
-#ifndef BEAMSEARCH_HPP
+﻿#ifndef BEAMSEARCH_HPP
 #define BEAMSEARCH_HPP 0
 
-// #include "all.hpp"
-#include "utilities.hpp"
+#include "state.hpp" // Stateやv_pair_iiの型定義に必要
 #include <iostream>
 #include <queue>
-using namespace std;
+
 
 class BeamNode {
 public:
+  BeamNode() = default; 
   BeamNode(State *p);
   State *p;
   bool operator<(const BeamNode &other) const;
@@ -23,6 +23,6 @@ public:
   v_pair_ii beamsearch();
 
 private:
-  bool addPriorityQueue(priority_queue<BeamNode> &beam, BeamNode node);
+  bool addPriorityQueue(std::priority_queue<BeamNode> &beam, BeamNode node);
 };
 #endif

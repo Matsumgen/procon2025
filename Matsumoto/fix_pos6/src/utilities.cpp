@@ -1,4 +1,14 @@
-#include "../inc/all.hpp"
+﻿#include "../inc/utilities.hpp"
+#include "../inc/connection.hpp"
+#include "../inc/field.hpp"
+
+// その他の必要な標準ライブラリ
+#include <iostream>
+#include <vector>
+#include <cmath> // abs に必要
+#include <cstdio> // printf, fprintf に必要
+#include <cstdlib> // exit に必要
+using namespace std;
 
 // State loadProblem(char *file_name) {
 //     State res;

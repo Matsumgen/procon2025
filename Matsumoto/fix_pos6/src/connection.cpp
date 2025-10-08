@@ -1,13 +1,17 @@
-#include "../inc/all.hpp"
+﻿#include "../inc/connection.hpp"
+#include "../inc/state.hpp"
+#include "../inc/field.hpp" // Pos, Ent 型定義に必要
+#include "../inc/utilities.hpp" // rep マクロに必要
+
+// その他の必要な標準ライブラリ
+#include <iostream>
+#include <string>
+#include <vector>
+#include <thread>
 #include <chrono>
 #include <cpr/cpr.h>
-#include <curl/curl.h>
-#include <fstream>
-#include <iostream>
 #include <nlohmann/json.hpp>
-#include <string>
-#include <thread>
-#include <vector>
+
 
 // nlohmann::jsonの名前空間を省略して使えるようにする
 using json = nlohmann::json;
@@ -69,7 +73,7 @@ State loadProblem(const std::string &api_base_url,
                   const std::string &your_token) {
   // APIから問題情報をJSON形式で取得
   json problem_data = get_match_info(api_base_url, your_token);
-  cout << "get_match_info完了" << endl;
+  std::cout << "get_match_info完了" << std::endl;
 
   if (!problem_data.contains("problem")) {
     std::cerr << "エラー: JSONデータに 'problem' キーが見つかりません。"
@@ -108,7 +112,7 @@ State loadProblem(const std::string &api_base_url,
       res.f.getEnt(i, j).num = cnt[val];
 
       // 逆引きテーブルを設定
-      res.f.getEntPos(val, cnt[val]) = (Pos){(uint8_t)j, (uint8_t)i};
+      res.f.getEntPos(val, cnt[val]) = Pos{(uint8_t)j, (uint8_t)i};
 
       cnt[val]++;
     }
