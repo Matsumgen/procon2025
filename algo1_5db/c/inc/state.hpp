@@ -1,11 +1,31 @@
 #ifndef STATE_HPP
 #define STATE_HPP 0
 
+#ifndef _REP_
+#define _REP_
+#define rep(i, n) for (int i = 0; i < n; i++)
+#endif
+
 // #include "all.hpp"
 #include <bits/stdc++.h>
 using namespace std;
 
 #include "field.hpp"
+
+typedef vector<int> v_int;
+typedef vector<v_int> vv_int;
+typedef vector<vv_int> vvv_int;
+typedef vector<vvv_int> vvvv_int;
+typedef vector<vvvv_int> vvvvv_int;
+
+typedef vector<unsigned short> v_ushort;
+typedef vector<v_ushort> vv_ushort;
+typedef vector<vv_ushort> vvv_ushort;
+typedef vector<vvv_ushort> vvvv_ushort;
+typedef vector<vvvv_ushort> vvvvv_ushort;
+typedef vector<vvvvv_ushort> vvvvvv_ushort;
+
+typedef vector<pair<int, int>> v_pair_ii;
 
 #define TYPE_CNT1 3
 #define TYPE_CNT2 5

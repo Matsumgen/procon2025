@@ -2,7 +2,7 @@
 
 CC	  = g++
 CFLAGS    = -std=c++17
-INCLUDE   = -I./inc -I lib/lmdb/include -I vcpkg_installed/x64-linux/include
+INCLUDE   = -I./inc -I vcpkg_installed/x64-linux/include
 LIBLINK = -L vcpkg_installed/x64-linux/lib/
 LIBLARY = -llmdb
 

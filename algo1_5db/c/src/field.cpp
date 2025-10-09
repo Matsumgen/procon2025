@@ -1,4 +1,6 @@
-#include "../inc/all.hpp"
+//#include "../inc/all.hpp"
+#include <field.hpp>
+#include <utilities.hpp>
 
 Pos::Pos() {
 }
@@ -84,7 +86,9 @@ void Field::rotate(Ope ope) {
             rep (i, 4){
                 Pos setting = (Pos){static_cast<uint8_t>(ope.x + dx[i]), static_cast<uint8_t>(ope.y + dy[i])};
                 this->getEnt(setting.y, setting.x) = i == 3 ? buf : this->getEnt(ope.y + dy[i + 1], ope.x + dx[i + 1]);
-                this->getEntPos(this->getEnt(setting.y, setting.x).val, this->getEnt(setting.y, setting.x).num) = setting;
+                auto& ent = this->getEnt(setting.y, setting.x);
+                this->getEntPos(ent.val, ent.num) = setting;
+                /* this->getEntPos(this->getEnt(setting.y, setting.x).val, this->getEnt(setting.y, setting.x).num) = setting; */
             }
         }
     }
@@ -103,7 +107,9 @@ void Field::rotate(Ope ope) {
             rep (j, 4){
                 Pos setting = (Pos){static_cast<uint8_t>(dx[j]), static_cast<uint8_t>(dy[j])};
                 this->getEnt(setting.y, setting.x) = j == 3 ? buf : this->getEnt(dy[j + 1], dx[j + 1]);
-                this->getEntPos(this->getEnt(setting.y, setting.x).val, this->getEnt(setting.y, setting.x).num) = setting;
+                auto& ent = this->getEnt(setting.y, setting.x);
+                this->getEntPos(ent.val, ent.num) = setting;
+                /* this->getEntPos(this->getEnt(setting.y, setting.x).val, this->getEnt(setting.y, setting.x).num) = setting; */
             }
         }
     }
@@ -147,7 +153,8 @@ void Field::reallocation() {
 }
 
 void Field::printField() {
-    rep (i, this->size) rep (j, this->size) cout << this->getEnt(i, j).val << " \n"[j == this->size - 1];
+    rep (i, this->size) rep (j, this->size) printf("%3d%c", this->getEnt(i, j).val, " \n"[j == this->size - 1]);
+    /* cout << this->getEnt(i, j).val << " \n"[j == this->size - 1]; */
     cout << endl;
 }
 
