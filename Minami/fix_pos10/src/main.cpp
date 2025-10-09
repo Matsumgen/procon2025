@@ -23,10 +23,24 @@ int main(int argc, char **argv) {
         }
     }
 
-    State first = loadProblem(input_file_name);
-    BFS_result::loadData(first.f.size);
+    char *file_path_list[4];
+    FILE *fp = fopen("data_path.txt", "r");
+    rep (i, 4) {
+        file_path_list[i] = new char[1024];
+        fgets(file_path_list[i], 1024, fp);
+        rep (j, strlen(file_path_list[i])) {
+            if (file_path_list[i][j] == ',') {
+                file_path_list[i][j] = '\0';
+                break;
+            }
+        }
+    }
+    fclose(fp);
+    BFS_result::loadData(24, file_path_list);
+    fdb::field4_init(file_path_list[3]);
+    rep (i, 4) delete[] file_path_list[i];
 
-    fdb::field4_init(FDB4_PATH);
+    State first = loadProblem(input_file_name);
     if (first.f.size == 4) {
         v_ope ans = fdb::getField4(first.f);
         print_ans(ans, output_file_name);

@@ -65,7 +65,7 @@ v_pair_ii BeamSearch::beamsearch() {
                 second_state_idx++;
             }
 
-            rep (type, TYPE_CNT1 + TYPE_CNT2) {
+            rep (type, TYPE_CNT1 + TYPE_CNT2 + TYPE_CNT3 + 1) {
                 int next_cnt = tmp.p->getNextCount(type);
                 rep (j, next_cnt) {
                     State *next_state = state_mem[i % 2] + mem_idx;
@@ -80,7 +80,7 @@ v_pair_ii BeamSearch::beamsearch() {
         }
         // if (is_end) break;
         now_beam = move(next_beam);
-        printf("(%d, %d, %d)\n", i, (int)now_beam.size(), max_score);
+        printf("(%d, %d, %d, %d)\n", i, (int)now_beam.size(), mem_idx, max_score);
         cout << flush;
         // cout << best_state->progress << " " << best_state->last_type << endl;
         // rep (j, best_state->log.size()) {
@@ -210,7 +210,7 @@ bool BeamSearch2::beamsearch(v_ope &out) {
         }
         if (is_end) break;
         now_beam = move(next_beam);
-        printf("(%d, %d, %d)\n", i, (int)now_beam.size(), max_score);
+        printf("(%d, %d, %d, %d)\n", i, (int)now_beam.size(), mem_idx, max_score);
         cout << flush;
         // cout << best_state->progress << " " << best_state->last_type << endl;
         // rep (j, best_state->log.size()) {
