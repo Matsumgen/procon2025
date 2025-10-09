@@ -49,6 +49,7 @@ namespace fsdb {
     bool isNext(std::array<std::uint8_t, 2> p1, std::array<std::uint8_t, 2> p2, std::array<std::uint8_t, 2> p3, std::array<std::uint8_t, 2> p4) const;
     void toNext(SRoutes_ptr& r, Ope ope) const;
     bool inOpe(const Ope ope) const;
+    bool inField(const Ope ope) const;
     bool isEnd() const;
     bool check();
     

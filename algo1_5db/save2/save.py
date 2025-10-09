@@ -3,7 +3,7 @@ from tqdm import tqdm
 import lmdb
 import struct
 import os
-FIELD_SIZE = 18
+FIELD_SIZE = 24
 X_SIZE = FIELD_SIZE * 2 - 2
 SAVE_COUNT = 20000
 # SAVE_COUNT = 100
@@ -21,7 +21,7 @@ length = 1
 save_count = 0
 buffer_path = "buffer.bt"
 try:
-  while depth < 4:
+  while depth < 3: # 24は3
     start_key = dkey(depth)
     depth += 1
     end_key = dkey(depth)

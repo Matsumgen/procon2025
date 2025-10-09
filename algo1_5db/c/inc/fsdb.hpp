@@ -46,7 +46,6 @@ namespace fsdb {
   // deepまで探索, horizon=Trueで縦
   void getAllOperation(SRoutes_ptr r, const std::uint8_t& x1, const std::uint8_t& x2, const std::uint8_t deep, bool horizon);
   Routes getOperation(const State *s);
-
 }
 
 

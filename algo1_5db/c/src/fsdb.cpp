@@ -196,7 +196,7 @@ void fsdb::getAllOperation(SRoutes_ptr r, const std::uint8_t& x1, const std::uin
   std::vector<std::uint8_t> key_vec(7);
   std::vector<std::uint8_t> value_vec;
   std::vector<Ope> opes, _opes;
-  std::uint8_t nowdepth = 1;
+  std::uint8_t nowdepth = 1, nowx1 = x1;
   Key kd;
   bool endflag = false;
   if (mdb_cursor_open(fs_txn, fs_dbi, &cursor) != 0) {
@@ -225,18 +225,32 @@ void fsdb::getAllOperation(SRoutes_ptr r, const std::uint8_t& x1, const std::uin
     if(kd.depth > nowdepth) {
       if(endflag) break;
       nowdepth = kd.depth;
-      setStartKey(start_key, nowdepth, x1, 0);
-      int rc = mdb_cursor_get(cursor, &start_key, &data, MDB_SET_RANGE);
+      nowx1 = x1;
+      setStartKey(key, nowdepth, x1, 0);
+      int rc = mdb_cursor_get(cursor, &key, &data, MDB_SET_RANGE);
       if (rc == MDB_NOTFOUND) {
         std::cout << "Key not found in database.\n";
         break;
       } else if (rc != 0) {
         std::cerr << "Cursor get failed: " << mdb_strerror(rc) << "\n";
       }
-      key = start_key;
+      std::memcpy(key_vec.data(), key.mv_data, key.mv_size);
+      kd = decodeKey(key_vec);
+    }else if(kd.x2 > x2) {
+      nowx1 += 1;
+      setStartKey(key, nowdepth, nowx1, 0);
+      int rc = mdb_cursor_get(cursor, &key, &data, MDB_SET_RANGE);
+      if (rc == MDB_NOTFOUND) {
+        std::cout << "Key not found in database.\n";
+        break;
+      } else if (rc != 0) {
+        std::cerr << "Cursor get failed: " << mdb_strerror(rc) << "\n";
+      }
+      std::memcpy(key_vec.data(), key.mv_data, key.mv_size);
+      kd = decodeKey(key_vec);
     }
 
-    /* if(horizon )debug_log((int)x1, (int)x2, kd.str()); */
+    /* debug_log((int)nowdepth, (int)nowx1, (int)x1, (int)x2, kd.str()); */
     if(kd.x1 < x1 || x2 < kd.x2) continue;
     if(kd.depth > deep) break;
 
@@ -248,26 +262,21 @@ void fsdb::getAllOperation(SRoutes_ptr r, const std::uint8_t& x1, const std::uin
     if (value_vec.size() < data.mv_size) value_vec.resize(data.mv_size);
     std::memcpy(value_vec.data(), data.mv_data, data.mv_size);
 
-    _opes = decodeValue(value_vec);
-    /* opesの補正 */
-    opes.clear();
-    for(auto& ope: _opes) {
-      ope.x = ope.x + kd.x1 - x1;
-      /* ope.x = ope.x - x1; // fiels_size = 16の時 */
-      if(horizon) {
-        int b = ope.x;
-        ope.x = r->f.size - (ope.y + ope.n - 1) - 1;
-        ope.y = b + 2;
-      }
-      if(ope.x < 0 || ope.y < 0 || ope.x + ope.n > r->f.size || ope.y + ope.n > r->f.size) continue;
-      opes.push_back(ope);
-    }
+    opes = decodeValue(value_vec);
     if(opes.size() == 0) continue;
 
     if(first){
       if(r->isNext(kd.p1, kd.p2, kd.p3, kd.p4)) {
-        debug_log(kd.str(), opes_str(opes));
+        debug_log((int)x1, (int)x2, kd.str(), opes.size());
+        /* debug_log((int)x1, (int)x2, kd.str(), opes_str(opes)); */
         for(auto& ope: opes){
+          ope.x = ope.x + kd.x1 - x1;
+          if(horizon) {
+            int b = ope.x;
+            ope.x = r->f.size - (ope.y + ope.n - 1) - 1;
+            ope.y = b + 2;
+          }
+          if(!r->inField(ope))  continue; 
           if(r->inOpe(ope)) continue;
           SRoutes_ptr next = make_SRoutes_ptr();
           r->toNext(next, ope);
@@ -278,8 +287,15 @@ void fsdb::getAllOperation(SRoutes_ptr r, const std::uint8_t& x1, const std::uin
     }else{
       for(SRoutes_ptr& ptr : r->next) {
         if(ptr->isNext(kd.p1, kd.p2, kd.p3, kd.p4)){
-          debug_log(kd.str(), opes_str(opes));
+          debug_log((int)x1, (int)x2, kd.str(), opes.size());
           for(auto& ope: opes){
+            ope.x = ope.x + kd.x1 - x1;
+            if(horizon) {
+              int b = ope.x;
+              ope.x = r->f.size - (ope.y + ope.n - 1) - 1;
+              ope.y = b + 2;
+            }
+            if(!r->inField(ope))  continue; 
             if(ptr->inOpe(ope)) continue;
             SRoutes_ptr next = make_SRoutes_ptr();
             ptr->toNext(next, ope);
@@ -332,7 +348,7 @@ Routes fsdb::getOperation(const State* s) {
     x1 = field_size - (s->progress - 1) - 2;
     x2 = field_size + s->f.size - (s->progress - 1) - 2;
   }
-  debug_log(s->progress, s->f.size, "(x1 x2) =", (int)x1, (int)x2, "horizon =", horizon);
+  debug_log(s->progress, s->f.size, (int)field_size, "(x1 x2) =", (int)x1, (int)x2, "horizon =", horizon);
   getAllOperation(root, x1, x2, 4, horizon);
   root->check();
   return *(root->toRoutes());

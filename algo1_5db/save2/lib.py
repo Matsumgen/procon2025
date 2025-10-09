@@ -138,12 +138,19 @@ def encodeOperate(x:int, y:int, n:int):
     return bytes([ (x << 3) | (y >> 2), ((y << 6) & 0xFF) | (n << 1) ])
   raise ValueError(f"encodeOperate: x={x}, y={y}, n={n}")
 
+def encodeOperateL(opes:list):
+  ret = bytearray()
+  for x, y, n in opes:
+    ret.append((x << 3) | (y >> 2))
+    ret.append(((y << 6) & 0xFF) | (n << 1))
+  return bytes(ret)
+
 def decodeOperate(bop:bytes, duplicate:bool=False):
   if duplicate:
-    ret = list()
+    ret = set()
     for i in range(0, len(bop), 2):
-      ret.append([ bop[i] >> 3, ((bop[i] & 0x07) << 2) | (bop[i+1] >> 6), (bop[i+1] >> 1 & 0x1F)])
-    return ret
+      ret.add(( bop[i] >> 3, ((bop[i] & 0x07) << 2) | (bop[i+1] >> 6), (bop[i+1] >> 1 & 0x1F)))
+    return list(ret)
   return [ bop[0] >> 3, ((bop[0] & 0x07) << 2) | (bop[1] >> 6), (bop[1] >> 1 & 0x1F)]
 
 def rotateP(p, fsize):

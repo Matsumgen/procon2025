@@ -132,6 +132,7 @@ void FsField::print() {
 
 void FsField::rotate(Ope ope) {
   if(!this->inField(ope.x, ope.y) || !this->inField(ope.x + ope.n - 1, ope.y + ope.n - 1)){
+    printf("%d, %d, %d\n", ope.x, ope.y, ope.n);
     throw std::invalid_argument("rotate: out of range");
   }
   std::uint8_t n_half = ope.n >> 1;
@@ -196,6 +197,11 @@ bool SRoutes::inOpe(const Ope ope) const {
     if(nv->ope.x == ope.x && nv->ope.y == ope.y && nv->ope.n == ope.n)  return true;
   }
   return false;
+}
+
+bool SRoutes::inField(const Ope ope) const {
+  return !(ope.x < 0 || this->f.size < ope.x + ope.n || ope.y < 0 || this->f.size < ope.y + ope.n);
+
 }
 
 bool SRoutes::isEnd() const {
