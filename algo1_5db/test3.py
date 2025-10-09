@@ -3,10 +3,10 @@ import lmdb
 import random
 
 # 最低でも4手は欲しい
-FIELD_SIZE = 16
-FSIZE = 16
-# db_file_name = f'save2/algo1_5_2_{FIELD_SIZE}.db'
-db_file_name = f'algo1_5_2_{FIELD_SIZE}.db'
+FIELD_SIZE = 8
+FSIZE = 8
+db_file_name = f'save2/algo1_5_2_{FIELD_SIZE}.db'
+# db_file_name = f'algo1_5_2_{FIELD_SIZE}.db'
 db = lmdb.open(db_file_name, map_size=16 * 1024 * 1024 * 1024)
 
 fsize = FSIZE
@@ -64,8 +64,8 @@ while not isEnd(field):
           
           opes = list()
           for ope in _opes:
-            # ope[0] = ope[0] + _x1 - x1
-            ope[0] = ope[0]  - x1 # FIELD_SIZE == 16の時に使用
+            ope[0] = ope[0] + _x1 - x1
+            # ope[0] = ope[0]  - x1 # FIELD_SIZE == 16の時に使用
             ope[1] += t_p
 
             if mode == 1:

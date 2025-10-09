@@ -1,4 +1,4 @@
-#define DEBUG
+/* #define DEBUG */
 
 #include <fsdb.hpp>
 #include <lmdb.h>
@@ -31,7 +31,7 @@ void _debug_log(const char* file, int line, Args&&... args) {
     std::ostringstream oss;
     oss << "[DEBUG] " << file << ":" << line << " ";
     stream_with_space(oss, std::forward<Args>(args)...);
-    std::cerr << oss.str() << std::endl;
+    std::cout << oss.str() << std::endl;
 }
 
 std::string ope_str(Ope ope) {
@@ -64,32 +64,33 @@ std::string Key::str() const {
   return oss.str();
 }
 
-void Key::correction(std::uint8_t fx1, bool horizon, std::uint8_t fsize) {
+bool Key::correction(std::uint8_t fx1, bool horizon, std::uint8_t fsize) {
   // fiels_size == 16の時
-  /* this->p1[0] -= fx1; */
-  /* this->p2[0] -= fx1; */
-  /* this->p3[0] -= fx1; */
-  /* this->p4[0] -= fx1; */
+  this->p1[0] -= fx1;
+  this->p2[0] -= fx1;
+  this->p3[0] -= fx1;
+  this->p4[0] -= fx1;
 
-  this->p1[0] = this->p1[0] + this->x1 - fx1;
-  this->p2[0] = this->p2[0] + this->x1 - fx1;
-  this->p3[0] = this->p3[0] + this->x1 - fx1;
-  this->p4[0] = this->p4[0] + this->x1 - fx1;
+  /* this->p1[0] = this->p1[0] + this->x1 - fx1; */
+  /* this->p2[0] = this->p2[0] + this->x1 - fx1; */
+  /* this->p3[0] = this->p3[0] + this->x1 - fx1; */
+  /* this->p4[0] = this->p4[0] + this->x1 - fx1; */
 
   if(horizon) {
     std::uint8_t b = this->p1[0];
     this->p1[0] = fsize - this->p1[1] - 1;
-    this->p1[1] = b;
+    this->p1[1] = b + 2;
     b = this->p2[0];
     this->p2[0] = fsize - this->p2[1] - 1;
-    this->p2[1] = b;
+    this->p2[1] = b + 2;
     b = this->p3[0];
     this->p3[0] = fsize - this->p3[1] - 1;
-    this->p3[1] = b;
+    this->p3[1] = b + 2;
     b = this->p4[0];
     this->p4[0] = fsize - this->p4[1] - 1;
-    this->p4[1] = b;
+    this->p4[1] = b + 2;
   }
+  return p1[0] < fsize && p1[1] < fsize && p2[0] < fsize && p2[1] < fsize && p3[0] < fsize && p3[1] < fsize && p4[0] < fsize && p4[1] < fsize;
 }
 
 bool fsdb::fsdb_init(const char *db_path, std::uint8_t fsize){
@@ -150,10 +151,10 @@ Key fsdb::decodeKey(std::vector<std::uint8_t>& key) {
   ret.depth = static_cast<std::uint8_t>((key[0] >> 4) & 0x0f);
   ret.x1 = static_cast<std::uint8_t>(((key[0] & 0x0f) << 2) | ((key[1] >> 6) & 0x03));
   ret.x2 = static_cast<std::uint8_t>(key[1] & 0x3f);
-  ret.p1 = {static_cast<std::uint8_t>((key[2] >> 3) & 0x1f), static_cast<std::uint8_t>((key[2] & 0x07) << 2 | ((key[3] >> 6) & 0x03))};
-  ret.p2 = {static_cast<std::uint8_t>((key[3] >> 1) & 0x1f), static_cast<std::uint8_t>(((key[3] & 0x01) << 4) | ((key[4] >> 4) & 0x0f))};
-  ret.p3 = {static_cast<std::uint8_t>(((key[4] & 0x0f) << 1) | ((key[5] >> 7) & 0x01)), static_cast<std::uint8_t>((key[5] & 0x7f) >> 2)};
-  ret.p4 = {static_cast<std::uint8_t>(((key[5] & 0x03) << 3) | ((key[6] >> 5) & 0x07)), static_cast<std::uint8_t>(key[6] & 0x1f)};
+  ret.p1 = {static_cast<std::uint8_t>(((key[2] >> 3) & 0x1f) + ret.x1), static_cast<std::uint8_t>((key[2] & 0x07) << 2 | ((key[3] >> 6) & 0x03))};
+  ret.p2 = {static_cast<std::uint8_t>(((key[3] >> 1) & 0x1f) + ret.x1), static_cast<std::uint8_t>(((key[3] & 0x01) << 4) | ((key[4] >> 4) & 0x0f))};
+  ret.p3 = {static_cast<std::uint8_t>((((key[4] & 0x0f) << 1) | ((key[5] >> 7) & 0x01)) + ret.x1), static_cast<std::uint8_t>((key[5] & 0x7f) >> 2)};
+  ret.p4 = {static_cast<std::uint8_t>((((key[5] & 0x03) << 3) | ((key[6] >> 5) & 0x07)) + ret.x1), static_cast<std::uint8_t>(key[6] & 0x1f)};
   return ret;
 }
 
@@ -179,6 +180,7 @@ void setStartKey(MDB_val& key, const std::uint8_t a, const std::uint8_t b, const
       buffer[i] = static_cast<uint8_t>((key_bits >> ((6 - i) * 8)) & 0xFF);
   }
 
+  /* debug_log("startKey", (int)a, (int)b, (int)c, bitset<8>(buffer[0]), bitset<8>(buffer[1])); */
   // MDB_val に設定
   key.mv_size = 7;
   key.mv_data = buffer;
@@ -213,11 +215,12 @@ void fsdb::getAllOperation(SRoutes_ptr r, const std::uint8_t& x1, const std::uin
   } else if (rc != 0) {
     std::cerr << "Cursor get failed: " << mdb_strerror(rc) << "\n";
   }
-
-  while (mdb_cursor_get(cursor, &key, &data, MDB_NEXT) == 0) {
+  key = start_key;
+  do{
     if (key_vec.size() < key.mv_size) key_vec.resize(key.mv_size);
     std::memcpy(key_vec.data(), key.mv_data, key.mv_size);
     kd = decodeKey(key_vec);
+    /* debug_log(bitset<8>(key_vec[0]), bitset<8>(key_vec[1]), (int)x1, (int)x2, kd.str()); */
 
     if(kd.depth > nowdepth) {
       if(endflag) break;
@@ -230,15 +233,17 @@ void fsdb::getAllOperation(SRoutes_ptr r, const std::uint8_t& x1, const std::uin
       } else if (rc != 0) {
         std::cerr << "Cursor get failed: " << mdb_strerror(rc) << "\n";
       }
-      continue;
+      key = start_key;
     }
 
-    /* debug_log((int)x1, (int)x2, kd.str()); */
+    /* if(horizon )debug_log((int)x1, (int)x2, kd.str()); */
     if(kd.x1 < x1 || x2 < kd.x2) continue;
     if(kd.depth > deep) break;
 
-    kd.correction(x1, horizon, r->f.size); /* p1 ~ p4の補正 */
-    /* debug_log("    ", kd.str()); */
+    if(!kd.correction(x1, horizon, r->f.size)) { /* p1 ~ p4の補正 */
+      continue;
+    }
+    /* if(horizon)debug_log("    ", kd.str()); */
 
     if (value_vec.size() < data.mv_size) value_vec.resize(data.mv_size);
     std::memcpy(value_vec.data(), data.mv_data, data.mv_size);
@@ -254,13 +259,14 @@ void fsdb::getAllOperation(SRoutes_ptr r, const std::uint8_t& x1, const std::uin
         ope.x = r->f.size - (ope.y + ope.n - 1) - 1;
         ope.y = b + 2;
       }
-      if(ope.x + ope.n > r->f.size || ope.y + ope.n > r->f.size) continue;
+      if(ope.x < 0 || ope.y < 0 || ope.x + ope.n > r->f.size || ope.y + ope.n > r->f.size) continue;
       opes.push_back(ope);
     }
+    if(opes.size() == 0) continue;
 
     if(first){
       if(r->isNext(kd.p1, kd.p2, kd.p3, kd.p4)) {
-        /* debug_log(kd.str(), opes_str(opes)); */
+        debug_log(kd.str(), opes_str(opes));
         for(auto& ope: opes){
           if(r->inOpe(ope)) continue;
           SRoutes_ptr next = make_SRoutes_ptr();
@@ -272,7 +278,7 @@ void fsdb::getAllOperation(SRoutes_ptr r, const std::uint8_t& x1, const std::uin
     }else{
       for(SRoutes_ptr& ptr : r->next) {
         if(ptr->isNext(kd.p1, kd.p2, kd.p3, kd.p4)){
-          /* debug_log(kd.str(), opes_str(opes)); */
+          debug_log(kd.str(), opes_str(opes));
           for(auto& ope: opes){
             if(ptr->inOpe(ope)) continue;
             SRoutes_ptr next = make_SRoutes_ptr();
@@ -284,14 +290,18 @@ void fsdb::getAllOperation(SRoutes_ptr r, const std::uint8_t& x1, const std::uin
       }
     }
 
-  }
+  }while (mdb_cursor_get(cursor, &key, &data, MDB_NEXT) == 0);
+  mdb_cursor_close(cursor);
+
   if(nowdepth > 0){
-    debug_log("depth: ", (int)nowdepth, "next_length:", r->next.size());
-    if(first) getAllOperation(r, x1, x2, nowdepth - 1, horizon);
-    else{
+    /* debug_log("depth: ", (int)nowdepth, "next_length:", r->next.size()); */
+    if(first) {
+      if(r->next.size() != 0) getAllOperation(r, x1, x2, nowdepth - 1, horizon);
+    } else{
       for(size_t i = 0; i < r->next.size();){
-        if(r->next[i]->next.size() == 0) { r->next.erase(r->next.begin() + i); }
-        else{
+        if(r->next[i]->next.size() == 0) {
+          r->next.erase(r->next.begin() + i);
+        }else{
           getAllOperation(r->next[i], x1, x2, nowdepth - 1, horizon);
           if(r->next[i]->next.size() == 0){ r->next.erase(r->next.begin() + i); }
           else ++i;
@@ -299,13 +309,14 @@ void fsdb::getAllOperation(SRoutes_ptr r, const std::uint8_t& x1, const std::uin
       }
     }
   }
-
-  mdb_cursor_close(cursor);
 }
 
 Routes fsdb::getOperation(const State* s) {
   if(s->progress <= 0) {
     throw std::invalid_argument("getOperation: progress <= 0");
+  }else if(s->progress > s->f.size * 2 - 2){
+    std::cout << "getOperation: progress > f.size * 2 - 2" << std::endl;
+    return Routes();
   }
   SRoutes_ptr root = make_SRoutes_ptr();
   root->f = FsField(s->f);
@@ -313,13 +324,16 @@ Routes fsdb::getOperation(const State* s) {
   bool horizon = (s->progress > s->f.size);
 
   if(horizon) {
+    root->tg = {static_cast<std::uint8_t>(s->f.size - 2), static_cast<std::uint8_t>(s->progress - s->f.size + 1)};
     x1 = field_size - (s->progress - s->f.size - 1) - 2;
-    x2 = field_size + s->f.size - (s->progress - 1) - 4;
+    x2 = field_size + s->f.size - (s->progress - s->f.size - 1) - 4;
   }else {
+    root->tg = {static_cast<std::uint8_t>(s->progress - 1), 0};
     x1 = field_size - (s->progress - 1) - 2;
     x2 = field_size + s->f.size - (s->progress - 1) - 2;
   }
-  debug_log("(x1 x2) =", (int)x1, (int)x2);
+  debug_log(s->progress, s->f.size, "(x1 x2) =", (int)x1, (int)x2, "horizon =", horizon);
   getAllOperation(root, x1, x2, 4, horizon);
+  root->check();
   return *(root->toRoutes());
 }

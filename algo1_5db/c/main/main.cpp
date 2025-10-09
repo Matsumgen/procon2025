@@ -21,6 +21,7 @@ Field randomfield(const std::uint8_t fsize) {
   }
   std::random_device rd;
   std::mt19937 g(rd());
+  /* std::mt19937 g(1234); */
   std::shuffle(vec.begin(), vec.end(), g);
   
   Field f(fsize);
@@ -36,10 +37,10 @@ Field randomfield(const std::uint8_t fsize) {
 
 int main(void) {
   fsdb_init("../save2/algo1_5_2_8.db", 8);
-  const std::uint8_t fsize = 16;
+  const std::uint8_t fsize = 8;
   int x;
   State *s = new State();
-  s->f = randomfield(8);
+  s->f = randomfield(fsize);
 
   s->progress = 1;
 
@@ -75,17 +76,16 @@ int main(void) {
       printf("\n");
     }
 
-    std::uniform_int_distribution<> dist(0, r.size);
+    std::uniform_int_distribution<> dist(0, r.size - 1);
     x = dist(gen);
-    std::cout << std::endl;
+    /* std::cin >> x; */
+    /* x = 0; */
+    std::cout << "selected: " << (int)x << std::endl;
     for(auto& ope: r.getOperation((size_t)x)) {
       printf("(%d, %d, %d) -> ", ope.x, ope.y, ope.n);
-    }
-    printf("\n");
-    for(auto& ope: r.getOperation((size_t)x)) {
-      /* printf("(%d, %d, %d) -> \n", ope.x, ope.y, ope.n); */
       s->f.rotate(ope);
     }
+    printf("\n");
     s->progress += 2;
   }while(x >= 0);
   s->f.printField();

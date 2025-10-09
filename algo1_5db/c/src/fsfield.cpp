@@ -123,6 +123,13 @@ bool FsField::inField(const std::uint8_t x, const std::uint8_t y) const {
   return false;
 }
 
+void FsField::print() {
+  for(size_t i = 0; i < this->field.size(); ++i) {
+    printf("%3d%c", this->field[i], " \n"[i%this->size == this->size - 1]);
+  }
+  std::cout << std::endl;
+}
+
 void FsField::rotate(Ope ope) {
   if(!this->inField(ope.x, ope.y) || !this->inField(ope.x + ope.n - 1, ope.y + ope.n - 1)){
     throw std::invalid_argument("rotate: out of range");
@@ -151,10 +158,10 @@ void FsField::rotate(Ope ope) {
   }
 
   if(ope.n & 1){
-    i0 = ope.x+n_half+1 + (ope.y+h) * this->size;
-    i1 = ope.x + (ope.n - 1 - h) + (ope.y + n_half + 1) * this->size;
-    i2 = ope.x + (ope.n - 2 - n_half) + (ope.y + ope.n - 1 - h) * this->size;
-    i3 = ope.x + h + (ope.y + ope.n - 2 - n_half) * this->size;
+    i0 = ope.x + n_half  + (ope.y) * this->size;
+    i1 = ope.x + (ope.n - 1) + (ope.y + n_half) * this->size;
+    i2 = ope.x + n_half + (ope.y + ope.n - 1) * this->size;
+    i3 = ope.x + (ope.y + n_half) * this->size;
     for(h = 0; h < n_half; ++h) {
       buf = this->field[i0];
       this->field[i0] = this->field[i3];
@@ -179,6 +186,7 @@ void SRoutes::toNext(SRoutes_ptr& r, Ope ope) const {
   r->f = this->f;
   r->ope = ope;
   r->f.rotate(ope);
+  r->tg = this->tg;
   r->next.clear();
 }
 
@@ -190,6 +198,10 @@ bool SRoutes::inOpe(const Ope ope) const {
   return false;
 }
 
+bool SRoutes::isEnd() const {
+  return (this->f.get(tg) == f.get(tg[0]+1, tg[1]) && this->f.get(tg[0], tg[1]+1) == this->f.get(tg[0]+1, tg[1]+1)) || (this->f.get(tg) == f.get(tg[0], tg[1]+1) && this->f.get(tg[0]+1, tg[1]) == this->f.get(tg[0]+1, tg[1]+1));
+}
+
 Routes_ptr SRoutes::toRoutes() {
   Routes_ptr rptr;
   std::vector<Routes_ptr> v;
@@ -199,4 +211,29 @@ Routes_ptr SRoutes::toRoutes() {
     v.push_back(rptr);
   }
   return make_Routes_ptr(this->ope, v);
+}
+bool SRoutes::check() {
+  if(this->next.size() == 0) {
+    /* std::cout << "isEnd: " << this->isEnd() << std::endl; */
+    /* printf("(%d, %d, %d)\n", this->ope.x, this->ope.y, this->ope.n); */
+    /* this->f.print(); */
+    return this->isEnd();
+  }
+  for(size_t i = 0; i < this->next.size();) {
+    if(!this->next[i]->check()) {
+      /* std::cout << "isCheck: 0" << std::endl; */
+      /* printf("(%d, %d, %d)\n", this->ope.x, this->ope.y, this->ope.n); */
+      /* this->f.print(); */
+      this->next.erase(this->next.begin() + i);
+    }else {
+      /* std::cout << "isCheck: 1" << std::endl; */
+      /* printf("(%d, %d, %d)\n", this->ope.x, this->ope.y, this->ope.n); */
+      /* this->f.print(); */
+      ++i;
+    }
+  }
+  if(this->next.size() == 0) {
+    return false;
+  }
+  return true;
 }

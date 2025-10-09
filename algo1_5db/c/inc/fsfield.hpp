@@ -37,16 +37,20 @@ namespace fsdb {
     std::uint16_t get(std::array<std::uint8_t, 2> p) const;
     bool inField(const std::uint8_t x, const std::uint8_t y) const;
     void rotate(Ope ope);
+    void print();
   };
 
   struct SRoutes {
     Ope ope;
     FsField f;
     std::vector<SRoutes_ptr> next;
+    std::array<std::uint8_t, 2> tg; // 揃える左上の位置
     
     bool isNext(std::array<std::uint8_t, 2> p1, std::array<std::uint8_t, 2> p2, std::array<std::uint8_t, 2> p3, std::array<std::uint8_t, 2> p4) const;
     void toNext(SRoutes_ptr& r, Ope ope) const;
     bool inOpe(const Ope ope) const;
+    bool isEnd() const;
+    bool check();
     
     Routes_ptr toRoutes();
 

@@ -29,7 +29,7 @@ namespace fsdb {
     std::array<std::uint8_t, 2> p3;
     std::array<std::uint8_t, 2> p4;
 
-    void correction(std::uint8_t fx1, bool horizon, std::uint8_t fsize);
+    bool correction(std::uint8_t fx1, bool horizon, std::uint8_t fsize);
     std::string str() const;
 
   };
