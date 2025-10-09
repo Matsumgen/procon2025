@@ -7,6 +7,10 @@ using namespace std;
 
 
 typedef vector<int> v_int;
+typedef vector<v_int> vv_int;
+typedef vector<vv_int> vvv_int;
+typedef vector<vvv_int> vvvv_int;
+typedef vector<vvvv_int> vvvvv_int;
 
 typedef vector<unsigned short> v_ushort;
 typedef vector<v_ushort> vv_ushort;
