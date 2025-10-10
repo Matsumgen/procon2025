@@ -3,6 +3,9 @@
 
 #include "field.hpp"
 #include <lmdb.h>
+#include <iostream>
+#include <array>  
+#include <vector>
 
 #define FDB4_PATH (char*)"../../../field4_db"
 /*
@@ -24,7 +27,7 @@ namespace fdb {
 
 
     v_ope getField4(Field &f);
-    vector<std::uint8_t> encodeField4(Field& f);
+    std::vector<std::uint8_t> encodeField4(Field& f);
 
     //LUT化
     Ope decodeOperate(const std::uint8_t& ope);

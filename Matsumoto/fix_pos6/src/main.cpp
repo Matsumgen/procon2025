@@ -1,4 +1,17 @@
-#include "../inc/all.hpp"
+﻿#include "../inc/state.hpp"
+#include "../inc/bfs_result.hpp"
+#include "../inc/beamsearch.hpp"
+#include "../inc/utilities.hpp"
+#include "../inc/connection.hpp"
+
+// その他の必要な標準ライブラリ
+#include <iostream>
+#include <string>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+
+using namespace std;
 
 int debug_val1 = 0;
 

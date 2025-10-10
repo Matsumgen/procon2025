@@ -1,8 +1,8 @@
 #ifndef BFS_RESULT_HPP
 #define BFS_RESULT_HPP 0
-#include <bits/stdc++.h>
-using namespace std;
 #include "state.hpp"
+#include <cstdio>
+#include <string>
 
 class BFS_result {
     public:

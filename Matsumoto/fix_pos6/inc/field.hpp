@@ -1,10 +1,8 @@
-#ifndef FIELD_HPP
+﻿#ifndef FIELD_HPP
 #define FIELD_HPP 0
 
 #include <vector>
-
-// #include "all.hpp"
-using namespace std;
+#include <cstdint>
 
 class Pos {
 public:
@@ -32,20 +30,19 @@ public:
   Ope();
   Ope(short x, short y, short n);
 };
-typedef vector<Ope> v_ope;
-typedef vector<v_ope> vv_ope;
-typedef vector<vv_ope> vvv_ope;
-typedef vector<vvv_ope> vvvv_ope;
-typedef vector<vvvv_ope> vvvvv_ope;
 
-/**
- * 盤面を管理するクラス
- */
+// Ope型を定義した後に、関連する型エイリアスを定義
+typedef std::vector<Ope> v_ope;
+typedef std::vector<v_ope> vv_ope;
+typedef std::vector<vv_ope> vvv_ope;
+typedef std::vector<vvv_ope> vvvv_ope;
+typedef std::vector<vvvv_ope> vvvvv_ope;
+
 class Field {
 public:
   short size;
-  Ent *ent_mem; // 各場所に対応するエンティティ
-  Pos *pos_mem; // 各エンティティの場所
+  Ent *ent_mem;
+  Pos *pos_mem;
 
   Field();
   Field(short size);

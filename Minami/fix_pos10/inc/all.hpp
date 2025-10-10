@@ -1,9 +1,10 @@
 #ifndef ALL_HPP
 #define ALL_HPP 0
 
-#include <bits/stdc++.h>
 using namespace std;
 #include "field.hpp"
+#include <nlohmann/json.hpp>
+
 #include "beamsearch.hpp"
 #include "utilities.hpp"
 #include "state.hpp"
@@ -11,4 +12,5 @@ using namespace std;
 #include "bfs_result.hpp"
 #include "fielddb.hpp"
 #include "eval_func.hpp"
+#include "connection.hpp"
 #endif

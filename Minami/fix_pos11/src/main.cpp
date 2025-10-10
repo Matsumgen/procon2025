@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
         second_state_mem[i].log.clear();
     }
 
-    BeamSearch bs = BeamSearch(&first, 5000, 500, first_state_mem, second_state_mem);
+    BeamSearch bs = BeamSearch(&first, 100, 500, first_state_mem, second_state_mem);
     v_pair_ii ans_log = bs.beamsearch();
     v_ope ans;
     first.getAnswer(ans_log, 0, ans);

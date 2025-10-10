@@ -1,5 +1,8 @@
 #include "../inc/all.hpp"
 
+BeamNode::BeamNode() {
+}
+
 BeamNode::BeamNode(State *p) : p(p){
 }
 
@@ -48,8 +51,27 @@ v_pair_ii BeamSearch::beamsearch() {
         int max_score = INT_MIN;
         int mem_idx = 0;
         State *best_state = NULL;
-        while (!now_beam.empty()) {
-            BeamNode tmp = now_beam.top();
+
+        int beam_cnt = now_beam.size();
+        BeamNode tmp_now_beam[beam_cnt];
+        rep (j, beam_cnt) {
+            tmp_now_beam[j] = now_beam.top();
+            now_beam.pop();
+        }
+
+        fsdb::Routes tmp_route[beam_cnt];
+        #pragma omp parallel for
+        rep (j, beam_cnt) {
+            if (tmp_now_beam[j].p->end_flag || !tmp_now_beam[j].p->isOKType(15)) continue;
+            tmp_route[j] = fsdb::getOperation(tmp_now_beam[j].p);
+            tmp_now_beam[j].p->route = &tmp_route[j];
+            cout << "." << flush;
+        }
+        cout << endl;
+
+        rep (j, beam_cnt) {
+            // BeamNode tmp = now_beam.top();
+            BeamNode tmp = tmp_now_beam[j];
             now_beam.pop();
             if (tmp.p->getScore() > max_score) {
                 best_state = tmp.p;
@@ -74,20 +96,22 @@ v_pair_ii BeamSearch::beamsearch() {
                 second_state_idx++;
             }
 
-            int priority_type[6] = {15, 3, 4, 0, 1, 2};
-            // rep (type, TYPE_CNT1 + TYPE_CNT2 + TYPE_CNT3 + 2) {
-            rep (t, 6) {
-                int type = priority_type[t];
+            // int priority_type[6] = {15, 3, 4, 0, 1, 2};
+            rep (type, TYPE_CNT1 + TYPE_CNT2 + TYPE_CNT3 + 2) {
+            // rep (t, 6) {
+                // int type = priority_type[t];
+                // cout << j << " " << t << " " << type << " " << flush;
                 int next_cnt = tmp.p->getNextCount(type);
-                rep (j, next_cnt) {
+                // cout << next_cnt << endl;
+                rep (k, next_cnt) {
                     State *next_state = state_mem[i % 2] + mem_idx;
                     next_state->f.ent_mem = ent_mem[i % 2] + mem_idx * (this->first->f.size * this->first->f.size);
                     next_state->f.pos_mem = pos_mem[i % 2] + mem_idx * (this->first->f.size * this->first->f.size);
                     tmp.p->getClone(next_state);
-                    next_state->moveNextState(type, j);
+                    next_state->moveNextState(type, k);
                     mem_idx += addPriorityQueue(next_beam, BeamNode(next_state));
                 }
-                if (next_cnt != 0) break;
+                // if (next_cnt != 0) break;
             }
             debug++;
         }

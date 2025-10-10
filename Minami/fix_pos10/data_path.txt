@@ -1,4 +1,4 @@
-[Your path to "bfs_result6_m5.bin"]
-[Your path to "bfs_result8" folder]
-[Your path to "bfs_result9" folder]
-[Your path to "field.db" folder]
+C:\Users\sisim\Documents\procon\bfs_result6\bfs_result6_m20.bin,
+C:\Users\sisim\Documents\procon\bfs_result8,
+C:\Users\sisim\Documents\procon\bfs_result9,
+C:\Users\sisim\Documents\procon\feild.db,

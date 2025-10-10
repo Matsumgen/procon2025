@@ -1,4 +1,5 @@
 #include "../inc/all.hpp"
+using namespace std;
 
 Pos::Pos() {
 }

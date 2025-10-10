@@ -2,10 +2,10 @@
 #define STATE_HPP 0
 
 // #include "all.hpp"
-#include <bits/stdc++.h>
-using namespace std;
 
 #include "field.hpp"
+#include <utility>
+#include <vector>
 
 #define TYPE_CNT1 3
 #define TYPE_CNT2 5

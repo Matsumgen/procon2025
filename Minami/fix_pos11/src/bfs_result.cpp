@@ -96,7 +96,7 @@ void BFS_result::loadData(int max_field_size, char **file_path_list) {
     }
 
     BFS_result::ope_cnt.resize(max_field_size / 2);
-    for (int size = 2; size <= max_field_size; size += 2) {
+    for (int size = 4; size <= max_field_size; size += 2) {
         BFS_result::ope_cnt[size / 2 - 1] = vvvv_int(size * 2 - 2, vvv_int(TYPE_CNT3, vv_int(size - 1, v_int(size * size, 0))));
         rep (i, size * 2 - 2) rep (j, TYPE_CNT3) rep (k, size - 1) rep (l, size * size) {
             // cout << i << " " << j << " " << k << " " << l << endl;
