@@ -1,4 +1,5 @@
 #include "../inc/all.hpp"
+using namespace std;
 
 State::State() : x_hosei(0), y_hosei(0), rotate_hosei(0), progress(0), log(v_pair_ii(0)), score(0), end_flag(false), last_type(FLAT), ok_pair(0), ope_sum(0), pile_dir(HORIZON) {
 }

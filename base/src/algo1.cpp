@@ -164,7 +164,6 @@ void alg1(Field& f){
   auto updateTp = [&](int i) {
     //tp[i]が確定していたら次へ
     //0が1の領域を侵す
-    int endF = 0;
     auto stopFCheck = [&](int j) {
       if(j == 0 && tp[j][0] == fsize - (stepC << 1) - 4){
         if(!f.isConfirm(tp[j][0]+3, tp[j][1])){

@@ -1,4 +1,6 @@
 #include "../inc/all.hpp"
+using namespace std;
+
 
 vvvvv_ope BFS_result::bfs_result;
 uint16_t** BFS_result::bfs_result2;

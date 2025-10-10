@@ -1,0 +1,5 @@
+実行方法
+fix_pos6のディレクトリで以下のコマンドを実行してください
+cmake --build build
+
+すると、buildにprocon_solverが生成されます。

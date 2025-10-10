@@ -1,5 +1,7 @@
 #include "../inc/all.hpp"
 
+using namespace std;
+
 BeamNode::BeamNode(State *p) : p(p){
 }
 

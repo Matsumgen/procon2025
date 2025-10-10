@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
     fdb::field4_init(file_path_list[3]);
     rep (i, 4) delete[] file_path_list[i];
 
-    State first = loadProblem(input_file_name);
+    State first = loadProblem("http://127.0.0.1:3000", "player1");
     if (first.f.size == 4) {
         v_ope ans = fdb::getField4(first.f);
         print_ans(ans, output_file_name);
@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
         second_state_mem[i].log.clear();
     }
 
-    BeamSearch bs = BeamSearch(&first, 5000, 500, first_state_mem, second_state_mem);
+    BeamSearch bs = BeamSearch(&first, 7000, 500, first_state_mem, second_state_mem);
     v_pair_ii ans_log = bs.beamsearch();
     v_ope ans;
     first.getAnswer(ans_log, 0, ans);
