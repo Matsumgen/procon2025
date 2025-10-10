@@ -124,7 +124,7 @@ void State::getAnswer(v_pair_ii &ans_log, int idx, v_ope &out) {
     this->getClone(&tmp_s);
     rep (i, (int)ans_log.size()) {
         if (tmp_s.progress == 0) {
-            cout << ans_log[i].second << " " << tmp_s.rotate_hosei << " " << tmp_s.x_hosei << " " << tmp_s.y_hosei << endl;
+            // cout << ans_log[i].second << " " << tmp_s.rotate_hosei << " " << tmp_s.x_hosei << " " << tmp_s.y_hosei << endl;
         } else {
             v_ope ope_list = tmp_s.getOperation(ans_log[i].first, ans_log[i].second);
             for (Ope &ope : ope_list) {

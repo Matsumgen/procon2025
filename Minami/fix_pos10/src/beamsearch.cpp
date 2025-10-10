@@ -21,6 +21,16 @@ v_pair_ii BeamSearch::beamsearch() {
     }
 
     int second_state_idx = 0;
+    if (this->first->f.size <= 10) {
+        this->first_state_mem[second_state_idx].score = first->getScore();
+        this->first_state_mem[second_state_idx].log = first->log;
+        this->first_state_mem[second_state_idx].rotate_hosei = first->rotate_hosei;
+        this->first_state_mem[second_state_idx].x_hosei = first->x_hosei;
+        this->first_state_mem[second_state_idx].y_hosei = first->y_hosei;
+        this->first_state_mem[second_state_idx].f.size = first->f.size;
+        first->f.getClone(&(this->second_state_mem[second_state_idx].f));
+        second_state_idx++;
+    }
 
     priority_queue<BeamNode> now_beam;
     state_mem[1][0].f.ent_mem = ent_mem[1];
@@ -89,6 +99,7 @@ v_pair_ii BeamSearch::beamsearch() {
         // cout << endl;
         // best_state->f.printField();
     }
+    cout << "mem_idx: " << second_state_idx << endl;
 
     rep (i, 2) {
         delete[] state_mem[i];

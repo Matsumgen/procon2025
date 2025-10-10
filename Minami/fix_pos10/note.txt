@@ -11,7 +11,7 @@
 data_path.txtの1行目に, bfs_result6_m5.binのファイルのパスを記述してください
 data_path.txtの2行目に, bfs_result8フォルダのパスを記述してください(最後に/はつけないでください)
 data_path.txtの3行目に, bfs_result9フォルダのパスを記述してください(最後に/はつけないでください)
-data_path.txtの3行目に, field.dbフォルダのパスを記述してください(最後に/はつけないでください)
+data_path.txtの4行目に, field.dbフォルダのパスを記述してください(最後に/はつけないでください)
 全てのパスの最後に,をつけてください
 
 bfs_result8フォルダの中にはbfs_result8_n{size}_m5.binがある必要があります(sizeは4以上24以下の偶数全て)
