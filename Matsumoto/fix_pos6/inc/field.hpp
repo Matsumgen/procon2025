@@ -2,6 +2,7 @@
 #define FIELD_HPP 0
 
 #include <vector>
+#include <cstdint>
 
 class Pos {
 public:

@@ -2,8 +2,8 @@
 #define STATE2_HPP 0
 
 // #include "all.hpp"
-#include <bits/stdc++.h>
-using namespace std;
+#include <utility>
+#include <vector>
 
 #include "field.hpp"
 

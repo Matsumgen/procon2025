@@ -2,24 +2,24 @@
 #define FIELD_HPP 0
 
 // #include "all.hpp"
-#include <bits/stdc++.h>
-using namespace std;
+#include <vector>
+#include <cstdint>
 
 
-typedef vector<int> v_int;
-typedef vector<v_int> vv_int;
-typedef vector<vv_int> vvv_int;
-typedef vector<vvv_int> vvvv_int;
-typedef vector<vvvv_int> vvvvv_int;
+typedef std::vector<int> v_int;
+typedef std::vector<v_int> vv_int;
+typedef std::vector<vv_int> vvv_int;
+typedef std::vector<vvv_int> vvvv_int;
+typedef std::vector<vvvv_int> vvvvv_int;
 
-typedef vector<unsigned short> v_ushort;
-typedef vector<v_ushort> vv_ushort;
-typedef vector<vv_ushort> vvv_ushort;
-typedef vector<vvv_ushort> vvvv_ushort;
-typedef vector<vvvv_ushort> vvvvv_ushort;
-typedef vector<vvvvv_ushort> vvvvvv_ushort;
+typedef std::vector<unsigned short> v_ushort;
+typedef std::vector<v_ushort> vv_ushort;
+typedef std::vector<vv_ushort> vvv_ushort;
+typedef std::vector<vvv_ushort> vvvv_ushort;
+typedef std::vector<vvvv_ushort> vvvvv_ushort;
+typedef std::vector<vvvvv_ushort> vvvvvv_ushort;
 
-typedef vector<pair<int, int>> v_pair_ii;
+typedef std::vector<std::pair<int, int>> v_pair_ii;
 
 class Pos {
     public:
@@ -30,7 +30,7 @@ class Pos {
         bool operator == (const Pos &other) const;
         int toInt(int N);
 };
-typedef vector<Pos> v_pos;
+typedef std::vector<Pos> v_pos;
 
 class Ent {
     public:
@@ -50,11 +50,11 @@ class Ope {
         Ope(short x, short y, short n);
         bool operator < (const Ope &other) const;
 };
-typedef vector<Ope> v_ope;
-typedef vector<v_ope> vv_ope;
-typedef vector<vv_ope> vvv_ope;
-typedef vector<vvv_ope> vvvv_ope;
-typedef vector<vvvv_ope> vvvvv_ope;
+typedef std::vector<Ope> v_ope;
+typedef std::vector<v_ope> vv_ope;
+typedef std::vector<vv_ope> vvv_ope;
+typedef std::vector<vvv_ope> vvvv_ope;
+typedef std::vector<vvvv_ope> vvvvv_ope;
 
 class Field {
     public:

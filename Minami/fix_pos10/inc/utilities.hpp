@@ -8,7 +8,7 @@
 
 extern int debug_val1;
 
-State loadProblem(char *file_name);
+//State loadProblem(char *file_name);
 void print_ans(v_ope &ans, char* file_name);
 int manhattan(Pos p1, Pos p2);
 Ope rotateOpe(Ope ope, int fsize, int r);

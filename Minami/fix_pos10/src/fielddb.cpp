@@ -1,6 +1,8 @@
 /* #define DEBUG_FIELD_DB */
 #include "../inc/fielddb.hpp"
 #include <lmdb.h>
+#include <map>             
+#include <unordered_map> 
 
 using namespace fdb;
 

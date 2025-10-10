@@ -26,7 +26,7 @@ int main() {
   const std::string procon_token = "player1";        // 自身のトークン
 
   // --- テキストファイルから回答データを読み込み、JSONを構築 ---
-  std::ifstream ifs("1th_ans.txt"); // 読み込むテキストファイルのパス
+  std::ifstream ifs("C:/Users/sisim/Documents/procon/procon2025/Minami/fix_pos10/1th_ans.txt"); // 読み込むテキストファイルのパス
   if (!ifs.is_open()) {
     std::cerr << "エラー: answer.txtファイルを開けませんでした。" << std::endl;
     return 1; // エラー終了
