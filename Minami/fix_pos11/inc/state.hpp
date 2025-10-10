@@ -26,7 +26,8 @@ class State {
         int ope_sum;
         bool pile_dir;
         int last_pair_x;
-        static fsdb::Routes tmp_route;
+        // static fsdb::Routes tmp_route;
+        fsdb::Routes *route;
 
         State();
         bool isEnd();
@@ -35,12 +36,12 @@ class State {
         void moveNextState(int type, int idx);
         void getClone(State *out);
         void getAnswer(v_pair_ii &ans_log, int idx, v_ope &out);
+        bool isOKType(int type);
 
     private:
         v_ope getOperation(int type, int idx);
         v_pos getBasePos(int type);
         v_pos getLastPos(int type);
-        bool isOKType(int type);
         v_ope getToHorizonOpe();
 };
 

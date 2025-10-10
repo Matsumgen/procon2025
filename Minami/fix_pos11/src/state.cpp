@@ -1,6 +1,6 @@
 #include "../inc/all.hpp"
 
-fsdb::Routes State::tmp_route;
+// fsdb::Routes State::tmp_route;
 
 State::State() : x_hosei(0), y_hosei(0), rotate_hosei(0), progress(0), log(v_pair_ii(0)), score(0), end_flag(false), last_type(FLAT), ok_pair(0), ope_sum(0), pile_dir(HORIZON) {
 }
@@ -21,12 +21,8 @@ int State::getNextCount(int type) {
     if (this->progress == 0) return 4 * (type == 0);
     if (!isOKType(type)) return 0;
     if (type == 14) return 1;
-    // if (type == 15) return fsdb::getNextCount(this);
     if (type == 15) {
-        // cout << "." << flush;
-        State::tmp_route = fsdb::getOperation(this);
-        // cout << "# " << (int)State::tmp_route.getSize() << endl;
-        return State::tmp_route.getSize();
+        return route->getSize();
     }
 
     v_pos base_pos = this->getBasePos(type);
@@ -131,6 +127,7 @@ void State::getClone(State *out) {
     out->ope_sum = this->ope_sum;
     out->pile_dir = this->pile_dir;
     out->last_pair_x = this->last_pair_x;
+    out->route = this->route;
 }
 
 void State::getAnswer(v_pair_ii &ans_log, int idx, v_ope &out) {
@@ -141,12 +138,14 @@ void State::getAnswer(v_pair_ii &ans_log, int idx, v_ope &out) {
     tmp_s.f.pos_mem = tmp_pos_mem;
 
     this->getClone(&tmp_s);
+    fsdb::Routes tmp_route;
+    tmp_s.route = &tmp_route;
     rep (i, (int)ans_log.size()) {
         if (tmp_s.progress == 0) {
             // cout << ans_log[i].second << " " << tmp_s.rotate_hosei << " " << tmp_s.x_hosei << " " << tmp_s.y_hosei << endl;
         } else {
             if (ans_log[i].first == 15) {
-                State::tmp_route = fsdb::getOperation(&tmp_s);
+                tmp_route = fsdb::getOperation(&tmp_s);
             }
             v_ope ope_list = tmp_s.getOperation(ans_log[i].first, ans_log[i].second);
             for (Ope &ope : ope_list) {
@@ -178,7 +177,7 @@ v_ope State::getOperation(int type, int idx) {
         if (type == 14) {
             return this->getToHorizonOpe();
         } else if (type == 15) {
-            return State::tmp_route.getOperation(idx);
+            return route->getOperation(idx);
         } else {
             v_pos base_pos = this->getBasePos(type);
             // v_pos last_pos = this->getLastPos(type);
@@ -197,6 +196,7 @@ v_ope State::getOperation(int type, int idx) {
 }
 
 bool State::isOKType(int type) { 
+    if (this->progress == 0) return false;
     if (this->progress == this->f.size * 2 - 1 && type != 14) return false;
 
     int tmp_progress, dir;
@@ -277,7 +277,7 @@ bool State::isOKType(int type) {
     } else if (type == 14) {
         return this->pile_dir == VERTICAL && this->last_type == FLAT;
     } else {
-        return this->pile_dir == HORIZON && this->last_type == FLAT;
+        return this->f.size <= 16 && this->pile_dir == HORIZON && this->last_type == FLAT;
     }
     return true;
 }

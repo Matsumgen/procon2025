@@ -9,6 +9,7 @@ using namespace std;
 
 class BeamNode {
     public:
+        BeamNode();
         BeamNode(State *p);
         State *p;
         bool operator < (const BeamNode &other) const;

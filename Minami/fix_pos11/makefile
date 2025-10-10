@@ -2,9 +2,9 @@
 
 CC	  = g++
 CFLAGS    = -std=c++17
-INCLUDE   = -I./inc -I vcpkg_installed/x64-linux/include
-LIBLINK = -L vcpkg_installed/x64-linux/lib/
-LIBLARY = -llmdb
+INCLUDE   = -I./inc -I C:\Users\sisim\vcpkg\installed\x64-mingw-dynamic\include
+LIBLINK = -L C:\Users\sisim\vcpkg\installed\x64-mingw-dynamic\lib	
+LIBLARY = -llmdb  -lcpr -lcurl -lssl -lcrypto -lws2_32 -lcrypt32 -lwldap32
 
 TARGET    = exe
 SRCDIR    = ./src
@@ -21,11 +21,11 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS)
 # 	$(CC) -o $@ $^ $(ASAN_FLAGS) 
-	$(CC) $(CFLAGS) $(INCLUDE) $(LIBLINK) -o $@ $^ -O4 $(LIBLARY)
+	$(CC) $(CFLAGS) $(INCLUDE) $(LIBLINK) -fopenmp -o $@ $^ -O4 $(LIBLARY)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 # 	${CC} $(CFLAGS) $(INCLUDE) -c $< -o $@ $(ASAN_FLAGS)
-	${CC} $(CFLAGS) $(INCLUDE) $(LIBLINK) -c $< -o $@ -O4 $(LIBLARY)
+	${CC} $(CFLAGS) $(INCLUDE) $(LIBLINK) -fopenmp -c $< -o $@ -O4 $(LIBLARY)
 
 clean:
 	rm -f $(OBJS)
