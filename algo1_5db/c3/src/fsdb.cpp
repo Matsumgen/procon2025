@@ -9,6 +9,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <utility>
+#include <omp.h>
 
 #ifdef DEBUG
 #define debug_log(...) _debug_log(__FILE__, __LINE__, __VA_ARGS__)
@@ -132,11 +133,15 @@ bool getCache(const MDB_dbi& fs_dbi, MDB_txn *fs_txn) {
   debug_log("loaded fsdb");
 
   for(auto& fsdb24 : FSDB24) {
-    std::vector<Record>(fsdb24).swap(fsdb24);
+    if (!fsdb24.empty())
+      std::vector<Record>(std::move(fsdb24)).swap(fsdb24);
     for(Record& rec : fsdb24){
-      std::vector<std::array<std::uint8_t, 3>>(rec.second).swap(rec.second);
+      if (!rec.second.empty())
+        std::vector<std::array<std::uint8_t, 3>>(std::move(rec.second)).swap(rec.second);
     }
+    fsdb24.erase( std::remove_if(fsdb24.begin(), fsdb24.end(), [](const Record& rec) { return rec.second.empty(); }), fsdb24.end());
   }
+
   return true;
 }
 
@@ -236,71 +241,56 @@ void fsdb::decodeKey(Key& ret, std::vector<std::uint8_t>& key) {
 
 
 Routes fsdb::getOperation(const State* s) {
+  const std::uint8_t fsize = s->f.size;
   if(s->progress <= 0) {
     throw std::invalid_argument("getOperation: progress <= 0");
-  }else if(s->progress == s->f.size || s->progress >= s->f.size * 2 - 2){
+  }else if(s->progress == fsize || s->progress >= fsize * 2 - 2){
     return Routes();
   }
-  std::uint8_t depth, max_depth = 4;
-  std::uint8_t X1, X2, x1, x2, b;
-  size_t gcm = 1, endd = 1, i, index;
+  std::uint8_t X1, X2;
+  size_t gcm = 1;
   GC[0]->f = FsField(s->f);
   GC[0]->ope.n = 0;
   GC[0]->next.clear();
-  bool horizon = (s->progress > s->f.size), flag1 = false;
-  std::array<std::uint8_t, 3> ope;
+  bool horizon = (s->progress > fsize);
 
   if(horizon) {
-    X1 = FSIZE - (s->progress - s->f.size - 1) - 2;
-    X2 = FSIZE + s->f.size - (s->progress - s->f.size - 1) - 4;
-    GC[0]->tg[0] = static_cast<std::uint8_t>(s->f.size - 2);
-    GC[0]->tg[1] = static_cast<std::uint8_t>(s->progress - s->f.size + 1);
+    X1 = FSIZE - (s->progress - fsize - 1) - 2;
+    X2 = FSIZE + fsize - (s->progress - fsize - 1) - 4;
+    GC[0]->tg[0] = static_cast<std::uint8_t>(fsize - 2);
+    GC[0]->tg[1] = static_cast<std::uint8_t>(s->progress - fsize + 1);
   }else {
     X1 = FSIZE - (s->progress - 1) - 2;
-    X2 = FSIZE + s->f.size - (s->progress - 1) - 2;
+    X2 = FSIZE + fsize - (s->progress - 1) - 2;
     GC[0]->tg[0] = static_cast<std::uint8_t>(s->progress - 1);
     GC[0]->tg[1] = 0;
   }
 
 
-  SRoutes_ptr root;
-  for(i = 0; i < GC_SIZE; ++i){
-    if(i >= endd) {
-      --max_depth;
-      if(max_depth <= 1) {
-        break;
-      }else if(gcm <= endd){
-        debug_log("Not Found.");
-        break;
-      }
-      endd = gcm;
-    }
-    /* debug_log("test1: ", (int)max_depth, (int)endd, (int)gcm, (int)i, horizon); */
-    root = GC[i];
-    flag1 = true;
-    // depthのforは最初の一回だけでいい？
-    for(depth = 1; depth < max_depth && depth < 4 && flag1; ++depth){
-
-      for(x1 = X1; x1 <= 22; ++x1) {
-        for(x2 = X2; 24 <= x2; --x2){
-          index = getIndex(depth, x1, x2);
-          if (FSDB24[index].empty()) continue;
-
-          /* debug_log("test2:", (int)depth, (int)x1, (int)x2, (int)index); */
-
-          std::vector<Record>& fsdb24 = FSDB24[index];
-          for(Record& rec: fsdb24) {
-            PKey k = rec.first;
-            k.adaptation(X1, horizon, s->f.size);
-
-            if(root->isNext(k.p1, k.p2, k.p3, k.p4)) {
+  std::uint8_t startd = 0, endd = 1;
+  for(std::uint8_t d = 4; d > 1; --d){
+    #pragma omp parallel for schedule(dynamic)
+    for(size_t i = startd; i < endd; ++i){
+      SRoutes_ptr root = GC[i];
+      /* debug_log("test1: ", (int)d, (int)endd, (int)gcm, (int)i, horizon); */
+      for(std::uint8_t depth = 1; depth < d && depth < 4; ++depth){
+        for(std::uint8_t x1 = X1; x1 <= 22; ++x1) {
+          for(std::uint8_t x2 = X2; 24 <= x2; --x2){
+            size_t index = getIndex(depth, x1, x2);
+            if (FSDB24[index].empty()) continue;
+            /* debug_log("test2:", (int)depth, (int)x1, (int)x2, (int)index); */
+            std::vector<Record>& fsdb24 = FSDB24[index];
+            for(Record& rec: fsdb24) {
+              PKey k = rec.first;
+              k.adaptation(X1, horizon, fsize);
+              if(!(root->isNext(k.p1, k.p2, k.p3, k.p4))) continue;
               /* debug_log("p:", (int)k.p1[0], (int)k.p1[1], (int)k.p2[0], (int)k.p2[1], (int)k.p3[0], (int)k.p3[1], (int)k.p4[0], (int)k.p4[1]); */
               for(std::array<std::uint8_t, 3>& _ope : rec.second) {
-                ope = _ope;
+                std::array<std::uint8_t, 3> ope = _ope;
                 ope[0] -= X1;
                 if(horizon){
-                  b = ope[0];
-                  ope[0] = s->f.size - (ope[1] + ope[2] - 1) - 1;
+                  std::uint8_t b = ope[0];
+                  ope[0] = fsize - (ope[1] + ope[2] - 1) - 1;
                   ope[1] = b + 2;
                 }
                 if(!root->inField(ope) || root->inOpe(ope)){
@@ -308,17 +298,21 @@ Routes fsdb::getOperation(const State* s) {
                   continue; 
                 }
                 /* debug_log("\t", "find:", (int)ope[0], (int)ope[1], (int)ope[2]); */
-                root->toNext(GC[gcm], Ope(ope[0], ope[1], ope[2]));
-                root->next.push_back(GC[gcm]);
-                ++gcm;
-                flag1 = false;
+                size_t local_gcm;
+
+                #pragma omp atomic capture
+                local_gcm = gcm++;
+                
+                root->toNext(GC[local_gcm], Ope(ope[0], ope[1], ope[2]));
+                root->next.push_back(GC[local_gcm]); // 今回は排他処理不要
               }
             }
           }
         }
       }
     }
-    max_depth = depth;
+    startd = endd;
+    endd = gcm;
   }
 
   GC[0]->check();
