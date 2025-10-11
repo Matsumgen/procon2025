@@ -7,7 +7,9 @@
 #include <iostream>
 #include <chrono>
 
-#define FIELD_SIZ 12
+#define FIELD_SIZ 24
+/* #define INIT_FILE "../save2/algo1_5_2_24_checked5.db" */
+#define INIT_FILE "../db/algo1_5_2_24.db"
 
 State::State() : x_hosei(0), y_hosei(0), rotate_hosei(0), progress(0), score(0), end_flag(false), last_type(FLAT), log(v_pair_ii(0)), ok_pair(0), ope_sum(0), pile_dir(HORIZON) {}
 
@@ -122,10 +124,11 @@ int think(Field& f) {
 int main(void) {
   std::chrono::system_clock::time_point startTime, endTime;
   startTime = std::chrono::system_clock::now(); // 計測開始時間
-  if(! fsdb_init("../db/algo1_5_2_24.db")){
+  if(! fsdb_init(INIT_FILE)){
     std::cerr << "init error" << std::endl;
     return 0;
   }
+  /* return 0; */
   endTime = std::chrono::system_clock::now();  // 計測終了時間
   std::cout << "time[ms]: "
             << std::chrono::duration_cast<std::chrono::milliseconds>(

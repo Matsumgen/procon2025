@@ -27,7 +27,8 @@ namespace fsdb {
   };
 
   struct FsField {
-    vector<std::uint16_t> field;
+    std::vector<std::uint16_t> field;
+    std::vector<std::array<std::uint16_t, 2>> pairs;
     std::uint8_t size;
 
     FsField() = default;
@@ -35,9 +36,11 @@ namespace fsdb {
     FsField(const Field& f);
     std::uint16_t get(std::uint8_t x, std::uint8_t y) const;
     std::uint16_t get(std::array<std::uint8_t, 2> p) const;
+    std::uint16_t getPair(std::uint8_t x, std::uint8_t y) const;
+    std::uint16_t getPair(std::uint16_t x) const;
     bool inField(const std::uint8_t x, const std::uint8_t y) const;
     void rotate(Ope ope);
-    void print();
+    void print() const;
   };
 
   struct SRoutes {

@@ -99,6 +99,7 @@ bool getCache(const MDB_dbi& fs_dbi, MDB_txn *fs_txn) {
   MDB_val key, data;
   std::uint8_t fsize;
   size_t index;
+  std::vector<std::array<std::uint8_t, 3>> opes;
   debug_log("loading fsdb");
   while(mdb_cursor_get(cursor, &key, &data, MDB_NEXT) == 0) {
     if (key_vec.size() < key.mv_size) key_vec.resize(key.mv_size);
@@ -109,16 +110,9 @@ bool getCache(const MDB_dbi& fs_dbi, MDB_txn *fs_txn) {
     decodeKey(kd, key_vec);
 
     if(kd.depth == 0) continue;
-    /* debug_log(kd.str()); */
-    
-    index = getIndex(kd.depth, kd.x1, kd.x2);
-    std::vector<Record>& records = FSDB24[index];
 
-    /* debug_log((int)kd.depth, FSIZE - kd.x1 - 2, (int)fsize, index, kd.str()); */
-
-    records.push_back(Record(kd.pk, std::vector<std::array<std::uint8_t, 3>>()));
-    std::vector<std::array<std::uint8_t, 3>>& opes = records.back().second;
     fsize = kd.x2 - kd.x1;
+    opes.clear();
     for(auto v: val) {
       if(v[0] + v[2] <= fsize && v[1] + v[2] - 2 <= fsize) { // hor=Trueの時は縦が2長い
         v[0] = v[0] + kd.x1;
@@ -126,17 +120,49 @@ bool getCache(const MDB_dbi& fs_dbi, MDB_txn *fs_txn) {
       }
     }
 
-    /* debug_log("val:", aopes_str(opes)); */
+    if(opes.size() == 0) continue;
 
+    std::uint64_t& k = kd.pk.value;
+    if(FSDB24.find(k) == FSDB24.end()) {
+      FSDB24[k] = Record{};
+    }
+    
+    index = getIndex(kd.depth, kd.x1, kd.x2);
+    if(FSDB24[k].find(index) == FSDB24[k].end()) {
+      FSDB24[k][index] = std::vector<std::array<std::uint8_t, 3>>();
+      std::vector<std::array<std::uint8_t, 3>>& fopes = FSDB24[k][index];
+      fopes.reserve(fopes.size());
+      fopes.insert(fopes.end(), opes.begin(), opes.end());
+    }else{
+      std::vector<std::array<std::uint8_t, 3>>& fopes = FSDB24[k][index];
+      fopes.reserve(fopes.size() + opes.size());
+      fopes.insert(fopes.end(), opes.begin(), opes.end());
+    }
+
+
+
+    /* debug_log("val:", aopes_str(opes)); */
   }
   debug_log("loaded fsdb");
 
-  for(auto& fsdb24 : FSDB24) {
-    std::vector<Record>(fsdb24).swap(fsdb24);
-    for(Record& rec : fsdb24){
-      std::vector<std::array<std::uint8_t, 3>>(rec.second).swap(rec.second);
-    }
-  }
+  /* PKey pk{}; */
+  /* for (auto& [id, record] : FSDB24) { */
+  /*   for (auto& [key, vec] : record) { */
+  /*     /1* std::vector<std::array<std::uint8_t, 3>>(vec).swap(vec); *1/ */
+  /*     pk.value = id; */
+  /*     std::cout << pk.str() << "\t" << (int)key << "\t" <<  vec.size() << std::endl; */
+  /*   } */
+  /* } */
+  debug_log("FSDB24 size:", FSDB24.size());
+
+  /* for(int depth = 1; depth < 4; ++depth){ */
+  /*   for(int x1 = 0; x1 <= 22; ++x1) { */
+  /*     for(int x2 = 24 + x1; 24 <= x2; --x2){ */
+  /*       printf("%d %2d %2d %5zu\t%zu\n", depth, x1, x2, getIndex(depth, x1, x2), FSDB24[getIndex(depth, x1, x2)].size()); */
+  /*     } */
+  /*   } */
+  /* } */
+
   return true;
 }
 
@@ -146,13 +172,43 @@ bool PKey::operator==(const PKey& other) {
 
 void PKey::adaptation(const std::uint8_t X1, const bool& hor,const std::uint8_t fsize) {
   for (auto& p : {std::ref(p1), std::ref(p2), std::ref(p3), std::ref(p4)}) {
-    p.get()[0] -= X1;
+    p.get()[0] += X1;
     if (hor) {
       uint8_t b = p.get()[0];
       p.get()[0] = fsize - p.get()[1] - 1;
       p.get()[1] = b + 2;
     }
   }
+}
+
+std::array<PKey, 8> PKey::getIsotopes() {
+  std::array<PKey, 8> ret;
+  ret.fill(*this);
+  std::swap(ret[1].p1, ret[1].p2);
+  std::swap(ret[2].p3, ret[2].p4);
+  std::swap(ret[3].p1, ret[3].p2);
+  std::swap(ret[3].p3, ret[3].p4);
+  std::swap(ret[4].p1, ret[4].p3);
+  std::swap(ret[4].p2, ret[4].p4);
+  std::swap(ret[5].p1, ret[5].p4);
+  std::swap(ret[5].p2, ret[5].p3);
+  std::swap(ret[6].p1, ret[6].p3);
+  std::swap(ret[6].p2, ret[6].p4);
+  std::swap(ret[6].p3, ret[6].p4);
+  std::swap(ret[6].p1, ret[6].p3);
+  std::swap(ret[6].p2, ret[6].p4);
+  std::swap(ret[6].p1, ret[6].p2);
+  return ret;
+}
+
+std::string PKey::str() const {
+  std::ostringstream oss;
+  oss << "PKey: {";
+  oss << (int)this->p1[0] << ", " << (int)this->p1[1] << "} {";
+  oss << (int)this->p2[0] << ", " << (int)this->p2[1] << "} {";
+  oss << (int)this->p3[0] << ", " << (int)this->p3[1] << "} {";
+  oss << (int)this->p4[0] << ", " << (int)this->p4[1] << "}";
+  return oss.str();
 }
 
 std::string Key::str() const {
@@ -233,32 +289,37 @@ void fsdb::decodeKey(Key& ret, std::vector<std::uint8_t>& key) {
 
 
 
-
-
 Routes fsdb::getOperation(const State* s) {
+  const std::uint8_t fsize = s->f.size;
   if(s->progress <= 0) {
     throw std::invalid_argument("getOperation: progress <= 0");
-  }else if(s->progress == s->f.size || s->progress >= s->f.size * 2 - 2){
+  }else if(s->progress == fsize || s->progress >= fsize * 2 - 2){
     return Routes();
   }
-  std::uint8_t depth, max_depth = 4;
-  std::uint8_t X1, X2, x1, x2, b;
-  size_t gcm = 1, endd = 1, i, index;
   GC[0]->f = FsField(s->f);
   GC[0]->ope.n = 0;
   GC[0]->next.clear();
-  bool horizon = (s->progress > s->f.size), flag1 = false;
+  /* GC[0]->f.print(); */
+
+  const bool horizon = (s->progress > fsize);
+  const size_t pairSize = GC[0]->f.pairs.size();
+  const std::uint8_t endy = s->progress - 1 - fsize + 2;
+  const std::uint8_t endx = s->progress - 1;
+
+  std::uint8_t depth, X1, X2, x1, x2, b, max_depth = 4;
+  size_t gcm = 1, endd = 1, i, index;
   std::array<std::uint8_t, 3> ope;
+  PKey pk{}, _pk{};
 
   if(horizon) {
-    X1 = FSIZE - (s->progress - s->f.size - 1) - 2;
-    X2 = FSIZE + s->f.size - (s->progress - s->f.size - 1) - 4;
-    GC[0]->tg[0] = static_cast<std::uint8_t>(s->f.size - 2);
-    GC[0]->tg[1] = static_cast<std::uint8_t>(s->progress - s->f.size + 1);
+    X1 = FSIZE - endy;
+    X2 = FSIZE + fsize - endy - 2;
+    GC[0]->tg[0] = static_cast<std::uint8_t>(fsize - 2);
+    GC[0]->tg[1] = static_cast<std::uint8_t>(s->progress - fsize + 1);
   }else {
-    X1 = FSIZE - (s->progress - 1) - 2;
-    X2 = FSIZE + s->f.size - (s->progress - 1) - 2;
-    GC[0]->tg[0] = static_cast<std::uint8_t>(s->progress - 1);
+    X1 = FSIZE - endx - 2;
+    X2 = FSIZE + fsize - endx - 2;
+    GC[0]->tg[0] = endx;
     GC[0]->tg[1] = 0;
   }
 
@@ -275,50 +336,78 @@ Routes fsdb::getOperation(const State* s) {
       }
       endd = gcm;
     }
-    /* debug_log("test1: ", (int)max_depth, (int)endd, (int)gcm, (int)i, horizon); */
+
+
+    /* debug_log("test1: ", (int)max_depth, (int)endd, (int)gcm, (int)i, horizon, (int)pairSize); */
     root = GC[i];
-    flag1 = true;
-    // depthのforは最初の一回だけでいい？
-    for(depth = 1; depth < max_depth && depth < 4 && flag1; ++depth){
+    /* root->f.print(); */
+    FsField& f = root->f;
+    for (std::uint16_t i = 0; i < pairSize; ++i) {
+      const auto& pi = f.pairs[i];
+      _pk.p1[0] = pi[0] % fsize;
+      _pk.p1[1] = pi[0] / fsize;
+      _pk.p2[0] = pi[1] % fsize;
+      _pk.p2[1] = pi[1] / fsize;
+      if(horizon){
+        if(_pk.p1[1] < 2 || (fsize - 2 < _pk.p1[0] && _pk.p1[1] < endy)) { debug_log("ignore", arr_str(_pk.p1)); break; }
+      }else{
+        if(_pk.p1[1] < 2 && _pk.p1[0] < endx) { debug_log("ignore", arr_str(_pk.p1)); break; }
+      }
+      for (std::uint16_t j = i + 1; j < pairSize; ++j) {
+        const auto& pj = f.pairs[j];
+        _pk.p3[0] = pj[0] % fsize;
+        _pk.p3[1] = pj[0] / fsize;
+        _pk.p4[0] = pj[1] % fsize;
+        _pk.p4[1] = pj[1] / fsize;
+        if(horizon){
+          if(_pk.p3[1] < 2 || (fsize - 2 < _pk.p3[0] && _pk.p3[1] < endy)) { debug_log("ignore", arr_str(_pk.p3)); break; }
+        }else{
+          if(_pk.p3[1] < 2 && _pk.p3[0] < endx) { debug_log("ignore", arr_str(_pk.p3)); break; }
+        }
 
-      for(x1 = X1; x1 <= 22; ++x1) {
-        for(x2 = X2; 24 <= x2; --x2){
-          index = getIndex(depth, x1, x2);
-          if (FSDB24[index].empty()) continue;
+        /* debug_log(_pk.str()); */
 
-          /* debug_log("test2:", (int)depth, (int)x1, (int)x2, (int)index); */
+        pk = _pk;
+        pk.adaptation(X1, horizon, fsize);
+        
+        for(auto& pkiso : pk.getIsotopes()) {
+          if(FSDB24.find(pk.value) != FSDB24.end()){
+            pk = pkiso;
+            break;
+          }
+        }
 
-          std::vector<Record>& fsdb24 = FSDB24[index];
-          for(Record& rec: fsdb24) {
-            PKey k = rec.first;
-            k.adaptation(X1, horizon, s->f.size);
+        if(FSDB24.find(pk.value) == FSDB24.end()) continue;
+        /* debug_log("find:", pk.str()); */
 
-            if(root->isNext(k.p1, k.p2, k.p3, k.p4)) {
-              /* debug_log("p:", (int)k.p1[0], (int)k.p1[1], (int)k.p2[0], (int)k.p2[1], (int)k.p3[0], (int)k.p3[1], (int)k.p4[0], (int)k.p4[1]); */
-              for(std::array<std::uint8_t, 3>& _ope : rec.second) {
+        Record& records = FSDB24[pk.value];
+        for(depth = 1; depth < max_depth; ++depth){
+          for(x1 = X1; x1 <= 22; ++x1) {
+            for(x2 = X2; 24 <= x2; --x2){
+              index = getIndex(depth, x1, x2);
+              if(records.find(index) == records.end()) continue;
+              for(auto& _ope : records[index]){
                 ope = _ope;
                 ope[0] -= X1;
                 if(horizon){
                   b = ope[0];
-                  ope[0] = s->f.size - (ope[1] + ope[2] - 1) - 1;
+                  ope[0] = fsize - (ope[1] + ope[2] - 1) - 1;
                   ope[1] = b + 2;
                 }
                 if(!root->inField(ope) || root->inOpe(ope)){
                   /* debug_log("\t", "not in Field", (int)ope[0], (int)ope[1], (int)ope[2]); */
                   continue; 
                 }
-                /* debug_log("\t", "find:", (int)ope[0], (int)ope[1], (int)ope[2]); */
+                /* debug_log("\t", "find:", (int)depth, (int)x1, (int)x2, (int)ope[0], (int)ope[1], (int)ope[2]); */
                 root->toNext(GC[gcm], Ope(ope[0], ope[1], ope[2]));
                 root->next.push_back(GC[gcm]);
                 ++gcm;
-                flag1 = false;
               }
             }
           }
         }
       }
     }
-    max_depth = depth;
   }
 
   GC[0]->check();
