@@ -238,8 +238,7 @@ void fsdb::decodeKey(Key& ret, std::vector<std::uint8_t>& key) {
 Routes fsdb::getOperation(const State* s) {
   if(s->progress <= 0) {
     throw std::invalid_argument("getOperation: progress <= 0");
-  }else if(s->progress > s->f.size * 2 - 2){
-    std::cout << "getOperation: is Ended" << std::endl;
+  }else if(s->progress == s->f.size || s->progress >= s->f.size * 2 - 2){
     return Routes();
   }
   std::uint8_t depth, max_depth = 4;
