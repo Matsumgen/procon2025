@@ -30,6 +30,7 @@ namespace fsdb {
     };
 
   bool operator==(const PKey& other);
+  void adaptation(const std::uint8_t X1, const bool& hor,const std::uint8_t fsize);
   };
   typedef std::pair<PKey, std::vector<std::array<std::uint8_t, 3>>> Record;
 

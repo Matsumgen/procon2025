@@ -144,6 +144,17 @@ bool PKey::operator==(const PKey& other) {
   return this->value == other.value;
 }
 
+void PKey::adaptation(const std::uint8_t X1, const bool& hor,const std::uint8_t fsize) {
+  for (auto& p : {std::ref(p1), std::ref(p2), std::ref(p3), std::ref(p4)}) {
+    p.get()[0] -= X1;
+    if (hor) {
+      uint8_t b = p.get()[0];
+      p.get()[0] = fsize - p.get()[1] - 1;
+      p.get()[1] = b + 2;
+    }
+  }
+}
+
 std::string Key::str() const {
   std::ostringstream oss;
   oss << (int)this->depth << " <" << (int)this->x1 << ", " << (int)this->x2 << "> {";
@@ -225,6 +236,12 @@ void fsdb::decodeKey(Key& ret, std::vector<std::uint8_t>& key) {
 
 
 Routes fsdb::getOperation(const State* s) {
+  if(s->progress <= 0) {
+    throw std::invalid_argument("getOperation: progress <= 0");
+  }else if(s->progress > s->f.size * 2 - 2){
+    std::cout << "getOperation: is Ended" << std::endl;
+    return Routes();
+  }
   std::uint8_t depth, max_depth = 4;
   std::uint8_t X1, X2, x1, x2, b;
   size_t gcm = 1, endd = 1, i, index;
@@ -232,6 +249,7 @@ Routes fsdb::getOperation(const State* s) {
   GC[0]->ope.n = 0;
   GC[0]->next.clear();
   bool horizon = (s->progress > s->f.size), flag1 = false;
+  std::array<std::uint8_t, 3> ope;
 
   if(horizon) {
     X1 = FSIZE - (s->progress - s->f.size - 1) - 2;
@@ -267,39 +285,24 @@ Routes fsdb::getOperation(const State* s) {
       for(x1 = X1; x1 <= 22; ++x1) {
         for(x2 = X2; 24 <= x2; --x2){
           index = getIndex(depth, x1, x2);
+          if (FSDB24[index].empty()) continue;
 
           /* debug_log("test2:", (int)depth, (int)x1, (int)x2, (int)index); */
 
           std::vector<Record>& fsdb24 = FSDB24[index];
           for(Record& rec: fsdb24) {
             PKey k = rec.first;
-            k.p1[0] -= X1;
-            k.p2[0] -= X1;
-            k.p3[0] -= X1;
-            k.p4[0] -= X1;
-            if(horizon){
-              b = k.p1[0];
-              k.p1[0] = s->f.size - k.p1[1] - 1;
-              k.p1[1] = b + 2;
-              b = k.p2[0];
-              k.p2[0] = s->f.size - k.p2[1] - 1;
-              k.p2[1] = b + 2;
-              b = k.p3[0];
-              k.p3[0] = s->f.size - k.p3[1] - 1;
-              k.p3[1] = b + 2;
-              b = k.p4[0];
-              k.p4[0] = s->f.size - k.p4[1] - 1;
-              k.p4[1] = b + 2;
-            }
+            k.adaptation(X1, horizon, s->f.size);
+
             if(root->isNext(k.p1, k.p2, k.p3, k.p4)) {
               /* debug_log("p:", (int)k.p1[0], (int)k.p1[1], (int)k.p2[0], (int)k.p2[1], (int)k.p3[0], (int)k.p3[1], (int)k.p4[0], (int)k.p4[1]); */
-              for(std::array<std::uint8_t, 3> ope : rec.second) {
+              for(std::array<std::uint8_t, 3>& _ope : rec.second) {
+                ope = _ope;
                 ope[0] -= X1;
                 if(horizon){
                   b = ope[0];
                   ope[0] = s->f.size - (ope[1] + ope[2] - 1) - 1;
                   ope[1] = b + 2;
-
                 }
                 if(!root->inField(ope) || root->inOpe(ope)){
                   /* debug_log("\t", "not in Field", (int)ope[0], (int)ope[1], (int)ope[2]); */
