@@ -1,0 +1,23 @@
+Package: vcpkg-cmake-config
+Version: 2024-05-23
+Architecture: x64-linux
+Multi-Arch: same
+Abi: bf9f8b3b654f1a8f4a3c16bfa5f1ee228ee49b1eba1241989c9b305db15dc003
+Status: install ok installed
+
+Package: vcpkg-cmake
+Version: 2024-04-23
+Architecture: x64-linux
+Multi-Arch: same
+Abi: 27b2f2dc6238c408a551df274772d4e48b73da8eb9ca19e0876150528b2ac9e8
+Status: install ok installed
+
+Package: lmdb
+Version: 0.9.33
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-linux
+Multi-Arch: same
+Abi: fd8d81dabe238f5f3090f8fe54cbfdfeec7d579e8624f52c7d496fd5a4e7a2fe
+Description: LMDB is an extraordinarily fast, memory-efficient database
+Status: install ok installed
+
