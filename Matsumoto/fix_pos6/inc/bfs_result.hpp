@@ -1,23 +1,19 @@
-#ifndef BFS_RESULT_HPP
+﻿#ifndef BFS_RESULT_HPP
 #define BFS_RESULT_HPP 0
-using namespace std;
-#include "state.hpp"
+
+#include "state.hpp" // Stateや関連する型定義に必要
+#include "field.hpp" // vvvvv_ope型定義に必要
 
 #include <cstdio>
+#include <string>
 
-#define BFS_RESULT_FILE_NAME "../data/bfs_result6_m5.bin"
+#define BFS_RESULT_FILE_NAME "/Users/sisim/Documents/procon/procon2025/Matsumoto/fix_pos6/data/bfs_result6_m5.bin"
 
-/**
- * BFSの結果を管理するクラス
- * 基本的にインスタンスを作成せず静的メソッドを利用する
- */
 class BFS_result {
 public:
   static FILE *fp;
   static char now_file_name[256];
-  static vvvvv_ope
-      bfs_result; // bfsの結果を格納している配列(bfs_result[i][j][k][l]:
-                  // i番目にタイプjでマスkを目的地に持っていくl番目の手順リスト)
+  static vvvvv_ope bfs_result;
 
   static void open(char *file_name);
   static void close();
@@ -27,8 +23,7 @@ public:
                                int type);
 
 private:
-  static v_int
-      idx_memo; // 現在の盤面のサイズと揃えた進捗からbfs_resultに対応するインデックスを求める際のメモ
+  static v_int idx_memo;
 
   static int calcOpeIndex(int size, int progress);
   static Pos calcTargetPos(int size, Pos target_pos);

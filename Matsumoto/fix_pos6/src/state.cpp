@@ -1,4 +1,15 @@
-#include "../inc/all.hpp"
+﻿#include "../inc/state.hpp"
+#include "../inc/field.hpp"
+#include "../inc/bfs_result.hpp"
+#include "../inc/utilities.hpp" // manhattan, rotateOpe関数に必要
+
+// その他の必要な標準ライブラリ
+#include <iostream>
+#include <vector>
+#include <algorithm> // std::min, std::maxなどに必要
+#include <utility>   // std::pairに必要
+
+using namespace std;
 
 State::State() : x_hosei(0), y_hosei(0), rotate_hosei(0), progress(0), log(v_pair_ii(0)), score(0), end_flag(false), last_type(VERTICAL) {
 }

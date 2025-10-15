@@ -2,10 +2,11 @@
 #define BEAMSEARCH_HPP 0
 
 // #include "all.hpp"
-#include <bits/stdc++.h>
-using namespace std;
+
 #include "utilities.hpp"
 #include "state2.hpp"
+#include <iostream>
+#include <queue>
 
 class BeamNode {
     public:

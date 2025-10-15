@@ -1,4 +1,14 @@
-#include "../inc/all.hpp"
+﻿#include "../inc/field.hpp"
+#include "../inc/utilities.hpp"
+
+// その他の必要な標準ライブラリ
+#include <iostream>
+#include <vector>
+#include <cstring> // memcpy, memmove に必要
+#include <cstdio>  // printf に必要
+#include <cstdlib> // exit に必要
+
+using namespace std;
 
 Pos::Pos() {
 }
@@ -100,7 +110,7 @@ void Field::rotate(Ope ope) {
             int dy[4] = {h1, w2, h2, w1};
             int dx[4] = {w1, h1, w2, h2};
             rep (i, 4){
-                Pos setting = (Pos){static_cast<uint8_t>(ope.x + dx[i]), static_cast<uint8_t>(ope.y + dy[i])};
+                Pos setting = Pos{static_cast<uint8_t>(ope.x + dx[i]), static_cast<uint8_t>(ope.y + dy[i])};
                 this->getEnt(setting.y, setting.x) = i == 3 ? buf : this->getEnt(ope.y + dy[i + 1], ope.x + dx[i + 1]);
                 this->getEntPos(this->getEnt(setting.y, setting.x).val, this->getEnt(setting.y, setting.x).num) = setting;
             }
@@ -119,7 +129,7 @@ void Field::rotate(Ope ope) {
             int dy[4] = {h1, mh, h2, mh};
             int dx[4] = {mw, w1, mw, w2};
             rep (j, 4){
-                Pos setting = (Pos){static_cast<uint8_t>(dx[j]), static_cast<uint8_t>(dy[j])};
+                Pos setting = Pos{static_cast<uint8_t>(dx[j]), static_cast<uint8_t>(dy[j])};
                 this->getEnt(setting.y, setting.x) = j == 3 ? buf : this->getEnt(dy[j + 1], dx[j + 1]);
                 this->getEntPos(this->getEnt(setting.y, setting.x).val, this->getEnt(setting.y, setting.x).num) = setting;
             }

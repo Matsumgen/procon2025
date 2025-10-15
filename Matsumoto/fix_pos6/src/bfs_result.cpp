@@ -1,4 +1,14 @@
-#include "../inc/all.hpp"
+﻿#include "../inc/bfs_result.hpp"
+#include "../inc/field.hpp"
+#include "../inc/utilities.hpp"
+
+// その他の必要な標準ライブラリ
+#include <iostream>
+#include <vector>
+#include <cstdio>
+#include <cstring>
+
+using namespace std;
 
 FILE *BFS_result::fp = NULL;
 char BFS_result::now_file_name[256] = "";
@@ -40,7 +50,7 @@ void BFS_result::open(char *file_name) {
                     fread(&x, sizeof(char), 1, BFS_result::fp);
                     fread(&y, sizeof(char), 1, BFS_result::fp);
                     fread(&n, sizeof(char), 1, BFS_result::fp);
-                    BFS_result::bfs_result[i][j][k][l][m] = (Ope){(short)x, (short)y, (short)n};
+                    BFS_result::bfs_result[i][j][k][l][m] = Ope{(short)x, (short)y, (short)n};
                 }
             }
         }

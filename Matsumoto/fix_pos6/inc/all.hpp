@@ -1,9 +1,8 @@
-#ifndef ALL_HPP
+﻿#ifndef ALL_HPP
 #define ALL_HPP
 
 #include <nlohmann/json.hpp>
 
-using namespace std;
 #include "field.hpp"
 #include "state.hpp"
 #include "utilities.hpp"

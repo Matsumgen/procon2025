@@ -2,13 +2,14 @@
 #define STATE_HPP 0
 
 // #include "all.hpp"
-#include <bits/stdc++.h>
-using namespace std;
 
 #include "field.hpp"
+#include <utility>
+#include <vector>
 
 #define TYPE_CNT1 3
 #define TYPE_CNT2 5
+#define TYPE_CNT3 6
 
 class State {
     public:
@@ -22,6 +23,8 @@ class State {
         v_pair_ii log;
         int ok_pair;
         int ope_sum;
+        bool pile_dir;
+        int last_pair_x;
 
         State();
         bool isEnd();
@@ -36,6 +39,7 @@ class State {
         v_pos getBasePos(int type);
         v_pos getLastPos(int type);
         bool isOKType(int type);
+        v_ope getToHorizonOpe();
 };
 
 /*enum PairType {
@@ -46,6 +50,13 @@ class State {
 
 enum LastType {
     FLAT = 0,
-    OUTSIDE
+    OUTSIDE,
+    LEFT,
+    RIGHT
+};
+
+enum PileDir {
+    HORIZON = 0,
+    VERTICAL
 };
 #endif

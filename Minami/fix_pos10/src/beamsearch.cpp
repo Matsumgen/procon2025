@@ -1,5 +1,7 @@
 #include "../inc/all.hpp"
 
+using namespace std;
+
 BeamNode::BeamNode(State *p) : p(p){
 }
 
@@ -21,6 +23,16 @@ v_pair_ii BeamSearch::beamsearch() {
     }
 
     int second_state_idx = 0;
+    if (this->first->f.size <= 10) {
+        this->first_state_mem[second_state_idx].score = first->getScore();
+        this->first_state_mem[second_state_idx].log = first->log;
+        this->first_state_mem[second_state_idx].rotate_hosei = first->rotate_hosei;
+        this->first_state_mem[second_state_idx].x_hosei = first->x_hosei;
+        this->first_state_mem[second_state_idx].y_hosei = first->y_hosei;
+        this->first_state_mem[second_state_idx].f.size = first->f.size;
+        first->f.getClone(&(this->second_state_mem[second_state_idx].f));
+        second_state_idx++;
+    }
 
     priority_queue<BeamNode> now_beam;
     state_mem[1][0].f.ent_mem = ent_mem[1];
@@ -65,7 +77,7 @@ v_pair_ii BeamSearch::beamsearch() {
                 second_state_idx++;
             }
 
-            rep (type, TYPE_CNT1 + TYPE_CNT2) {
+            rep (type, TYPE_CNT1 + TYPE_CNT2 + TYPE_CNT3 + 1) {
                 int next_cnt = tmp.p->getNextCount(type);
                 rep (j, next_cnt) {
                     State *next_state = state_mem[i % 2] + mem_idx;
@@ -80,7 +92,7 @@ v_pair_ii BeamSearch::beamsearch() {
         }
         // if (is_end) break;
         now_beam = move(next_beam);
-        printf("(%d, %d, %d)\n", i, (int)now_beam.size(), max_score);
+        printf("(%d, %d, %d, %d)\n", i, (int)now_beam.size(), mem_idx, max_score);
         cout << flush;
         // cout << best_state->progress << " " << best_state->last_type << endl;
         // rep (j, best_state->log.size()) {
@@ -89,6 +101,7 @@ v_pair_ii BeamSearch::beamsearch() {
         // cout << endl;
         // best_state->f.printField();
     }
+    cout << "mem_idx: " << second_state_idx << endl;
 
     rep (i, 2) {
         delete[] state_mem[i];
@@ -210,7 +223,7 @@ bool BeamSearch2::beamsearch(v_ope &out) {
         }
         if (is_end) break;
         now_beam = move(next_beam);
-        printf("(%d, %d, %d)\n", i, (int)now_beam.size(), max_score);
+        printf("(%d, %d, %d, %d)\n", i, (int)now_beam.size(), mem_idx, max_score);
         cout << flush;
         // cout << best_state->progress << " " << best_state->last_type << endl;
         // rep (j, best_state->log.size()) {

@@ -1,4 +1,13 @@
-#include "../inc/all.hpp"
+﻿#include "../inc/beamsearch.hpp"
+#include "../inc/state.hpp"
+#include "../inc/utilities.hpp"
+
+// その他の必要な標準ライブラリ
+#include <iostream>
+#include <queue>
+#include <utility>
+#include <climits> // INT_MIN に必要
+#include <algorithm> // std::max に必要
 
 BeamNode::BeamNode(State *p) : p(p){
 }
@@ -20,7 +29,7 @@ v_pair_ii BeamSearch::beamsearch() {
         pos_mem[i] = new Pos[600000 * this->first->f.size * this->first->f.size]{};
     }
 
-    priority_queue<BeamNode> now_beam;
+    std::priority_queue<BeamNode> now_beam;
     state_mem[1][0].f.ent_mem = ent_mem[1];
     state_mem[1][0].f.pos_mem = pos_mem[1];
     this->first->getClone(state_mem[1]);
@@ -28,7 +37,7 @@ v_pair_ii BeamSearch::beamsearch() {
     bool is_end = false;
     State *last_state = NULL;
     rep (i, this->max_turn) {
-        priority_queue<BeamNode> next_beam;
+        std::priority_queue<BeamNode> next_beam;
         int debug = 0;
 
         int max_score = INT_MIN;
@@ -39,7 +48,7 @@ v_pair_ii BeamSearch::beamsearch() {
             if (tmp.p->getScore() > max_score) {
                 best_state = tmp.p;
             }
-            max_score = max(max_score, tmp.p->getScore());
+            max_score = std::max(max_score, tmp.p->getScore());
             if (tmp.p->isEnd()) {
                 is_end = true;
                 last_state = tmp.p;
@@ -62,7 +71,7 @@ v_pair_ii BeamSearch::beamsearch() {
         if (is_end) break;
         now_beam = move(next_beam);
         printf("(%d, %lld, %d)\n", i, now_beam.size(), max_score);
-        cout << flush;
+        std::cout << std::flush;
         // cout << best_state->progress << endl;
         // best_state->f.printField();
     }
@@ -81,7 +90,7 @@ v_pair_ii BeamSearch::beamsearch() {
     if (is_end) {
         return res;
     } else {
-        cout << "Cannot solve !!" << endl;
+        std::cout << "Cannot solve !!" << std::endl;
         exit(1);
     }
 }
@@ -91,7 +100,7 @@ v_pair_ii BeamSearch::beamsearch() {
  * priority_queueは結果が昇順に入っており, 評価は高いほうがいいものとする
  * 追加した場合はtrueを返す。
  */
-bool BeamSearch::addPriorityQueue(priority_queue<BeamNode> &beam, BeamNode node) {
+bool BeamSearch::addPriorityQueue(std::priority_queue<BeamNode> &beam, BeamNode node) {
     if (beam.size() < this->width || node.p->progress == 1) {
         beam.push(node);
         return true;
