@@ -1,0 +1,57 @@
+#include <algo.cuh>
+#include <matrix.cuh>
+#include <matrixField.cuh>
+#include <iostream>
+#include <cuda_runtime.h>
+#include <cstdio>
+
+
+__global__
+void rotate_process(MatrixArrayDp4a arr, const uint8_t x, const uint8_t y, const uint8_t n, uint16_t *result) {
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  printf("Thread %d\n", idx);
+  if (idx < 1) {
+    printf("exec Thread %d: arr.fsize=%d\n", idx, (int)arr.fsize);
+    arr.rotate(x, y, n);
+    arr.culc(result);
+  }
+
+}
+
+
+
+void test_rotate() {
+  const uint8_t fsize = 8;
+  const size_t field_size = fsize * fsize;
+
+  uint16_t h_result[field_size];
+
+  MatrixArrayDp4a arr(fsize);
+  arr.print();
+
+  uint16_t *d_result;
+  cudaMalloc(&d_result, field_size * sizeof(uint16_t));
+
+  std::cout << "GPU PROCESS" << std::endl;
+  rotate_process<<<1, 1>>>(arr, 1, 2, 4, d_result);
+  cudaDeviceSynchronize();
+  std::cout << "-----------" << std::endl;
+
+  cudaMemcpy(h_result, d_result, field_size * sizeof(uint16_t), cudaMemcpyDeviceToHost);
+
+  std::cout << "result " << (int)arr.fsize << std::endl;
+  for(size_t x = 0; x < fsize; ++x) {
+    for(size_t y = 0; y < fsize; ++y) {
+      size_t i = y * fsize + x;
+      if(arr.field[i] != h_result[i])
+        printf("\x1b[36m%3d\x1b[0m ", (int)h_result[i]);
+      else
+        printf("%3d ", (int)h_result[i]);
+    }
+    std::cout << std::endl;
+  }
+
+  arr.close();
+
+}
+
