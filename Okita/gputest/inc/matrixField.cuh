@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <random>
+#include <iostream>
 
 
 __host__
@@ -17,7 +18,11 @@ bool checkProblem(const uint32_t fsize, const uint16_t *f) {
     }
   }
   for(size_t i = 0; i < a.size(); ++i){
-    if(a[i] != 2) return false;
+    if(a[i] != 2){
+      for(size_t j = 0; j < a.size(); ++j){ std::cout << "(" << j << ", " << a[j] << "), ";}
+      std::cout << std::endl;
+      return false;
+    }
   }
   return true;
 }
@@ -47,8 +52,8 @@ std::vector<uint16_t> makeShuffledPairs(const uint16_t fsize) {
 
 __host__
 void printField(const uint32_t fsize, const uint16_t *field, const uint16_t *before_f) {
-  for(size_t x = 0; x < fsize; ++x) {
-    for(size_t y = 0; y < fsize; ++y) {
+  for(size_t y = 0; y < fsize; ++y) {
+    for(size_t x = 0; x < fsize; ++x) {
       size_t i = y * fsize + x;
       if(field[i] != before_f[i])
         printf("\x1b[36m%3d\x1b[0m ", (int)field[i]);
@@ -62,8 +67,8 @@ void printField(const uint32_t fsize, const uint16_t *field, const uint16_t *bef
 
 __host__
 void printField(const uint32_t fsize, const uint16_t *field) {
-  for(size_t x = 0; x < fsize; ++x) {
-    for(size_t y = 0; y < fsize; ++y) {
+  for(size_t y = 0; y < fsize; ++y) {
+    for(size_t x = 0; x < fsize; ++x) {
       size_t i = y * fsize + x;
       printf("%3d ", (int)field[i]);
     }
