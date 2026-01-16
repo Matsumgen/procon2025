@@ -55,7 +55,7 @@ MAIN_SRC   = $(MAINDIR)/main.cpp
 MAIN_OBJ   = $(OBJDIR)/main.o
 
 # テスト用
-TEST_SRC  = $(TESTDIR)/test.cpp
+TEST_SRC  = $(TESTDIR)/test.cu
 TEST_OBJ  = $(OBJDIR)/test.o
 
 # ==============================
@@ -90,7 +90,7 @@ $(OBJDIR)/main.o: $(MAIN_SRC)
 # test.cpp
 $(OBJDIR)/test.o: $(TEST_SRC)
 	@mkdir -p $(OBJDIR)
-	$(CC) $(CFLAGS) $(INCLUDE) $(INCLUDE_OMP) -MMD -MP -c $< -o $@
+	$(NVCC) $(CUFLAGS) $(INCLUDE) -MMD -MP -c $< -o $@
 
 # 依存関係
 -include $(wildcard $(DEPDIR)/*.Po)

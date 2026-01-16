@@ -2,8 +2,8 @@
 #include <matrix.cuh>
 #include <matrixField.cuh>
 #include <iostream>
-#include <fstream> // ファイル読み込み用
-#include <string>  // 文字列操作用
+#include <fstream>
+#include <string>
 #include <cuda_runtime.h>
 #include <cstdio>
 #include <vector>
@@ -17,7 +17,6 @@ Device name: NVIDIA GeForce RTX 4070 Laptop GPU
 Optimization Strategy:
 1. GPU: On-the-fly calculation.
 2. CPU: Histogram-based Filtering.
-3. Input: Load from Text File.
 */
 
 const uint32_t tidPerField_list[] = { 0, 0, 0, 0,13, 0, 54, 0, 139, 0, 284, 0, 505, 0, 818, 0, 1239, 0, 1784, 0, 2469, 0, 3310, 0, 4323 };
@@ -33,23 +32,17 @@ struct CandidateResult {
     uint64_t hash;
 };
 
-// --- ファイル読み込み関数 ---
-bool loadFieldFromFile(const std::string& filepath, uint32_t& fsize, std::vector<uint16_t>& field) {
+// ファイル読み込みヘルパー
+static bool loadFieldFromFile(const std::string& filepath, uint32_t& fsize, std::vector<uint16_t>& field) {
     std::ifstream ifs(filepath);
     if (!ifs) {
-        std::cerr << "Error: Could not open file " << filepath << std::endl;
+        // デバッグ用: 失敗したパスを表示
+        std::cerr << "Error: Could not open file [" << filepath << "]" << std::endl;
         return false;
     }
-
-    // 1行目: サイズ
     ifs >> fsize;
-    if (fsize == 0 || fsize > 24) { // tidPerField_listの制限など安全策
-        std::cerr << "Error: Invalid fsize " << fsize << std::endl;
-        return false;
-    }
-
+    if (fsize == 0 || fsize > 24) return false;
     field.resize(fsize * fsize);
-    // 残り: 盤面データ
     for (size_t i = 0; i < field.size(); ++i) {
         ifs >> field[i];
     }
@@ -222,35 +215,45 @@ void gather_next_generation_kernel(
     }
 }
 
-// 関数名を変更し、ファイルパスを受け取るように修正
-// main.cppからはこの関数を呼び出す
-void solve_from_file(const std::string& filepath) {
-    std::cout << "start: solve_from_file(" << filepath << ")" << std::endl;
+// ===============================================
+//  メインソルバー関数
+// ===============================================
+SolveResult solve_from_file(const std::string& filepath) {
+    SolveResult result;
+    // ファイル名だけ取得（表示用）
+    result.filename = filepath.substr(filepath.find_last_of("/\\") + 1);
+    result.time_seconds = 0.0;
+    result.moves = 0;
+    result.solved = false;
+    result.fsize = 0;
 
-    // ファイルから盤面を読み込む
+    // --- ファイル読み込み ---
     uint32_t fsize = 0;
     std::vector<uint16_t> start_field;
+    
+    // パスをそのまま渡す（test.cuから絶対パスが来ているはず）
     if (!loadFieldFromFile(filepath, fsize, start_field)) {
-        return; // 読み込み失敗
+        return result;
     }
 
     const uint32_t beam_width = 10000; 
     const uint32_t field_size = fsize * fsize;
     const uint32_t threadsPerBlock = 256;
+
+    result.fsize = fsize;
     
-    // tidPerField_listの範囲チェック
+    // パラメータチェック
     if (fsize >= sizeof(tidPerField_list)/sizeof(uint32_t)) {
-        std::cerr << "Error: fsize too large for tidPerField_list" << std::endl;
-        return;
+        return result;
     }
     const uint32_t tidPerField = tidPerField_list[fsize];
     const uint32_t slotPerField = (tidPerField + threadsPerBlock - 1) / threadsPerBlock;
     
+    // GPUメモリ確保
     uint16_t *d_parent_fields, *d_next_fields;
     cudaMalloc(&d_parent_fields, beam_width * field_size * sizeof(uint16_t));
     cudaMalloc(&d_next_fields, beam_width * field_size * sizeof(uint16_t));
     
-    // 初期盤面を転送
     cudaMemcpy(d_parent_fields, start_field.data(), field_size * sizeof(uint16_t), cudaMemcpyHostToDevice);
 
     size_t max_candidates = (size_t)beam_width * slotPerField * threadsPerBlock;
@@ -281,16 +284,8 @@ void solve_from_file(const std::string& filepath) {
         return a.hash < b.hash;
     };
 
+    // --- 探索ループ ---
     while(best_score < fsize * fsize + 1 && ope_num < MAX_DEPTH) {
-        auto current_time = std::chrono::high_resolution_clock::now();
-        double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - start_time).count() / 1000.0;
-        
-        std::cout << "depth=" << ope_num - 1 
-                  << " parents=" << parent_count 
-                  << " best=" << best_score
-                  << " time=" << elapsed << "s" 
-                  << std::endl;
-
         uint32_t total_threads = parent_count * slotPerField * threadsPerBlock;
         uint32_t num_blocks = (total_threads + threadsPerBlock - 1) / threadsPerBlock;
 
@@ -302,7 +297,7 @@ void solve_from_file(const std::string& filepath) {
         h_candidates.resize(total_threads);
         cudaMemcpy(h_candidates.data(), d_candidates, total_threads * sizeof(CandidateResult), cudaMemcpyDeviceToHost);
         
-        // ヒストグラム法
+        // 1. ヒストグラム法で足切りラインを決定
         std::fill(score_counts.begin(), score_counts.end(), 0);
         int max_s = 0;
         for(const auto& c : h_candidates) {
@@ -323,6 +318,7 @@ void solve_from_file(const std::string& filepath) {
             }
         }
         
+        // 2. 候補抽出
         shortlist.clear();
         for(const auto& c : h_candidates) {
             if((int)c.score >= threshold) {
@@ -330,6 +326,7 @@ void solve_from_file(const std::string& filepath) {
             }
         }
         
+        // 3. ソート (スコア+ハッシュ)
         std::sort(shortlist.begin(), shortlist.end(), comp);
 
         std::vector<CandidateResult> winners;
@@ -339,6 +336,7 @@ void solve_from_file(const std::string& filepath) {
         uint64_t prev_hash = 0;
         bool first = true;
 
+        // 4. 重複排除して採用
         for(const auto& cand : shortlist) {
             if (!first && cand.hash == prev_hash) continue;
             
@@ -357,10 +355,7 @@ void solve_from_file(const std::string& filepath) {
             if(winners.size() >= beam_width) break;
         }
         
-        if(winners.empty()) {
-            std::cout << "No valid moves found!" << std::endl;
-            break;
-        }
+        if(winners.empty()) break;
 
         best_score = winners[0].score;
         
@@ -378,34 +373,20 @@ void solve_from_file(const std::string& filepath) {
         ope_num++;
     }
     
-    // --- 結果出力 ---
-    std::vector<uint16_t> final_field(field_size);
-    cudaMemcpy(final_field.data(), d_parent_fields, field_size * sizeof(uint16_t), cudaMemcpyDeviceToHost);
+    // --- 終了処理 ---
+    auto end_time = std::chrono::high_resolution_clock::now();
+    result.time_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() / 1000.0;
+    result.moves = ope_num - 1;
+    result.solved = (best_score >= fsize * fsize + 1);
 
-    std::cout << "end result value =  " << operations[0] << std::endl;
-    std::cout << "end operation num = " << ope_num - 1 << std::endl;
-    
-    printField(fsize, final_field.data());
-    printField(fsize, start_field.data());
-    
-    for(uint32_t i = 1, X, Y, N; i < ope_num; ++i){
-        getParams(operations[i], fsize, &X, &Y, &N);
-        std::cout << X << " " << Y << " " << N << std::endl;
-    }
-    
-    std::cout << std::endl;
-    std::cout << "start: memory free" << std::endl;
-    
     cudaFree(d_parent_fields);
     cudaFree(d_next_fields);
     cudaFree(d_candidates);
     cudaFree(d_winners);
+
+    return result;
 }
 
-// 互換性維持のためのラッパー（引数なしで呼ばれた場合用）
-void test_beam_search() {
-    std::cout << "Using default random problem..." << std::endl;
-    // デフォルト動作が必要ならここに実装、あるいはエラーにする
-    // 今回はファイルパス指定が前提なので、ここを適当なデフォルトファイルにするか、
-    // メイン関数側を修正してここを呼ばないようにするのがベスト。
-}
+// 互換性のため残す
+void test_beam_search() {}
+void test_rotate() {}
