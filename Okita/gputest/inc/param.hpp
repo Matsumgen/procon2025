@@ -11,8 +11,11 @@
 
 #define BEAM_WIDTH (1<<18)
 #define FIELDS_PER_THREAD 32
-#define CPU_THREAD_NUM 4
+#define CPU_THREAD_NUM 3
 #define MAX_DEPTH 512
-#define SLEEP_TIME 50
+#define SLEEP_TIME 10
+
+// fsizeの最大値
+#define MAX_FSIZE 24
 
 #endif
