@@ -1,4 +1,3 @@
-#define REVIEW_NUM 100
 /*
 評価関数をgpu処理
 
@@ -10,13 +9,24 @@ cudaHostGetDevicePointer
 N: thread数(CPU_THREAD_NUM)
 M: beam幅(BEAM_WIDTH)
 R: 1Fieldあたりの回転の状態数
-・vector使用
-gpu - cpu:    O(M) * MR/N
-mearge:       O(N + MlogN)
 
 ・top-K(min-heap)使用
 gpu - cpu:    O(logM) * MR/N + O(MlogM)
 mearge:       O(N + MlogN)
+
+・top-K & mearge後の配列を分割して使用
+gpu - cpu:    O(logM) * MR/N
+sort:         O(MlogM)
+
+TasksをそのままGPUに送る？
+送る: Tasksをuint32_t data[3]にする. scoreが不要
+送らない：前処理にO(M)かかる
+
+
+盤面縮小メモ
+距離行列：24*24のものを論理式にする
+2点が1つの長方形の中にあるなら、一発
+無いとき、二つの長方形が重なる場所に移動させてからという流れで想定
 */
 
 #include <cuda_runtime.h>
@@ -33,61 +43,112 @@ mearge:       O(N + MlogN)
 #include <algorithm>
 #include <param.hpp>
 
-#include <chrono>
-#include <numeric>
-
-namespace bs1{
+namespace bs11{
 #include <gpu_process.cuh>
 
 struct Tasks {
-  uint32_t fid;
-  uint32_t rid;
-  uint32_t score;
-
-  uint64_t getTask() {
-    return (((uint64_t)rid) << 32) | fid;
-  }
+  uint32_t data[3]; // fid, rid, score
 };
 
 // min-heap
 struct TasksCompare {
   bool operator()(const Tasks& a, const Tasks&b) const {
-    return a.score > b.score;
+    return a.data[2] > b.data[2];
   }
 };
 
-// 禁忌に手を出している
-struct TasksQueue : std::priority_queue<Tasks, std::vector<Tasks>, TasksCompare> {
-    size_t current_index;
-    TasksQueue(const TasksCompare& comp = TasksCompare{}) : std::priority_queue<Tasks, std::vector<Tasks>, TasksCompare>(comp), current_index(0) {}
-    TasksQueue(const TasksCompare& comp, std::vector<Tasks>&& v) : std::priority_queue<Tasks, std::vector<Tasks>, TasksCompare>(comp, std::move(v)), current_index(0) {}
-  void clear() {
-    this->c.clear();
-    this->current_index = 0;
-  }
-  void sortVector() {
-    std::sort(this->c.rbegin(), this->c.rend(), [](const Tasks& a, const Tasks& b) { return a.score < b.score; });
-  }
-  Tasks at(size_t i) {
-    return this->c[i];
-  }
-  Tasks get() {
-    return this->c[this->current_index++];
+class TasksQueue {
+private:
+  Tasks *heap;
+  size_t max_size;
+  size_t sz;
+
+public:
+  TasksQueue(const size_t max_size) : heap(new Tasks[max_size]), max_size(max_size), sz(0) {}
+  TasksQueue(Tasks *data, const size_t max_size) : heap(data), max_size(max_size), sz(0) {}
+
+  void push(const Tasks& val) noexcept {
+    if(this->sz >= this->max_size) {
+      this->replace_top(val);
+      return;
+    }
+    const uint32_t key = val.data[2];
+    size_t i = this->sz++;
+
+    // ---- sift-up (hole method) ----
+    while (i > 0) {
+      size_t parent = (i - 1) >> 1;
+      if (this->heap[parent].data[2] <= key)
+        break;
+
+      this->heap[i] = this->heap[parent];
+      i = parent;
+    }
+    this->heap[i] = val;
   }
 
-  bool q_empty() {
-    return this->current_index >= this->size();
+  void pop() noexcept {
+    Tasks last = this->heap[--this->sz];
+    const uint32_t key = last.data[2];
+
+    size_t i = 0;
+    size_t half = sz >> 1;
+    size_t child = 1;
+
+    // ---- sift-down (hole method) ----
+    while (i < half) {
+      size_t right = child + 1;
+      if (right < this->sz && this->heap[right].data[2] < this->heap[child].data[2]) {
+        ++child;
+      }
+
+      if (this->heap[child].data[2] >= key)
+        break;
+      this->heap[i] = this->heap[child];
+      i = child;
+      child = (i << 1) + 1;
+    }
+
+    this->heap[i] = last;
   }
 
-};
+  void replace_top(const Tasks& val) noexcept {
+    const uint32_t key = val.data[2];
 
-struct Node {
-  Tasks t;
-  size_t thidx;
-};
-struct NodeCompare {
-  bool operator()(const Node& a, const Node&b) const {
-    return a.t.score < b.t.score;
+    size_t i = 0;
+    size_t child = 1;
+    size_t half = this->sz >> 1;
+
+    // sift-down only
+    while (i < half) {
+      size_t right = child + 1;
+      if (right < sz && this->heap[right].data[2] < this->heap[child].data[2]) {
+        ++child;
+      }
+
+      if (this->heap[child].data[2] >= key)
+        break;
+
+      this->heap[i] = this->heap[child];
+      i = child;
+      child = (i << 1) + 1;
+    }
+
+    this->heap[i] = val;
+  }
+
+  size_t size() const noexcept {
+    return this->sz;
+  }
+
+  void after_care() noexcept {
+    for(size_t i = this->sz; i < this->max_size; ++i) {
+      this->heap[i].data[2] = 0;
+    }
+  }
+
+  void clear() noexcept {
+    this->sz = 0;
   }
 };
 
@@ -275,17 +336,17 @@ void beam_search_kernel_depth1(
 }
 
 __global__
-void beam_search_kernel_depth1_after(uint32_t fsize, uint32_t field_size, uint64_t *tasks_gpu,uint32_t idx, uint16_t *df, uint16_t *next_df) {
+void beam_search_kernel_depth1_after(uint32_t fsize, uint32_t field_size, uint32_t *tasks_gpu,uint32_t idx, uint16_t *df, uint16_t *next_df) {
   const uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;
   if(tid < idx) {
-    uint64_t task = tasks_gpu[tid];
-    uint16_t *field = df + ((uint32_t)(task & 0xffffffff)) * field_size;
+    uint32_t *task = tasks_gpu + (tid << 1);
+    uint16_t *field = df + task[0] * field_size;
     uint16_t *next_field = next_df + tid * field_size;
 
     uint32_t X, Y, N;
     uint32_t fields4 = field_size >> 2;
     uint32_t rot[2];
-    getParams((uint32_t)(task >> 32), fsize, &X, &Y, &N);
+    getParams(task[1], fsize, &X, &Y, &N);
     createMatrixArrayL(X, Y, N, rot);
 
     ushort4 *nf = (ushort4*)next_field;
@@ -377,7 +438,7 @@ void run_gpu(
 }
 
 /* void beamSearch(std::vector<uint64_t>& operations, std::vector<uint16_t>& values, uint32_t beam_width, tail_counter& counter) { */
-void beamSearch(TasksQueue& queue, uint32_t beam_width, tail_counter& counter) {
+void beamSearch(TasksQueue& queue, tail_counter& counter) {
   /* printf("[beamSearch] start: beam_width=%d, %p\n", beam_width, &queue); */
   uint16_t val[FIELDS_PER_THREAD];
   uint32_t rid = 0, fid = 0;
@@ -392,19 +453,11 @@ void beamSearch(TasksQueue& queue, uint32_t beam_width, tail_counter& counter) {
         /* else{ */
         /*   printf("[beamSearch]  rid=%d, fid=%d, score=%d\n", rid, fid + i, val[i]); */
         /* } */
-        if(queue.size() < beam_width){
-          queue.push({fid + i, rid, val[i]});
-        }else{
-          Tasks cur = queue.top();
-          if(cur.score < val[i]) { // 先が優先
-            queue.pop();
-            queue.push({fid + i, rid, val[i]});
-          }
-        }
+        queue.push({fid + i, rid, val[i]});
       }
     }else if(fid == 0xffffffff) {
       /* printf("[beamSearch] end %p, %d\n", &queue, (int)queue.size()); */
-      queue.sortVector();
+      queue.after_care();
       break;
     }else{
       /* printf("[beamSearch] wait\n"); */
@@ -429,20 +482,20 @@ std::vector<uint32_t> algo(uint16_t *start_field, uint32_t fsize) {
   /* printf("start memory\n"); */
   std::vector<std::vector<uint32_t>> resultOperations(BEAM_WIDTH, std::vector<uint32_t>(MAX_DEPTH, 0));
   std::vector<std::vector<uint32_t>> bresultOperations(BEAM_WIDTH, std::vector<uint32_t>(MAX_DEPTH, 0));
-  std::vector<uint64_t> tasks(BEAM_WIDTH, 0);
+  Tasks *tasks = new Tasks[BEAM_WIDTH];
+  uint32_t *tasks_cpu = new uint32_t[BEAM_WIDTH<<1];
+  for(size_t i = 0; i < BEAM_WIDTH; ++i)  tasks[i].data[2] = 0;
   uint32_t field_len = 1;
 
   std::vector<TasksQueue> threadQueues;
   threadQueues.reserve(CPU_THREAD_NUM);
-  for(size_t i = 0; i < CPU_THREAD_NUM; ++i) {
-    std::vector<Tasks> buf;
-    buf.reserve(BEAM_WIDTH);
-    threadQueues.emplace_back(TasksCompare{}, std::move(buf));
+  for(size_t i = 0, siz = BEAM_WIDTH / CPU_THREAD_NUM; i < CPU_THREAD_NUM; ++i) {
+    threadQueues.emplace_back(tasks + siz * i, siz);
   }
 
   ResultQueue *hq, *dq;
   uint16_t *df, *next_df;
-  uint64_t *tasks_gpu;
+  uint32_t *tasks_gpu;
   cudaError_t err = cudaMalloc(&df, BEAM_WIDTH * field_size * sizeof(uint16_t));
   if (err != cudaSuccess) {
     std::cerr << "cudaMalloc failed: " << cudaGetErrorString(err) << std::endl;
@@ -453,7 +506,7 @@ std::vector<uint32_t> algo(uint16_t *start_field, uint32_t fsize) {
     std::cerr << "cudaMalloc failed: " << cudaGetErrorString(err) << std::endl;
     return std::vector<uint32_t>();
   }
-  err = cudaMalloc(&tasks_gpu, BEAM_WIDTH * sizeof(uint64_t));
+  err = cudaMalloc(&tasks_gpu, BEAM_WIDTH * sizeof(uint32_t) * 2);
   if (err != cudaSuccess) {
     std::cerr << "cudaMalloc failed: " << cudaGetErrorString(err) << std::endl;
     return std::vector<uint32_t>();
@@ -466,25 +519,14 @@ std::vector<uint32_t> algo(uint16_t *start_field, uint32_t fsize) {
 
   tail_counter counter;
   for(size_t i = 0; i < QUEUE_SIZE; ++i) hq->done[i] = 0;
-  counter.q = hq;
   counter.ridsPerField = ridsPerField;
+  counter.clear();
+  counter.q = hq;
+  counter.field_len = field_len;
 
-#ifdef REVIEW_NUM
-  std::vector<double> times;
-  std::vector<int> operations;
-  for(int loop = 0; loop < REVIEW_NUM; ++loop){
-    std::vector<uint16_t> sf = makeShuffledPairs(fsize);
-    start_field = sf.data();
-    auto start_time = std::chrono::high_resolution_clock::now();
-#endif
+
 
   // 実行
-  depth = 0;
-  field_len = 1;
-  counter.clear();
-  counter.field_len = 1;
-  threads.clear();
-
   err = cudaMemcpy(df, start_field, field_size * sizeof(uint16_t), cudaMemcpyHostToDevice);
   if (err != cudaSuccess) {
     std::cerr << "cudaMemcpy failed: " << cudaGetErrorString(err) << std::endl;
@@ -497,49 +539,47 @@ std::vector<uint32_t> algo(uint16_t *start_field, uint32_t fsize) {
     // thread生成
     std::thread gthread([&](){run_gpu(beam_search_kernel_depth1, BLOCKS_PER_GRID, THREADS_PER_BLOCK, fsize, ridsPerField, df, field_len, field_size, dq, counter);});
     for(size_t i = 0; i < CPU_THREAD_NUM; ++i){
-      threads.emplace_back([&, i](){beamSearch(threadQueues[i], BEAM_WIDTH, counter);});
+      threads.emplace_back([&, i](){beamSearch(threadQueues[i], counter);});
     }
 
     // thread終了待ち
     gthread.join();
-    for(auto& t : threads){ t.join(); }
+    field_len = 0;
+    for(size_t i = 0; i < CPU_THREAD_NUM; ++i){
+      threads[i].join();
+      field_len += threadQueues[i].size();
+    }
 
     // 次のfield生成
-    // この時点でthreadQueues内のヒープは壊れている
-    std::priority_queue<Node, std::vector<Node>, NodeCompare> pq;
-    for(size_t i = 0; i < CPU_THREAD_NUM; ++i) {
-      if(!threadQueues[i].q_empty()) {
-        pq.push({threadQueues[i].get(), i});
-      }
-    }
+    std::sort(tasks, tasks + BEAM_WIDTH, [](const Tasks& a, const Tasks& b) { return a.data[2] > b.data[2]; });
 
-    Node cur = pq.top();
-    /* printf("start sort queue: pq.size=%d, max:score=%d, rid=%d, fid=%d\n", (int)pq.size(), (int)cur.t.score, cur.t.rid, cur.t.fid); */
-    if(cur.t.score >= field_size) {
+    
+    
+    if(tasks[0].data[2] >= field_size) {
       // 終了処理
-      /* printf("end beamsearch: score=%d, rid=%d, fid=%d\n", (int)cur.t.score, cur.t.rid, cur.t.fid); */
-      resultOperations[0] = bresultOperations[cur.t.fid];
-      resultOperations[0][depth] = cur.t.rid;
-      depth += 1;
+      resultOperations[0] = bresultOperations[tasks[0].data[0]];
+      resultOperations[0][depth] = tasks[0].data[1];
+      ++depth;
       break;
     }
-    for(field_len = 0; field_len < BEAM_WIDTH && !pq.empty(); ++field_len) {
-      cur = pq.top();
-      /* printf("field_len=%d, pq.empty=%d, cur.thidx=%d\n", (int)field_len, (int)pq.empty(), (int)cur.thidx); */
-      pq.pop();
-      tasks[field_len] = cur.t.getTask();
-      resultOperations[field_len] = bresultOperations[cur.t.fid];
-      resultOperations[field_len][depth] = cur.t.rid;
-      if(!threadQueues[cur.thidx].q_empty()) {
-        pq.push({threadQueues[cur.thidx].get(), cur.thidx});
-      }
-      /* if(field_len < 5) { */
-      /*   printf("idx=%d, score=%d, rid=%d, fid=%d\n", field_len, (int)cur.t.score, cur.t.rid, cur.t.fid); */
+
+    for(size_t i = 0; i < field_len; ++i) {
+      uint32_t *d = tasks[i].data;
+      resultOperations[i] = bresultOperations[d[0]];
+      resultOperations[i][depth] = d[1];
+      size_t j = i<<1;
+      tasks_cpu[j++] = d[0];
+      tasks_cpu[j]   = d[1];
+
+      /* if(i < 5){ */
+      /*   printf("idx=%d, score=%d, rid=%d, fid=%d\n", i, t.data[2], t.data[1], t.data[0]); */
       /* } */
     }
 
+
+
     /* printf("start next process next field_len=%d\n", field_len); */
-    err = cudaMemcpy(tasks_gpu, tasks.data(), field_len * sizeof(uint64_t), cudaMemcpyHostToDevice);
+    err = cudaMemcpy(tasks_gpu, tasks_cpu, field_len * sizeof(uint32_t) * 2, cudaMemcpyHostToDevice);
     if (err != cudaSuccess) {
       std::cerr << "cudaMemcpy failed: " << cudaGetErrorString(err) << std::endl;
       cudaFree(tasks_gpu);
@@ -561,59 +601,13 @@ std::vector<uint32_t> algo(uint16_t *start_field, uint32_t fsize) {
     /* printf("\n"); */
   }
 
-#ifdef REVIEW_NUM
-    auto end_time = std::chrono::high_resolution_clock::now();
-    double t = (double)std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count()/1000.0;
-    times.push_back(t);
-    operations.push_back(depth);
-
-    std::vector<uint16_t> field = sf;
-    for(uint32_t i = 0; i < depth; ++i) {
-      rotateField(field, fsize, resultOperations[0][i]);
-    }
-    if(!isEnd(field, fsize)){
-      printf("ERROR: Don't end\n");
-      field = sf;
-      printField(fsize, field.data());
-      for(uint32_t i = 0; i < depth; ++i) {
-        uint32_t x, y, n;
-        getParamsCpu(resultOperations[0][i], fsize, &x, &y, &n);
-        rotateField(field, fsize, x, y, n);
-        printf("rotate: rid=%d, (%d, %d, %d)\n", resultOperations[0][i], x, y, n);
-        printField(fsize, field.data());
-      }
-    }else{
-      std::cout << "time: " << t << " operations: " << depth << std::endl;
-    }
-
-  }
-  auto [ope_min_it, ope_max_it] = std::minmax_element(operations.begin(), operations.end());
-  auto [time_min_it, time_max_it] = std::minmax_element(times.begin(), times.end());
-  double ope_mean = std::accumulate(operations.begin(), operations.end(), 0) / REVIEW_NUM;
-  double time_mean = std::accumulate(times.begin(), times.end(), 0) / REVIEW_NUM;
-  double ope_sd = std::accumulate(operations.begin(), operations.end(), 0.0, [ope_mean](double acc, int x){ return acc + (x - ope_mean) * (x - ope_mean); }) / REVIEW_NUM;
-  double time_sd = std::accumulate(times.begin(), times.end(), 0.0, [time_mean](double acc, double x){ return acc + (x - time_mean) * (x - time_mean); }) / REVIEW_NUM;
-  std::cout << "config:" << std::endl;
-  std::cout << "\tfsize:\t\t\t"         << fsize << std::endl;
-  std::cout << "\tblocksPerGrid:\t\t"   << BLOCKS_PER_GRID << std::endl;
-  std::cout << "\tthreadsPerBlock:\t"   << THREADS_PER_BLOCK << std::endl;
-  std::cout << "\tBEAM_WIDTH:\t\t"      << BEAM_WIDTH << std::endl;
-  std::cout << "\tFIELDS_PER_THREAD:\t" << FIELDS_PER_THREAD << std::endl;
-  std::cout << "\tCPU_THREAD_NUM:\t\t"  << CPU_THREAD_NUM << std::endl;
-  std::cout << "\tQUEUE_SIZE:\t\t"      << QUEUE_SIZE << std::endl;
-  std::cout << "time:" << std::endl;
-  std::cout << "\tmax:\t"  << *time_max_it << "[sec]" << std::endl;
-  std::cout << "\tmin:\t"  << *time_min_it << "[sec]" << std::endl;
-  std::cout << "\tmean:\t" << time_mean    << "[sec]" << std::endl;
-  std::cout << "\tsd:\t"   << time_sd      << "[sec]" << std::endl;
-  std::cout << "operations:" << std::endl;
-  std::cout << "\tmax:\t"  << *ope_max_it << std::endl;
-  std::cout << "\tmin:\t"  << *ope_min_it << std::endl;
-  std::cout << "\tmean:\t" << ope_mean    << std::endl;
-  std::cout << "\tsd:\t"   << ope_sd      << std::endl;
-  std::cout << "\tmean time per operation:\t" << time_mean / ope_mean<< std::endl;
-  std::cout << "\tmean operation per pair:\t" << ope_mean / (field_size >> 1) << std::endl;
-#endif
+  /* printf("end search operation num=%d\n",depth); */
+  /* printField(fsize, start_field); */
+  /* for(uint32_t i = 0, X, Y, N; i < depth; ++i){ */
+  /*   getParams(resultOperations[0][i], fsize, &X, &Y, &N); */
+  /*   std::cout << X << " " << Y << " " << N << std::endl; */
+  /*   /1* printf("%d %d %d %d\n", X, Y, N, resultOperations[0][i]); *1/ */
+  /* } */
 
   cudaFree(tasks_gpu);
   cudaFree(df);
