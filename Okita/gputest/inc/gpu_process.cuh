@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include<iostream>
+#include<cmath>
 
 __device__ __host__ __forceinline__
 void createMatrixArrayL(const uint8_t x, const uint8_t y, const uint8_t n, uint32_t *a) {
@@ -128,21 +129,21 @@ void toInverse(const uint32_t *matrix, uint32_t *result) {
 
 // task_idから(X, Y, N)の組を取得
 __device__ __host__ __forceinline__
-void getParams(const uint32_t tid, const uint32_t fsize, uint32_t *X, uint32_t *Y, uint32_t *N) {
+void getParams(const uint32_t tid, const uint32_t fsize, uint32_t *X, uint32_t *Y, uint32_t *N, uint32_t sn=2, uint32_t slice=1) {
   uint32_t acc = 0;
-  uint32_t w = fsize - 1;
-  while(true) {
+  int32_t w = fsize - sn + 1;
+  for(; w >= 0; --w) {
     uint32_t size = w * w;
-    if(tid < acc + size){
-      break;
-    }
+    size = (size / slice) + (size % slice == 0 ? 0 : 1);
+    if(tid < acc + size) break; 
     acc += size;
-    --w;
   }
-  acc = tid - acc;
+
+  *N = fsize - w + 1;
+  
+  acc = (tid - acc) * slice;
   *X = acc % w;
   *Y = acc / w;
-  *N = fsize - w + 1;
 }
 
 __device__ __forceinline__
@@ -291,6 +292,16 @@ void rotateFieldGpu(uint16_t *field, const uint32_t fsize, const uint32_t x, con
       ++i3;
     }
   }
+}
+
+__device__ __forceinline__
+uint32_t canMove(const int8_t *p1, const int8_t *p2, const uint32_t fsize) {
+  int cx = p2[0] + p1[0] + p2[1] - p1[1];
+  int cy = p2[1] + p1[1] + p1[0] - p2[0];
+  int N = max(max(abs((p1[0]<<1) - cx), abs((p1[1]<<1) - cy)), max(abs((p2[0]<<1) - cx), abs((p2[1]<<1) - cy)));
+  int X = (cx - N) >> 1;
+  int Y = (cy - N) >> 1;
+  return 0 <= X && X + N < fsize && 0 <= Y && Y + N < fsize;
 }
 
 #endif
