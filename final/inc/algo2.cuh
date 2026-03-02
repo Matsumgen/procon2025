@@ -1,7 +1,12 @@
 #ifndef ALGO2_CUH_
 #define ALGO2_CUH_
 
-class MemObj2 {
+#include <util.hpp>
+#include <array>
+#include <vector>
+#include <stdint.h>
+
+struct MemObj2 {
   int size;
 };
 
