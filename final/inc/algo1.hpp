@@ -1,7 +1,12 @@
 #ifndef ALGO1_HPP_
 #define ALGO1_HPP_
 
-class MemObj1 {
+#include <util.hpp>
+#include <array>
+#include <vector>
+#include <stdint.h>
+
+struct MemObj1 {
   int size;
 };
 

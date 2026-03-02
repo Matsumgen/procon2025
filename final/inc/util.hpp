@@ -2,13 +2,15 @@
 #define UTIL_HPP_
 
 #include <array>
+#include <vector>
 #include <stdint.h>
+#include <random>
+#include <algorithm>
 
 typedef std::vector<uint16_t> RawField;
 
-void getProblem(RawField& field, uint32_t& fsize);
-void submission(std::vector<Ope> result);
-RawField createRandomField(uint32_t fsize, size_t seed=0);
+
+// function define
 
 struct Ope {
   std::array<uint8_t, 3> data;
@@ -21,19 +23,24 @@ struct Ope {
   uint8_t n();
 };
 
-inline Ope() : data({0, 0, 0}) {};
-inline Ope(uint8_t x, uint8_t y, uint8_t n) : data({x, y, n}) {};
-inline Ope(int x, int y, int n) : data({x, y, n}) {};
+void getProblem(RawField& field, uint32_t& fsize);
+void submission(std::array<Ope, 350> result);
+RawField createRandomField(uint32_t fsize, size_t seed=0);
 
-inline bool Ope(const Ope &other) {
+//Inline implementation
+inline Ope::Ope() : data({0, 0, 0}) {}
+inline Ope::Ope(uint8_t x, uint8_t y, uint8_t n) : data({x, y, n}) {}
+inline Ope::Ope(int x, int y, int n) : data({static_cast<uint8_t>(x), static_cast<uint8_t>(y), static_cast<uint8_t>(n)}) {}
+
+inline bool Ope::operator<(const Ope &other) {
   return this->data[0] < other.data[0]
         || (this->data[0] == other.data[0] && this->data[1] < other.data[1])
-        || (this->data[0] == other.data[0] && this->data[1] == other.data[1] && this->data[2] < other.data[2])
+        || (this->data[0] == other.data[0] && this->data[1] == other.data[1] && this->data[2] < other.data[2]);
 }
 
-inline uint8_t Ope::x() { return this->data[0] };
-inline uint8_t Ope::y() { return this->data[1] };
-inline uint8_t Ope::n() { return this->data[2] };
+inline uint8_t Ope::x() { return this->data[0]; }
+inline uint8_t Ope::y() { return this->data[1]; }
+inline uint8_t Ope::n() { return this->data[2]; }
 
 inline RawField createRandomField(uint32_t fsize, size_t seed) {
   const uint16_t n = fsize * fsize / 2;
@@ -55,13 +62,13 @@ inline RawField createRandomField(uint32_t fsize, size_t seed) {
   return result;
 }
 
-// スタブ関数
+// Stub function
 inline void getProblem(RawField& field, uint32_t& fsize) {
   fsize = 24;
   field = createRandomField(fsize, 0);
 }
 
-void submission(std::vector<Ope> result) {
+void submission(std::array<Ope, 350> result) {
   return;
 }
 
