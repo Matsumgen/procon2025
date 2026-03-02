@@ -1,0 +1,28 @@
+// depth2 default
+config:
+	fsize:			12
+	SN:			2
+	EN:			12
+	SLICE:			1
+	THRESHOLD:		5.75
+	EVALUATION:		1
+	blocksPerGrid:		512
+	threadsPerBlock:	256
+	BEAM_WIDTH:		16384
+	FIELDS_PER_THREAD:	32
+	CPU_THREAD_NUM:		3
+	QUEUE_SIZE:		1048576
+time:
+	max:	832.295[sec]
+	min:	290.687[sec]
+	mean:	304[sec]
+	sd:	9485.74[sec]
+operations:
+	max:	174
+	min:	62
+	mean:	64
+	sd:	427.08
+	mean time per operation:	4.75
+	mean operation per pair:	0.888889
+	Don't end:		0
+

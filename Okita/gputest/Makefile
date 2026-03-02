@@ -51,7 +51,7 @@ OBJS_CU  = $(addprefix $(OBJDIR)/, $(notdir $(SRCS_CU:$(SUFFIX_CU)=.o)))
 OBJS_ALL = $(OBJS_CPP) $(OBJS_CU)
 
 # 本番用
-MAIN_SRC   = $(MAINDIR)/main.cpp
+MAIN_SRC   = $(MAINDIR)/main.cu
 MAIN_OBJ   = $(OBJDIR)/main.o
 
 # テスト用
@@ -82,10 +82,10 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cu
 	@mkdir -p $(OBJDIR)
 	$(NVCC) $(CUFLAGS) $(INCLUDE) -MMD -MP -c $< -o $@
 
-# main.cpp
+# main.cu
 $(OBJDIR)/main.o: $(MAIN_SRC)
 	@mkdir -p $(OBJDIR)
-	$(CC) $(CFLAGS) $(INCLUDE) $(INCLUDE_OMP) -MMD -MP -c $< -o $@
+	$(NVCC) $(CUFLAGS) $(INCLUDE) -MMD -MP -c $< -o $@
 
 # test.cpp
 $(OBJDIR)/test.o: $(TEST_SRC)
