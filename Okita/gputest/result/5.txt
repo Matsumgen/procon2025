@@ -1,0 +1,28 @@
+// depth2 sn=5
+config:
+	fsize:			12
+	SN:			5
+	EN:			10
+	SLICE:			1
+	THRESHOLD:		9.85
+	EVALUATION:		1
+	blocksPerGrid:		512
+	threadsPerBlock:	256
+	BEAM_WIDTH:		16384
+	FIELDS_PER_THREAD:	32
+	CPU_THREAD_NUM:		3
+	QUEUE_SIZE:		1048576
+time:
+	max:	66.415[sec]
+	min:	51.041[sec]
+	mean:	50[sec]
+	sd:	58.4059[sec]
+operations:
+	max:	88
+	min:	68
+	mean:	67
+	sd:	85.63
+	mean time per operation:	0.746269
+	mean operation per pair:	0.930556
+	Don't end:		0
+

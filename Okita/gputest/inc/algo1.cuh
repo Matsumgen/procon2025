@@ -19,6 +19,9 @@ namespace bs2{
 namespace bs3{
   std::vector<uint32_t> algo(uint16_t *start_field, uint32_t fsize);
 };
+namespace bs4{
+  std::vector<uint32_t> algo(uint16_t *start_field, uint32_t fsize);
+};
 
 
 #endif
