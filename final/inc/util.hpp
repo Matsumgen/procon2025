@@ -68,7 +68,7 @@ inline void getProblem(RawField& field, uint32_t& fsize) {
   field = createRandomField(fsize, 0);
 }
 
-void submission(std::array<Ope, 350> result) {
+inline void submission(std::array<Ope, 350> result) {
   return;
 }
 
