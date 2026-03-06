@@ -18,13 +18,13 @@ CUFLAGS  = $(FLAGS) -Xcompiler "$(CFLAGS)" -lineinfo
 
 # インクルードとライブラリ
 #INCLUDE  = -Iinc -Isrc -Ilib/lmdb/include
-#INCLUDE_OMP = -Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include
+INCLUDE_OMP = -Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include
 #LIBRARY  = lib/lmdb/lib/liblmdb.a
-#LIBRARY_OMP = -lomp -L/opt/homebrew/opt/libomp/lib
+LIBRARY_OMP = -L/opt/homebrew/opt/libomp/lib -lgomp
 INCLUDE  = -Iinc -Isrc
-INCLUDE_OMP =
+#INCLUDE_OMP =
 LIBRARY  =
-LIBRARY_OMP =
+#LIBRARY_OMP =
 
 # ディレクトリ
 SRCDIR  = src
@@ -51,7 +51,7 @@ OBJS_CU  = $(addprefix $(OBJDIR)/, $(notdir $(SRCS_CU:$(SUFFIX_CU)=.o)))
 OBJS_ALL = $(OBJS_CPP) $(OBJS_CU)
 
 # 本番用
-MAIN_SRC   = $(MAINDIR)/main.cu
+MAIN_SRC   = $(MAINDIR)/main.cpp
 MAIN_OBJ   = $(OBJDIR)/main.o
 
 # テスト用
@@ -82,10 +82,10 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cu
 	@mkdir -p $(OBJDIR)
 	$(NVCC) $(CUFLAGS) $(INCLUDE) -MMD -MP -c $< -o $@
 
-# main.cu
+# main.cpp
 $(OBJDIR)/main.o: $(MAIN_SRC)
 	@mkdir -p $(OBJDIR)
-	$(NVCC) $(CUFLAGS) $(INCLUDE) -MMD -MP -c $< -o $@
+	$(CC) $(FLAGS) $(CFLAGS) $(INCLUDE) $(INCLUDE_OMP) -MMD -MP -c $< -o $@
 
 # test.cpp
 $(OBJDIR)/test.o: $(TEST_SRC)

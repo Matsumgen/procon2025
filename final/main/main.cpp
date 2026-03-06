@@ -1,4 +1,3 @@
-#include <cuda_runtime.h>
 #include <algo1.hpp>
 #include <algo2.cuh>
 #include <vector>
@@ -11,25 +10,32 @@ using namespace algo2lib;
 
 
 int main(void) {
-  cudaFree(0);
 
   // Initialization
-  MemObj1 mem1 = init1();
+  /* MemObj1 mem1 = init1(); */
   MemObj2 mem2{};
 
   // get problem
-  RawField field;
-  uint32_t fsize;
-  getProblem(field, fsize);
+  /* RawField field; */
+  /* uint32_t fsize; */
+  /* getProblem(field, fsize); */
 
   // algorithm 1
   std::vector<std::vector<Ope>> opes;
   std::vector<std::vector<uint16_t>> fields;
   std::vector<std::pair<uint8_t, uint8_t>> offsets;
-  algorithm1(field, fsize, mem1, opes, fields, offsets);;
+  /* algorithm1(field, fsize, mem1, opes, fields, offsets);; */
+
+  // algorithm2 debug
+  uint32_t fsize = 12;
+  RawField field = createRandomField(fsize);
+  fields.push_back(field);
+  opes.push_back(std::vector<Ope>{});
+  offsets.push_back(std::pair(0, 0));
 
   // algorithm 2
-  std::vector<Ope> result = algorithm2(fields, opes, offsets, 12, mem2);
+  /* std::vector<Ope> result = algorithm2(fields, opes, offsets, 12, mem2); */
+  std::vector<Ope> result = algorithm2(fields, opes, offsets, fsize, mem2);
 
   // debug
   RawField f = field;

@@ -415,6 +415,7 @@ void push_back_resultOperations(std::vector<Ope>& resultOperations, const uint32
 
 
 std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<Ope>>& opes, std::vector<std::pair<uint8_t, uint8_t>>& offsets, uint32_t fsize, MemObj2& mem2) {
+  cudaFree(0);
   std::cout << "start algo2_1" << std::endl;
   std::vector<std::thread> threads;
   const uint32_t field_size = fsize * fsize;
@@ -422,6 +423,7 @@ std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<
   uint32_t depth = 0;
   uint32_t field_len = fields.size();
   uint32_t ridsPerField = getTidPerField(fsize, MemObj2::SN, MemObj2::EN, MemObj2::SLICE);
+  uint32_t beam_width = MemObj2::BEAM_WIDTH;
 
   uint32_t paramMode = 0;
   bool depth2 = false;
@@ -476,14 +478,22 @@ std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<
       /* beam_search_func = beam_search_kernel_depth2; */
       /* beam_search_func_after = beam_search_kernel_depth2_after; */
       /* depth2 = true; */
-      /* counter.maxRid = getTidPerField(fsize, MemObj2::SN, MemObj2::EN, MemObj2::SLICE); */
+    }else if(depth >= 40 && paramMode == 1) {
+      paramMode = 2;
+      beam_search_func = beam_search_kernel_depth2;
+      beam_search_func_after = beam_search_kernel_depth2_after;
+      depth2 = true;
+      counter.maxRid = depth2 ? ridsPerField * (1 + ridsPerField) : ridsPerField;
+      beam_width = 1 << 14;
+      field_len = std::min(field_len, beam_width);
+      counter.field_len = field_len;
     }
 
     /* printf("depth=%d, paramMode=%d\n", depth, paramMode); */
 
     std::thread gthread([&](){run_gpu(beam_search_func, MemObj2::BLOCKS_PER_GRID, MemObj2::THREADS_PER_BLOCK, fsize, ridsPerField, mem2.df, field_len, field_size, mem2.dq, counter, paramMode);});
     for(size_t i = 0; i < MemObj2::CPU_THREAD_NUM; ++i){
-      threads.emplace_back([&, i](){beamSearch(threadQueues[i], MemObj2::BEAM_WIDTH, counter, ridsPerField, max_score, depth2);});
+      threads.emplace_back([&, i](){beamSearch(threadQueues[i], beam_width, counter, ridsPerField, max_score, depth2);});
     }
 
     gthread.join();
@@ -508,7 +518,7 @@ std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<
     }
 
 
-    for(field_len = 0; field_len < MemObj2::BEAM_WIDTH && !pq.empty(); ++field_len) {
+    for(field_len = 0; field_len < beam_width && !pq.empty(); ++field_len) {
       cur = pq.top();
       pq.pop();
       tasks[field_len] = cur.t.getTask();
@@ -520,7 +530,7 @@ std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<
         pq.push({threadQueues[cur.thidx].get(), cur.thidx});
       }
       /* if(depth == 1 && field_len < 40) { */
-      /*   std::cout << field_len << "/" << MemObj2::BEAM_WIDTH << " " << pq.size() << " " << resultOperations.size() << " " << bresultOperations.size(); */
+      /*   std::cout << field_len << "/" << beam_width << " " << pq.size() << " " << resultOperations.size() << " " << bresultOperations.size(); */
       /*   printf("idx=%d, score=%d, rid=%d, fid=%d\n", field_len, (int)cur.t.score(), cur.t.rid(), cur.t.fid()); */
       /* } */
     }
