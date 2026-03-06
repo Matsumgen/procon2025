@@ -6,7 +6,6 @@
 #include <thread>
 #include <queue>
 #include <algorithm>
-#include <pair>
 
 namespace algo2_1 {
   using namespace algo2lib;
@@ -81,9 +80,9 @@ void beam_search_kernel_depth1( const uint32_t fsize, const uint32_t ridsPerFiel
       }
     }
 
-    if(!checkProbrmGpu(next_field, fsize)){
-      printf("[gpu %d] broken field rid=%d, fid=%d, before_broken=%d\n", gpu_id, rid, current_field + cf, checkProbrmGpu(field, fsize));
-    }
+    /* if(!checkProbrmGpu(next_field, fsize)){ */
+    /*   printf("[gpu %d] broken field rid=%d, fid=%d, before_broken=%d\n", gpu_id, rid, current_field + cf, checkProbrmGpu(field, fsize)); */
+    /* } */
 
     // 評価
     scores[cf] = evaluation(next_field, fsize, paramMode) + 1;
@@ -133,9 +132,9 @@ void beam_search_kernel_depth1_after(uint32_t fsize, uint32_t field_size, uint32
         next_field[i] = field[j];
       }
     }
-    if(!checkProbrmGpu(next_field, fsize)){
-      printf("[after %d] broken field rid=%d, fid=%d, before_broken=%d\n", tid, (uint32_t)(task >> 32), (uint32_t)(task & 0xffffffff), checkProbrmGpu(field, fsize));
-    }
+    /* if(!checkProbrmGpu(next_field, fsize)){ */
+    /*   printf("[after %d] broken field rid=%d, fid=%d, before_broken=%d\n", tid, (uint32_t)(task >> 32), (uint32_t)(task & 0xffffffff), checkProbrmGpu(field, fsize)); */
+    /* } */
     /* else{ */
     /*   printf("[after %d] rid=%d, fid=%d before_broken=%d, next_field=%p\n", tid, (uint32_t)(task >> 32), (uint32_t)(task & 0xffffffff), checkProbrmGpu(field, fsize), next_field); */
     /* } */
@@ -400,13 +399,13 @@ void push_back_resultOperations(std::vector<Ope>& resultOperations, const uint32
       Ope ope = gparamcpu(b, fsize, paramMode);
       ope.data[0] += offset.first;
       ope.data[1] += offset.second;
-      resultOperations.push_back();
+      resultOperations.push_back(ope);
     }
   }else{
-    Ope ope = gparamcpu(b, fsize, paramMode);
+    Ope ope = gparamcpu(rid, fsize, paramMode);
     ope.data[0] += offset.first;
     ope.data[1] += offset.second;
-    resultOperations.push_back(gparamcpu(rid, fsize, paramMode));
+    resultOperations.push_back(ope);
   }
 }
 
@@ -416,6 +415,7 @@ void push_back_resultOperations(std::vector<Ope>& resultOperations, const uint32
 
 
 std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<Ope>>& opes, std::vector<std::pair<uint8_t, uint8_t>>& offsets, uint32_t fsize, MemObj2& mem2) {
+  std::cout << "start algo2_1" << std::endl;
   std::vector<std::thread> threads;
   const uint32_t field_size = fsize * fsize;
   const uint32_t max_score = field_size << 5;
@@ -438,23 +438,22 @@ std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<
   std::vector<uint64_t>& tasks = mem2.tasks;
   std::vector<std::vector<Ope>>& resultOperations = mem2.resultOperations;
   std::vector<std::vector<Ope>>& bresultOperations = mem2.bresultOperations;
-  std::vector<uint8_t>& start_idx = mem2.start_idx;
   std::vector<uint8_t>& bstart_idx = mem2.bstart_idx;
   for(size_t i = 0; i < opes.size() && MemObj2::BEAM_WIDTH; ++i){
     bresultOperations[i].assign(opes[i].begin(), opes[i].end());
-    bstart_idx[i] = i;
+    TasksQueue::start_idx[i] = i;
     TasksQueue::fieldsiz[i] = opes[i].size();
   }
 
   // debug
-  /* for(size_t i = 0; i < fields.size(); ++i) { */
-  /*   for(size_t j = 0; j < opes[i].size(); ++j) { */
-  /*     printf("(%d %d %d) ", (int)opes[i][j].x(), (int)opes[i][j].y(), (int)opes[i][j].n()); */
-  /*   } */
-  /*   std::cout << std::endl; */
-  /*   std::cout << fields[i].data() << " " << opes[i].data() << std::endl; */
-  /*   printField(fields[i], fsize); */
-  /* } */
+  for(size_t i = 0; i < fields.size(); ++i) {
+    for(size_t j = 0; j < opes[i].size(); ++j) {
+      printf("(%d %d %d) ", (int)opes[i][j].x(), (int)opes[i][j].y(), (int)opes[i][j].n());
+    }
+    std::cout << std::endl;
+    std::cout << fields[i].data() << " " << opes[i].data() << std::endl;
+    printField(fields[i], fsize);
+  }
 
   // fieldsをすべて書き込む
   std::vector<uint16_t> flat;
@@ -480,7 +479,7 @@ std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<
       /* counter.maxRid = getTidPerField(fsize, MemObj2::SN, MemObj2::EN, MemObj2::SLICE); */
     }
 
-    printf("depth=%d, paramMode=%d\n", depth, paramMode);
+    /* printf("depth=%d, paramMode=%d\n", depth, paramMode); */
 
     std::thread gthread([&](){run_gpu(beam_search_func, MemObj2::BLOCKS_PER_GRID, MemObj2::THREADS_PER_BLOCK, fsize, ridsPerField, mem2.df, field_len, field_size, mem2.dq, counter, paramMode);});
     for(size_t i = 0; i < MemObj2::CPU_THREAD_NUM; ++i){
@@ -498,6 +497,7 @@ std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<
     }
 
     Node cur = pq.top();
+    printf("depth: %3d, queue: pq.size=%d, pmode=%d, max:score=%d/%d, rid=%d, fid=%d\n", depth, (int)pq.size(), paramMode, (int)cur.t.score() >> 6, field_size >> 1, cur.t.rid(), cur.t.fid());
     /* printf("start sort depth: %3d, queue: pq.size=%d, pmode=%d, max:score=%d/%d, rid=%d, fid=%d\n", depth, (int)pq.size(), paramMode, (int)cur.t.score() >> 6, field_size >> 1, cur.t.rid(), cur.t.fid()); */
     if(cur.t.score() >= max_score) {
       // 終了処理
@@ -514,8 +514,8 @@ std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<
       tasks[field_len] = cur.t.getTask();
       uint32_t fid = cur.t.fid();
       resultOperations[field_len] = bresultOperations[fid];
-      start_idx[field_len] = bstart_idx[fid];
-      push_back_resultOperations(resultOperations[field_len], cur.t.rid(), fsize, paramMode, depth2, ridsPerField, offsets[fid]);
+      bstart_idx[field_len] = TasksQueue::start_idx[fid];
+      push_back_resultOperations(resultOperations[field_len], cur.t.rid(), fsize, paramMode, depth2, ridsPerField, offsets[TasksQueue::start_idx[fid]]);
       if(!threadQueues[cur.thidx].q_empty()) {
         pq.push({threadQueues[cur.thidx].get(), cur.thidx});
       }
@@ -542,7 +542,7 @@ std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<
     cudaDeviceSynchronize();
 
     std::swap(resultOperations, bresultOperations);
-    std::swap(start_idx, bstart_idx);
+    std::swap(bstart_idx, TasksQueue::start_idx);
     std::swap(mem2.df, mem2.next_df);
 
   }

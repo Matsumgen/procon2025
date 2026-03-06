@@ -24,7 +24,7 @@ struct Ope {
 };
 
 void getProblem(RawField& field, uint32_t& fsize);
-void submission(std::array<Ope, 350> result);
+void submission(std::vector<Ope> result);
 RawField createRandomField(uint32_t fsize, size_t seed=0);
 
 //Inline implementation
@@ -64,11 +64,13 @@ inline RawField createRandomField(uint32_t fsize, size_t seed) {
 
 // Stub function
 inline void getProblem(RawField& field, uint32_t& fsize) {
-  fsize = 24;
+  fsize = 16;
   field = createRandomField(fsize, 0);
 }
 
-inline void submission(std::array<Ope, 350> result) {
+#include<iostream>
+inline void submission(std::vector<Ope> result) {
+  std::cout << "result size: " << result.size() << std::endl;
   return;
 }
 

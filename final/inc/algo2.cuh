@@ -6,7 +6,6 @@
 #include <vector>
 #include <stdint.h>
 #include <queue>
-#include <pair>
 
 namespace algo2lib{
 
@@ -28,7 +27,8 @@ namespace algo2lib{
   struct TasksCompare { inline bool operator()(const Tasks& a, const Tasks&b) const { return a.key() > b.key(); } };
 
   struct TasksQueue : std::priority_queue<Tasks, std::vector<Tasks>, TasksCompare> {
-    static std::vector<uint8_t> fieldsiz;
+    inline static std::vector<uint8_t> fieldsiz{};
+    inline static std::vector<uint8_t> start_idx{};
     size_t current_index;
     TasksQueue(const TasksCompare& comp = TasksCompare{});
     TasksQueue(const TasksCompare& comp, std::vector<Tasks>&& v);
@@ -55,7 +55,7 @@ namespace algo2lib{
   inline void TasksQueue::sortVector() { std::sort(this->c.rbegin(), this->c.rend(),
   [](const Tasks& a, const Tasks& b) {
       uint32_t ak = a.key(), bk = b.key();
-      return ak < bk || (ak == bk && TasksQueue::fieldsiz[a.fid()] < TasksQueue::fieldsiz[b.fid()]); 
+      return ak < bk || (ak == bk && TasksQueue::fieldsiz[TasksQueue::start_idx[a.fid()]] < TasksQueue::fieldsiz[TasksQueue::start_idx[b.fid()]]); 
     });
   }
   inline Tasks TasksQueue::get()       { if(this->current_index < this->c.size())return this->c[this->current_index++]; printf("ERROR\n"); return Tasks(); }
@@ -85,7 +85,6 @@ struct MemObj2 {
   ResultQueue *hq;
   std::vector<std::vector<Ope>> resultOperations;
   std::vector<std::vector<Ope>> bresultOperations;
-  std::vector<uint8_t> start_idx;
   std::vector<uint8_t> bstart_idx;
   std::vector<uint64_t> tasks;
   std::vector<algo2lib::TasksQueue> threadQueues;

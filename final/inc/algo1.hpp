@@ -23,7 +23,7 @@ namespace algo1 {
   #define TYPE_CNT4 5
   #define CPU_CNT 20
 
-  #define BEAM_WIDTH 5000
+  const static size_t BEAM_WIDTH = 5000;
 
   #define getBit(x, y) (((x)>>(y))&1)
   #define setBit(x, y) ((x)|((unsigned long long int)1<<(y)))

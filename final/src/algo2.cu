@@ -7,12 +7,12 @@
 MemObj2::MemObj2(const uint32_t fsize)
 : resultOperations(std::vector<std::vector<Ope>>(MemObj2::BEAM_WIDTH)),
   bresultOperations(std::vector<std::vector<Ope>>(MemObj2::BEAM_WIDTH)),
-  start_idx(MemObj2::BEAM_WIDTH),
   bstart_idx(MemObj2::BEAM_WIDTH),
   tasks(std::vector<uint64_t>(MemObj2::BEAM_WIDTH, 0))
 {
   const size_t field_size = fsize * fsize;
-  TasksQueue::fieldsiz.resize(MemObj2::BEAM_WIDTH);
+  algo2lib::TasksQueue::fieldsiz.resize(MemObj2::BEAM_WIDTH);
+  algo2lib::TasksQueue::start_idx.resize(MemObj2::BEAM_WIDTH);
 
   for(size_t i = 0; i < MemObj2::BEAM_WIDTH; ++i) {
     this->resultOperations[i].reserve(350);
@@ -62,8 +62,8 @@ MemObj2 init2() {
   return MemObj2{};
 }
 
-std::vector<Ope> algorithm2(std::vector<RawField>& fields, std::vector<std::vector<Ope>>& opes, uint32_t fsize, MemObj2& mem2){
-  return algo2_1::algo2_1(fields, opes, fsize, mem2);
+std::vector<Ope> algorithm2(std::vector<RawField>& fields, std::vector<std::vector<Ope>>& opes, std::vector<std::pair<uint8_t, uint8_t>>& offsets, uint32_t fsize, MemObj2& mem2){
+  return algo2_1::algo2_1(fields, opes, offsets, fsize, mem2);
 }
 
 
