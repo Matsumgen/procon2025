@@ -50,6 +50,13 @@ MemObj2::MemObj2(const uint32_t fsize)
 MemObj2::MemObj2() : MemObj2(MemObj2::MAX_FSIZE) {}
 
 
+MemObj2::~MemObj2() {
+  cudaFree(this->df);
+  cudaFree(this->next_df);
+  cudaFree(this->tasks_gpu);
+  cudaFreeHost(this->hq);
+
+}
 
 
 

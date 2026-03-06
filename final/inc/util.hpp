@@ -64,7 +64,7 @@ inline RawField createRandomField(uint32_t fsize, size_t seed) {
 
 // Stub function
 inline void getProblem(RawField& field, uint32_t& fsize) {
-  fsize = 16;
+  fsize = 24;
   field = createRandomField(fsize, 0);
 }
 

@@ -71,6 +71,28 @@ inline void printField(const RawField field, const uint32_t fsize) {
   std::cout << std::endl;
 }
 
+inline bool isIndexAdjacent(RawField& field, const uint32_t fsize, const uint32_t i) {
+  std::uint16_t num = field[i];
+  const size_t x = i % fsize;
+
+  const size_t up    = i >= fsize                 ? i - fsize  : 1<<20;
+  const size_t down  = i + fsize < fsize * fsize  ? i + fsize  : 1<<20;
+  const size_t left  = x != 0                     ? i - 1      : 1<<20;
+  const size_t right = x != fsize-1               ? i + 1      : 1<<20;
+
+  return (up    != 1<<20 && field[up]    == num) ||
+         (down  != 1<<20 && field[down]  == num) ||
+         (left  != 1<<20 && field[left]  == num) ||
+         (right != 1<<20 && field[right] == num);
+}
+
+inline bool isEnd(RawField& field, const uint32_t fsize) {
+  for(std::uint16_t i=0; i < field.size(); ++i){
+    if(!isIndexAdjacent(field, fsize, i)){ return false; }
+  }
+  return true;
+}
+
 
 
 }

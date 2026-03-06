@@ -97,6 +97,7 @@ struct MemObj2 {
 
   MemObj2();
   MemObj2(const uint32_t fsize);
+  ~MemObj2();
 };
 
 

@@ -446,14 +446,14 @@ std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<
   }
 
   // debug
-  for(size_t i = 0; i < fields.size(); ++i) {
-    for(size_t j = 0; j < opes[i].size(); ++j) {
-      printf("(%d %d %d) ", (int)opes[i][j].x(), (int)opes[i][j].y(), (int)opes[i][j].n());
-    }
-    std::cout << std::endl;
-    std::cout << fields[i].data() << " " << opes[i].data() << std::endl;
-    printField(fields[i], fsize);
-  }
+  /* for(size_t i = 0; i < fields.size(); ++i) { */
+  /*   for(size_t j = 0; j < opes[i].size(); ++j) { */
+  /*     printf("(%d %d %d) ", (int)opes[i][j].x(), (int)opes[i][j].y(), (int)opes[i][j].n()); */
+  /*   } */
+  /*   std::cout << std::endl; */
+  /*   std::cout << fields[i].data() << " " << opes[i].data() << std::endl; */
+  /*   printField(fields[i], fsize); */
+  /* } */
 
   // fieldsをすべて書き込む
   std::vector<uint16_t> flat;
@@ -503,7 +503,7 @@ std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<
       // 終了処理
       uint32_t fid = cur.t.fid();
       resultOperations[0] = bresultOperations[fid];
-      push_back_resultOperations(resultOperations[0], cur.t.rid(), fsize, paramMode, depth2, ridsPerField, offsets[fid]);
+      push_back_resultOperations(resultOperations[0], cur.t.rid(), fsize, paramMode, depth2, ridsPerField, offsets[TasksQueue::start_idx[fid]]);
       break;
     }
 
