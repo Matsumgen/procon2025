@@ -65,8 +65,8 @@ namespace algo2lib{
 struct MemObj2 {
   inline static constexpr size_t BLOCKS_PER_GRID   = 512;
   inline static constexpr size_t THREADS_PER_BLOCK = 256;
-  inline static constexpr size_t QUEUE_SIZE        = 1 << 20;
-  inline static constexpr size_t BEAM_WIDTH        = 1 << 18;
+  inline static constexpr size_t QUEUE_SIZE        = 1 << 21;
+  inline static constexpr size_t BEAM_WIDTH        = 1 << 19;
   inline static constexpr size_t FIELDS_PER_THREAD = 32;
   inline static constexpr size_t CPU_THREAD_NUM    = 3;
   inline static constexpr size_t SLEEP_TIME = 10;
@@ -106,6 +106,10 @@ std::vector<Ope> algorithm2(std::vector<RawField>& fields, std::vector<std::vect
 namespace algo2_1 {
   std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<Ope>>& opes, std::vector<std::pair<uint8_t, uint8_t>>& offsets, uint32_t fsize, MemObj2& mem2);
 }
+namespace algo2_2 {
+  std::vector<Ope> algo2_2(RawField& fields, std::vector<Ope>& opes, std::pair<uint8_t, uint8_t>& offset, uint32_t fsize, MemObj2& mem2);
+}
+
 
 
 #endif
