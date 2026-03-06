@@ -10,8 +10,6 @@
 #define QUEUE_SIZE (1<<20)
 
 #define BEAM_WIDTH (1<<17)
-
-
 #define FIELDS_PER_THREAD 32
 #define CPU_THREAD_NUM 3
 #define MAX_DEPTH 512
