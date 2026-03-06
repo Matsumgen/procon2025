@@ -84,21 +84,47 @@ uint32_t  getTargetIndex(const uint16_t *vals, const uint32_t length, const uint
   return index;
 }
 
-void getParamsCpu(const uint32_t tid, const uint32_t fsize, uint32_t *X, uint32_t *Y, uint32_t *N) {
+void getParamsCpu(const uint32_t tid, const uint32_t fsize, uint32_t *X, uint32_t *Y, uint32_t *N, uint32_t sn, uint32_t slice) {
   uint32_t acc = 0;
-  uint32_t w = fsize - 1;
-  while(true) {
+  int32_t w = fsize - sn + 1;
+  for(; w >= 0; --w) {
     uint32_t size = w * w;
-    if(tid < acc + size){
-      break;
-    }
+    size = (size / slice) + (size % slice == 0 ? 0 : 1);
+    if(tid < acc + size) break; 
     acc += size;
-    --w;
   }
-  acc = tid - acc;
+
+  *N = fsize - w + 1;
+  
+  acc = (tid - acc) * slice;
   *X = acc % w;
   *Y = acc / w;
-  *N = fsize - w + 1;
+}
+
+std::vector<uint32_t> getTidPerFieldList(uint32_t sn, uint32_t en, uint32_t slice) {
+  std::vector<uint32_t> ret(24, 0);
+  uint32_t X, Y, N;
+  for(uint32_t i = 4; i < 26; i += 2) {
+    for(uint32_t t = 0; t < i * i * i; ++t){
+      getParamsCpu(t, i, &X, &Y, &N, sn, slice);
+      if(en <= N || i <= N){
+        ret[i] = t;
+        break;
+      }
+    }
+  }
+  return ret;
+}
+
+uint32_t getTidPerField(uint32_t fsize, uint32_t sn, uint32_t en, uint32_t slice) {
+  uint32_t X, Y, N;
+  for(uint32_t t = 0; t < fsize * fsize * fsize; ++t){
+    getParamsCpu(t, fsize, &X, &Y, &N, sn, slice);
+    if(en <= N || fsize <= N){
+      return t;
+    }
+  }
+  return 0;
 }
 
 void rotateField(std::vector<uint16_t>& field, const uint32_t fsize, const uint32_t rid){

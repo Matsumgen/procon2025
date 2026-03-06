@@ -12,9 +12,9 @@
 
 int main(void) {
   cudaFree(0);
-  uint32_t fsize = 14;
+  uint32_t fsize = 12;
   std::vector<uint16_t> start_field = makeShuffledPairs(fsize);
-  auto result = bs1::algo(start_field.data(), fsize);
+  auto result = bs4::algo(start_field.data(), fsize);
  
   return 0;
 }
