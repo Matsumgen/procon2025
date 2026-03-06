@@ -17,12 +17,13 @@ int main(void) {
   getProblem(field, fsize);
 
   // algorithm 1
-  std::vector<std::array<Ope, 350>> opes;
+  std::vector<std::vector<Ope>> opes;
   std::vector<std::vector<uint16_t>> fields;
-  algorithm1(field, fsize, mem1, opes, fields);;
+  std::vector<std::pair<uint8_t, uint8_t>> offsets;
+  algorithm1(field, fsize, mem1, opes, fields, offsets);;
 
   // algorithm 2
-  std::array<Ope, 350> result = algorithm2(fields, opes, fsize, mem2);
+  std::array<Ope, 350> result = algorithm2(fields, opes, offsets, fsize, mem2);
 
   // submission
   submission(result);

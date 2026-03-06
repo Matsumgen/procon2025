@@ -217,7 +217,7 @@ namespace algo1 {
       void moveNextState(int type, int ent, int idx, MemObj1 &mem1);
       void getClone(State *out);
       std::vector<Pos> getBasePos(int type);
-      void getAnswer(std::vector<AnsLog> &ans_log, RawField &raw_field, std::array<Ope, 350> &out, MemObj1 &mem1);
+      void getAnswer(std::vector<AnsLog> &ans_log, RawField &raw_field, std::vector<Ope> &out, std::pair<uint8_t, uint8_t> &offset, MemObj1 &mem1);
 
     private:
       std::vector<Ope> getOperation(int type, int ent, int idx, MemObj1 &mem1);
@@ -264,5 +264,5 @@ struct MemObj1 {
 };
 
 MemObj1 init1();
-void algorithm1(RawField field, uint32_t fsize, MemObj1& mem1, std::vector<std::array<Ope, 350>>& opes, std::vector<RawField>& fields);
+void algorithm1(RawField field, uint32_t fsize, MemObj1& mem1, std::vector<std::vector<Ope>>& opes, std::vector<RawField>& fields, std::vector<std::pair<uint8_t, uint8_t>> &offsets);
 #endif

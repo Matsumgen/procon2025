@@ -78,7 +78,7 @@ MemObj1 init1() {
   return mem;
 }
 
-void algorithm1(RawField field, uint32_t fsize, MemObj1& mem1, std::vector<std::array<Ope, 350>>& opes, std::vector<RawField>& fields){
+void algorithm1(RawField field, uint32_t fsize, MemObj1& mem1, std::vector<std::vector<Ope>>& opes, std::vector<RawField>& fields, std::vector<std::pair<uint8_t, uint8_t>> &offsets){
   State first = State(field, fsize);
   first.getClone(&mem1.state_mem[1][0]);
 
@@ -150,11 +150,13 @@ void algorithm1(RawField field, uint32_t fsize, MemObj1& mem1, std::vector<std::
 
       if (mem1.now_beam[idx].p->isEnd()) {
         if (second_state_idx < MAX_ENUM_COUNT) {
-          std::array<Ope, 350> tmp_ope;
+          std::vector<Ope> tmp_ope;
           RawField tmp_field;
-          first.getAnswer(mem1.now_beam[idx].p->log, tmp_field, tmp_ope, mem1);
+          std::pair<uint8_t, uint8_t> tmp_offset;
+          first.getAnswer(mem1.now_beam[idx].p->log, tmp_field, tmp_ope, tmp_offset, mem1);
           opes.push_back(tmp_ope);
           fields.push_back(tmp_field);
+          offsets.push_back(tmp_offset);
           second_state_idx++;
         }
         idx++;
@@ -291,14 +293,14 @@ void State::getClone(State *out) {
   out->ope_sum = this->ope_sum;
 }
 
-void State::getAnswer(std::vector<AnsLog> &ans_log, RawField &raw_field, std::array<Ope, 350> &out, MemObj1 &mem1) {
+void State::getAnswer(std::vector<AnsLog> &ans_log, RawField &raw_field, std::vector<Ope> &out, std::pair<uint8_t, uint8_t> &offset, MemObj1 &mem1) {
   Ent tmp_ent_mem[this->f.size * this->f.size];
   Pos tmp_pos_mem[this->f.size * this->f.size];
   State tmp_s;
   tmp_s.f.ent_mem = tmp_ent_mem;
   tmp_s.f.pos_mem = tmp_pos_mem;
 
-  int ope_cnt = 0;
+  out.resize(0);
   this->getClone(&tmp_s);
   for (int i = 0; i < (int)ans_log.size(); i++) {
     if (tmp_s.edge_cnt == -1) {
@@ -309,7 +311,7 @@ void State::getAnswer(std::vector<AnsLog> &ans_log, RawField &raw_field, std::ar
         Ope tmp = rotateOpe(ope, tmp_s.f.size, tmp_s.rotate_hosei);
         tmp.data[0] += tmp_s.x_hosei;
         tmp.data[1] += tmp_s.y_hosei;
-        out[ope_cnt++] = tmp;
+        out.push_back(tmp);
       }    
     }
     tmp_s.moveNextState(ans_log[i].type, ans_log[i].ent, ans_log[i].idx, mem1);
@@ -317,6 +319,7 @@ void State::getAnswer(std::vector<AnsLog> &ans_log, RawField &raw_field, std::ar
   for (int i = 0; i < (4 - tmp_s.rotate_hosei) % 4; i++) tmp_s.f.rotate(Ope(0, 0, tmp_s.f.size));
   raw_field.resize(tmp_s.f.size * tmp_s.f.size);
   for (int i = 0; i < tmp_s.f.size * tmp_s.f.size; i++) raw_field[i] = tmp_s.f.ent_mem[i].val;
+  offset = std::make_pair(tmp_s.x_hosei, tmp_s.y_hosei);
 }
 
 std::vector<Ope> State::getOperation(int type, int ent, int idx, MemObj1 &mem1) {

@@ -11,13 +11,13 @@ struct MemObj2 {
 };
 
 MemObj2 init2();
-std::array<Ope, 350> algorithm2(std::vector<RawField> fields, std::vector<std::array<Ope, 350>> opes, uint32_t fsize, MemObj2& mem2);
+std::array<Ope, 350> algorithm2(std::vector<RawField> fields, std::vector<std::array<Ope, 350>> opes, std::vector<std::pair<uint8_t, uint8_t>> offsets, uint32_t fsize, MemObj2& mem2);
 
 
 
 // スタブ関数
 inline MemObj2 init2() { return MemObj2{1}; }
-inline std::array<Ope, 350> algorithm2(std::vector<RawField> fields, std::vector<std::array<Ope, 350>> opes, uint32_t fsize, MemObj2& mem2){
+inline std::array<Ope, 350> algorithm2(std::vector<RawField> fields, std::vector<std::vector<Ope>> opes, std::vector<std::pair<uint8_t, uint8_t>> offsets, uint32_t fsize, MemObj2& mem2){
   return;
 }
 
