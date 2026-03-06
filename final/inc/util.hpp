@@ -18,9 +18,9 @@ struct Ope {
   Ope(uint8_t x, uint8_t y, uint8_t n);
   Ope(int x, int y, int n);
   bool operator < (const Ope &other);
-  uint8_t x();
-  uint8_t y();
-  uint8_t n();
+  uint8_t x() const;
+  uint8_t y() const;
+  uint8_t n() const;
 };
 
 void getProblem(RawField& field, uint32_t& fsize);
@@ -38,9 +38,9 @@ inline bool Ope::operator<(const Ope &other) {
         || (this->data[0] == other.data[0] && this->data[1] == other.data[1] && this->data[2] < other.data[2]);
 }
 
-inline uint8_t Ope::x() { return this->data[0]; }
-inline uint8_t Ope::y() { return this->data[1]; }
-inline uint8_t Ope::n() { return this->data[2]; }
+inline uint8_t Ope::x() const { return this->data[0]; }
+inline uint8_t Ope::y() const { return this->data[1]; }
+inline uint8_t Ope::n() const { return this->data[2]; }
 
 inline RawField createRandomField(uint32_t fsize, size_t seed) {
   const uint16_t n = fsize * fsize / 2;

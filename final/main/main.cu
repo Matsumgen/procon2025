@@ -23,7 +23,7 @@ int main(void) {
   algorithm1(field, fsize, mem1, opes, fields, offsets);;
 
   // algorithm 2
-  std::array<Ope, 350> result = algorithm2(fields, opes, offsets, fsize, mem2);
+  std::array<Ope> result = algorithm2(fields, opes, offsets, fsize, mem2);
 
   // submission
   submission(result);
