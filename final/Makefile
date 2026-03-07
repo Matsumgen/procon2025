@@ -30,7 +30,6 @@ LIBRARY  =
 INCLUDE = -Iinc -Isrc -I/usr/local/include
 
 # リンクフラグの追加
-# リンクフラグの追加
 LDFLAGS += -lcpr -lcurl -lssl -lcrypto
 
 # ディレクトリ
@@ -110,4 +109,3 @@ fclean: clean
 	rm -f $(MAIN_TARGET) $(TEST_TARGET)
 
 re: fclean all
-

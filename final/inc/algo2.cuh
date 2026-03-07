@@ -6,6 +6,7 @@
 #include <vector>
 #include <stdint.h>
 #include <queue>
+#include <algorithm>
 
 namespace algo2lib{
 
@@ -37,8 +38,6 @@ namespace algo2lib{
     Tasks get();
     bool q_empty();
   };
-
-
 
   inline Tasks::Tasks() : data({0, 0, 0}), isDepth1(false) {}
   inline Tasks::Tasks(uint32_t fid, uint32_t rid, uint32_t score) : data({fid, rid, score}), isDepth1(false) {}
@@ -115,11 +114,8 @@ struct MemObj2 {
   inline static constexpr uint32_t EN              = P_EN;
   inline static constexpr uint32_t SLICE           = P_SLICE;
   inline static constexpr uint32_t THRESHOLD       = P_THRESHOLD;
-  inline static constexpr uint32_t EVALUATION = P_EVALUATION;
+  inline static constexpr uint32_t EVALUATION      = P_EVALUATION;
   
-
-  // ... (以降のコードはそのまま
-
   struct ResultQueue {
     uint32_t scores[QUEUE_SIZE * FIELDS_PER_THREAD / 2];
     uint8_t done[QUEUE_SIZE];
@@ -153,7 +149,5 @@ namespace algo2_1 {
 namespace algo2_2 {
   std::vector<Ope> algo2_2(RawField& fields, std::vector<Ope>& opes, std::pair<uint8_t, uint8_t>& offset, uint32_t fsize, MemObj2& mem2);
 }
-
-
 
 #endif

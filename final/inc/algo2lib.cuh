@@ -27,7 +27,6 @@ void multDp4a(uint32_t *a, const uint32_t *b) {
 
   int32_t ra = __dp4a(a1, b1, 0);
   int32_t rb = __dp4a(a1, b2, 0);
-  /* printf("(a1, a2, b1, b2, ra, rb) = (%x %x %x %x %x %x)\n", a1, a2, b1, b2, ra, rb); */
   b1 = __dp4a(a2, b1, 0); // = rc
   b2 = __dp4a(a2, b2, 0); // = rb
 
@@ -236,10 +235,6 @@ uint32_t evaluation3(uint16_t *f, uint32_t fsize) {
   return val;
 }
 
-
-
-
-
 // デバッグ用
 __device__ __forceinline__
 bool checkProbrmGpu(const uint16_t *f, const uint32_t fsize) {
@@ -258,7 +253,6 @@ bool checkProbrmGpu(const uint16_t *f, const uint32_t fsize) {
   }
   return true;
 }
-
 
 }
 #endif
