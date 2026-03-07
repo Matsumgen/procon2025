@@ -1,0 +1,88 @@
+--- Configuration ---
+P_BEAM_WIDTH: 262144
+P_EVALUATION: 3
+P_SLICE: 1
+P_THRESHOLD: 16
+P_SN: 7
+P_EN: 14
+---------------------
+
+start algo2_1
+depth:   0, queue: pq.size=1, pmode=0, max:score=4/72, rid=33, fid=0
+depth:   1, queue: pq.size=2, pmode=0, max:score=6/72, rid=71, fid=12
+depth:   2, queue: pq.size=3, pmode=0, max:score=8/72, rid=71, fid=42
+depth:   3, queue: pq.size=3, pmode=0, max:score=11/72, rid=30, fid=14
+depth:   4, queue: pq.size=3, pmode=0, max:score=13/72, rid=37, fid=22
+depth:   5, queue: pq.size=3, pmode=0, max:score=14/72, rid=37, fid=20763
+depth:   6, queue: pq.size=3, pmode=0, max:score=17/72, rid=8, fid=841
+depth:   7, queue: pq.size=3, pmode=0, max:score=18/72, rid=31, fid=1
+depth:   8, queue: pq.size=3, pmode=0, max:score=20/72, rid=8, fid=75
+depth:   9, queue: pq.size=3, pmode=0, max:score=22/72, rid=15, fid=100
+depth:  10, queue: pq.size=3, pmode=0, max:score=23/72, rid=24, fid=1
+depth:  11, queue: pq.size=3, pmode=0, max:score=25/72, rid=49, fid=2
+depth:  12, queue: pq.size=3, pmode=0, max:score=26/72, rid=18, fid=404
+depth:  13, queue: pq.size=3, pmode=0, max:score=28/72, rid=1, fid=0
+depth:  14, queue: pq.size=3, pmode=0, max:score=29/72, rid=82, fid=5193
+depth:  15, queue: pq.size=3, pmode=0, max:score=30/72, rid=30, fid=0
+depth:  16, queue: pq.size=3, pmode=1, max:score=30/72, rid=385, fid=751
+depth:  17, queue: pq.size=3, pmode=1, max:score=32/72, rid=20, fid=136
+depth:  18, queue: pq.size=3, pmode=1, max:score=33/72, rid=227, fid=5518
+depth:  19, queue: pq.size=3, pmode=1, max:score=35/72, rid=499, fid=98428
+depth:  20, queue: pq.size=3, pmode=1, max:score=37/72, rid=499, fid=188096
+depth:  21, queue: pq.size=3, pmode=1, max:score=38/72, rid=100, fid=3
+depth:  22, queue: pq.size=3, pmode=1, max:score=39/72, rid=99, fid=15
+depth:  23, queue: pq.size=3, pmode=1, max:score=40/72, rid=192, fid=257
+depth:  24, queue: pq.size=3, pmode=1, max:score=42/72, rid=439, fid=70615
+depth:  25, queue: pq.size=3, pmode=1, max:score=43/72, rid=410, fid=70132
+depth:  26, queue: pq.size=3, pmode=1, max:score=44/72, rid=318, fid=218567
+depth:  27, queue: pq.size=3, pmode=1, max:score=45/72, rid=121, fid=2
+depth:  28, queue: pq.size=3, pmode=1, max:score=46/72, rid=429, fid=59412
+depth:  29, queue: pq.size=3, pmode=1, max:score=47/72, rid=286, fid=1
+depth:  30, queue: pq.size=3, pmode=1, max:score=47/72, rid=103, fid=145891
+depth:  31, queue: pq.size=3, pmode=1, max:score=49/72, rid=315, fid=194029
+depth:  32, queue: pq.size=3, pmode=1, max:score=50/72, rid=315, fid=25716
+depth:  33, queue: pq.size=3, pmode=1, max:score=50/72, rid=148, fid=5027
+depth:  34, queue: pq.size=3, pmode=1, max:score=52/72, rid=490, fid=1040
+depth:  35, queue: pq.size=3, pmode=1, max:score=53/72, rid=490, fid=20987
+depth:  36, queue: pq.size=3, pmode=1, max:score=53/72, rid=63, fid=68433
+depth:  37, queue: pq.size=3, pmode=1, max:score=54/72, rid=299, fid=9991
+depth:  38, queue: pq.size=3, pmode=1, max:score=54/72, rid=106, fid=3
+depth:  39, queue: pq.size=3, pmode=1, max:score=55/72, rid=177, fid=4208
+depth:  40, queue: pq.size=3, pmode=1, max:score=56/72, rid=93, fid=683
+depth:  41, queue: pq.size=3, pmode=1, max:score=57/72, rid=201, fid=339
+depth:  42, queue: pq.size=3, pmode=1, max:score=57/72, rid=291, fid=215
+depth:  43, queue: pq.size=3, pmode=1, max:score=58/72, rid=180, fid=53730
+depth:  44, queue: pq.size=3, pmode=1, max:score=59/72, rid=201, fid=19865
+depth:  45, queue: pq.size=3, pmode=1, max:score=59/72, rid=414, fid=4145
+depth:  46, queue: pq.size=3, pmode=1, max:score=60/72, rid=479, fid=165918
+depth:  47, queue: pq.size=3, pmode=1, max:score=61/72, rid=315, fid=195800
+depth:  48, queue: pq.size=3, pmode=1, max:score=61/72, rid=120, fid=160722
+depth:  49, queue: pq.size=3, pmode=1, max:score=62/72, rid=315, fid=7237
+depth:  50, queue: pq.size=3, pmode=1, max:score=62/72, rid=120, fid=80688
+depth:  51, queue: pq.size=3, pmode=1, max:score=63/72, rid=179, fid=10478
+depth:  52, queue: pq.size=3, pmode=1, max:score=63/72, rid=77, fid=5
+depth:  53, queue: pq.size=3, pmode=1, max:score=64/72, rid=32, fid=437
+depth:  54, queue: pq.size=3, pmode=1, max:score=64/72, rid=105, fid=102
+depth:  55, queue: pq.size=3, pmode=1, max:score=65/72, rid=27, fid=4757
+depth:  56, queue: pq.size=3, pmode=1, max:score=65/72, rid=71, fid=433
+depth:  57, queue: pq.size=3, pmode=1, max:score=66/72, rid=185, fid=19550
+depth:  58, queue: pq.size=3, pmode=1, max:score=66/72, rid=41, fid=0
+depth:  59, queue: pq.size=3, pmode=1, max:score=67/72, rid=411, fid=26
+depth:  60, queue: pq.size=3, pmode=1, max:score=67/72, rid=21, fid=6
+depth:  61, queue: pq.size=3, pmode=1, max:score=68/72, rid=411, fid=128
+depth:  62, queue: pq.size=3, pmode=1, max:score=68/72, rid=488, fid=23
+depth:  63, queue: pq.size=3, pmode=1, max:score=69/72, rid=393, fid=4142
+depth:  64, queue: pq.size=3, pmode=1, max:score=69/72, rid=408, fid=170288
+depth:  65, queue: pq.size=3, pmode=1, max:score=70/72, rid=259, fid=236623
+depth:  66, queue: pq.size=3, pmode=1, max:score=70/72, rid=393, fid=114328
+depth:  67, queue: pq.size=3, pmode=1, max:score=70/72, rid=293, fid=804
+depth:  68, queue: pq.size=3, pmode=1, max:score=70/72, rid=35, fid=8099
+depth:  69, queue: pq.size=3, pmode=1, max:score=71/72, rid=417, fid=217502
+depth:  70, queue: pq.size=3, pmode=1, max:score=71/72, rid=476, fid=0
+depth:  71, queue: pq.size=3, pmode=1, max:score=71/72, rid=119, fid=57
+depth:  72, queue: pq.size=3, pmode=1, max:score=72/72, rid=133, fid=1283
+result size: 73
+
+
+--- Performance ---
+Total Execution Time: 57.385 sec
