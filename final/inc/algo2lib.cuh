@@ -202,6 +202,41 @@ uint32_t evaluation1(uint16_t *f, uint32_t fsize) {
   return (val << 6);
 }
 
+// 評価関数3（超特大の隣接ボーナス＋距離の道標ハイブリッド）
+__device__  __forceinline__
+uint32_t evaluation3(uint16_t *f, uint32_t fsize) {
+  int8_t pos[24*24*2];
+  size_t i, j;
+  size_t ms = fsize * fsize * 2;
+  for(size_t k = 0; k < ms; k += 4) pos[k] = -1;
+
+  i = 0;
+  for(int8_t y = 0; y < fsize; ++y){
+    for(int8_t x = 0; x < fsize; ++x){
+      j = f[i] << 2;
+      if(pos[j] != -1){ j += 2; }
+      pos[j]   = x;
+      pos[j+1] = y;
+      ++i;
+    }
+  }
+
+  uint32_t val = 0;
+  for(size_t k = 0; k < ms; k += 4) {
+    uint32_t r = abs(pos[k] - pos[k+2]) + abs(pos[k+1] - pos[k+3]);
+    
+    if (r == 1) {
+      // 隣接している場合：圧倒的な特大ボーナスを与える (1<<10 = 1024)
+      val += 1024; 
+    } else if (r > 1) {
+      // 離れている場合：近づくほど少しずつスコアが上がる道標 (最大でも64未満)
+      val += (1 << 7) / (r * r); 
+    }
+  }
+  return val;
+}
+
+
 
 
 

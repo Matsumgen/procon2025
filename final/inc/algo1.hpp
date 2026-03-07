@@ -21,7 +21,7 @@ namespace algo1 {
   #define RESULT3_ENUM_CNT 5
 
   #define TYPE_CNT4 5
-  #define CPU_CNT 20
+  #define CPU_CNT 30
 
   const static size_t BEAM_WIDTH = 5000;
 
