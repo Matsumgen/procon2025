@@ -118,7 +118,7 @@ struct MemObj2 {
   inline static constexpr uint32_t EVALUATION = P_EVALUATION;
   
 
-  // ... (以降のコードはそのまま)
+  // ... (以降のコードはそのまま
 
   struct ResultQueue {
     uint32_t scores[QUEUE_SIZE * FIELDS_PER_THREAD / 2];
@@ -150,6 +150,10 @@ std::vector<Ope> algorithm2(std::vector<RawField>& fields, std::vector<std::vect
 namespace algo2_1 {
   std::vector<Ope> algo2_1(std::vector<RawField>& fields, std::vector<std::vector<Ope>>& opes, std::vector<std::pair<uint8_t, uint8_t>>& offsets, uint32_t fsize, MemObj2& mem2);
 }
+namespace algo2_2 {
+  std::vector<Ope> algo2_2(RawField& fields, std::vector<Ope>& opes, std::pair<uint8_t, uint8_t>& offset, uint32_t fsize, MemObj2& mem2);
+}
+
 
 
 #endif
