@@ -47,7 +47,7 @@ int main(void) {
 
   for(size_t i = 0; i < fields.size(); ++i) {
     size_t tid = i % max_threads;
-    futures.emplace_back( std::async(std::launch::async, [&, i, tid]{ return algo2_2::algo2_2( fields[i], opes[i], offsets[i], 12, mem2s[tid]); }));
+    futures.emplace_back( std::async(std::launch::async, [&, i, tid]{ return algo2_2::algo2_2( fields[i], opes[i], offsets[i], fsize % 4 == 0 ? 12 : 10, mem2s[tid]); }));
     while(futures.size() >= max_threads) {
 
       for(auto it = futures.begin(); it != futures.end(); ) {

@@ -21,7 +21,7 @@ MemObj1 init1() {
   mem.size += 11 * sizeof(uint16_t*);
   mem.bfs_result4 = new uint16_t*[11];
   size_t mem_sum4 = 0;
-  for (size_t i = 8; i <= MAX_FIELD_SIZE; i += 4) {
+  for (size_t i = 8; i <= MAX_FIELD_SIZE; i += 2) {
     size_t len = (i * 4 - 8) * TYPE_CNT4 * ((i * i) * (i * i - 1) / 2) * RESULT1_ENUM_CNT;
     mem.size += len * sizeof(uint16_t);
     mem.bfs_result4[i / 2 - 2] = new uint16_t[len];
@@ -75,6 +75,7 @@ MemObj1 init1() {
   mem.size += 2 * BEAM_WIDTH * CPU_CNT * sizeof(BeamNode);
   mem.now_beam = new BeamNode[BEAM_WIDTH * CPU_CNT];
   mem.tmp_beam = new BeamNode[BEAM_WIDTH * CPU_CNT];
+  std::cout << "Finish memory alloc" << std::endl;
   return mem;
 }
 
