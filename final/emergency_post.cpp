@@ -18,9 +18,9 @@ int main() {
 
   // APIエンドポイントとトークン
   const std::string api_url =
-      "http://localhost:3000"; // 実際のAPIサーバーのURLに置き換えてください
+      "http://192.168.123.2:3000"; // 実際のAPIサーバーのURLに置き換えてください
   const std::string procon_token =
-      "player1"; // 事前配布されたトークンに置き換えてください
+      "YSha9PPxJ4Yn"; // 事前配布されたトークンに置き換えてください
 
   // --- answer.jsonファイルから回答データを読み込む ---
   std::ifstream ifs("answer.json"); // 回答ファイルのパスを書き込む
