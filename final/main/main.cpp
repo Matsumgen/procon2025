@@ -48,11 +48,12 @@ int main(void) {
 
   // algorithm 2
   uint32_t fs = (fsize % 4) == 0 ? 12 : 10;
-  std::vector<Ope> best_result;
-  for(size_t i = 0; i < opes.size(); i += 16){
-    std::vector<std::vector<Ope>> opes_local(opes.begin() + i, opes.begin() + i + 16);
-    std::vector<std::vector<uint16_t>> fields_local(fields.begin() + i, fields.begin() + i + 16);
-    std::vector<std::pair<uint8_t, uint8_t>> offsets_local(offsets.begin() + i, offsets.begin() + i + 16);
+  std::vector<Ope> best_result(400);
+  const uint32_t sl = 8;
+  for(size_t i = 0; i < opes.size(); i += sl){
+    std::vector<std::vector<Ope>> opes_local(opes.begin() + i, opes.begin() + i + sl);
+    std::vector<std::vector<uint16_t>> fields_local(fields.begin() + i, fields.begin() + i + sl);
+    std::vector<std::pair<uint8_t, uint8_t>> offsets_local(offsets.begin() + i, offsets.begin() + i + sl);
     std::vector<Ope> result = algorithm2(fields_local, opes_local, offsets_local, fs, mem2);
     if(best_result.size() > result.size()) {
       submission(result);
