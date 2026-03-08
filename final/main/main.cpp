@@ -27,7 +27,10 @@ int main(void) {
   // get problem
   RawField field;
   uint32_t fsize;
-  getProblem(field, fsize);
+  /* getProblem(field, fsize); */
+  fsize = 24;
+  field = createRandomField(fsize, 1);
+
 
   // algorithm 1
   std::vector<std::vector<Ope>> opes;
@@ -45,7 +48,18 @@ int main(void) {
 
   // algorithm 2
   uint32_t fs = (fsize % 4) == 0 ? 12 : 10;
-   std::vector<Ope> result = algorithm2(fields, opes, offsets, fs, mem2);
+  std::vector<Ope> best_result;
+  for(size_t i = 0; i < opes.size(); i += 16){
+    std::vector<std::vector<Ope>> opes_local(opes.begin() + i, opes.begin() + i + 16);
+    std::vector<std::vector<uint16_t>> fields_local(fields.begin() + i, fields.begin() + i + 16);
+    std::vector<std::pair<uint8_t, uint8_t>> offsets_local(offsets.begin() + i, offsets.begin() + i + 16);
+    std::vector<Ope> result = algorithm2(fields_local, opes_local, offsets_local, fs, mem2);
+    if(best_result.size() > result.size()) {
+      submission(result);
+      best_result = result;
+
+    }
+  }
   /* std::vector<Ope> result = algorithm2(fields, opes, offsets, fsize, mem2); */
 
   /*std::vector<Ope> result;
@@ -72,21 +86,21 @@ int main(void) {
 
 
   // debug
-  RawField f = field;
-  for(auto& v : result) { rotateField(f, fsize, v); }
-  if(!isEnd(f, fsize)) {
-    f = field;
-    printField(f, fsize);
-    std::cout << std::endl;
-    for(auto& v : result) {
-      std::cout << (int)v.x() << " " << (int)v.y() << " " << (int)v.n() << std::endl;
-    }
-    std::cout << std::endl;
-    printField(f, fsize);
-  }
+  /* RawField f = field; */
+  /* for(auto& v : result) { rotateField(f, fsize, v); } */
+  /* if(!isEnd(f, fsize)) { */
+  /*   f = field; */
+  /*   printField(f, fsize); */
+  /*   std::cout << std::endl; */
+  /*   for(auto& v : result) { */
+  /*     std::cout << (int)v.x() << " " << (int)v.y() << " " << (int)v.n() << std::endl; */
+  /*   } */
+  /*   std::cout << std::endl; */
+  /*   printField(f, fsize); */
+  /* } */
 
   // submission
-  submission(result);
+  /* submission(result); */
  
   return 0;
 }

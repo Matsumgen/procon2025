@@ -146,39 +146,39 @@ inline void submission(std::vector<Ope> result) {
 
   std::string json_payload = answer_data.dump();
 
-  CURL *curl;
-  CURLcode res;
-  std::string readBuffer;
+  /* CURL *curl; */
+  /* CURLcode res; */
+  /* std::string readBuffer; */
 
-  curl_global_init(CURL_GLOBAL_DEFAULT);
-  curl = curl_easy_init();
-  if (curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, (API_BASE_URL).c_str()); // APIエンドポイント
-    curl_easy_setopt(curl, CURLOPT_POST, 1L);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_payload.c_str());
+  /* curl_global_init(CURL_GLOBAL_DEFAULT); */
+  /* curl = curl_easy_init(); */
+  /* if (curl) { */
+  /*   curl_easy_setopt(curl, CURLOPT_URL, (API_BASE_URL).c_str()); // APIエンドポイント */
+  /*   curl_easy_setopt(curl, CURLOPT_POST, 1L); */
+  /*   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_payload.c_str()); */
 
-    struct curl_slist *headers = NULL;
-    headers = curl_slist_append(headers, "Content-Type: application/json");
-    headers = curl_slist_append(headers, ("Procon-Token: " + YOUR_TOKEN).c_str());
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+  /*   struct curl_slist *headers = NULL; */
+  /*   headers = curl_slist_append(headers, "Content-Type: application/json"); */
+  /*   headers = curl_slist_append(headers, ("Procon-Token: " + YOUR_TOKEN).c_str()); */
+  /*   curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers); */
 
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+  /*   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback); */
+  /*   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer); */
 
-    res = curl_easy_perform(curl);
-    if (res != CURLE_OK) {
-      std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-    } else {
-      long response_code;
-      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-      std::cout << "Response Code: " << response_code << std::endl;
-      std::cout << "Response: " << readBuffer << std::endl;
-    }
+  /*   res = curl_easy_perform(curl); */
+  /*   if (res != CURLE_OK) { */
+  /*     std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl; */
+  /*   } else { */
+  /*     long response_code; */
+  /*     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code); */
+  /*     std::cout << "Response Code: " << response_code << std::endl; */
+  /*     std::cout << "Response: " << readBuffer << std::endl; */
+  /*   } */
 
-    curl_slist_free_all(headers);
-    curl_easy_cleanup(curl);
-  }
-  curl_global_cleanup();
+  /*   curl_slist_free_all(headers); */
+  /*   curl_easy_cleanup(curl); */
+  /* } */
+  /* curl_global_cleanup(); */
 
   // 回答をファイルにも保存
   std::string filename = "answer.json";
