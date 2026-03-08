@@ -83,6 +83,9 @@ inline size_t WriteCallback(void *contents, size_t size, size_t nmemb, std::stri
 const std::string API_BASE_URL = "http://localhost:3000"; 
 const std::string YOUR_TOKEN = "player1";
 
+// const std::string API_BASE_URL = "http://192.168.123.2:3000";
+// const std::string YOUR_TOKEN = "YSha9PPxJ4Yn";
+
 // サーバーから問題を取得する関数
 inline void getProblem(RawField& field, uint32_t& fsize) {
   bool is_connection = false;

@@ -27,9 +27,7 @@ int main(void) {
   // get problem
   RawField field;
   uint32_t fsize;
-  /* getProblem(field, fsize); */
-  fsize = 24;
-  field = createRandomField(fsize, 1);
+  getProblem(field, fsize);
 
 
   // algorithm 1
