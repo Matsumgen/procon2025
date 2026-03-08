@@ -2,7 +2,6 @@
 #define ALGO2_ALGO1_CUH_
 
 #include <util.hpp>
-#include <algo2lib.hpp> // algo2lib と getParamsCpu などのために追加
 #include <mutex>
 #include <condition_variable>
 #include <thread>
@@ -10,7 +9,10 @@
 #include <vector>
 
 namespace algo2_algo1 {
-  using namespace algo2lib;
+
+
+
+Ope getParamsCpu(uint16_t rid, uint32_t fsize, uint16_t type);
 
 /*
 types: ffttaabbccddeeee
@@ -25,24 +27,32 @@ struct MemObj21 {
   inline static constexpr uint32_t BEAM_WIDTH = 1 << 12;
   inline static constexpr size_t BLOCKS_PER_GRID   = 512;
   inline static constexpr size_t THREADS_PER_BLOCK = 256;
-  inline static constexpr size_t GPU_PROCESS_NUM = BLOCKS_PER_GRID * THREADS_PER_BLOCK; // 修正
+  inline static constexpr size_t GPU_PROCESS_NUM = BLOCKS_PER_GRID * THREADS_PER_BLOCK;
   inline static constexpr size_t ROT_DEPTH = 2;
 
   // cpu
   std::vector<uint16_t> fids;
   std::vector<uint8_t> opes_cpu;
   std::vector<uint16_t> types;
-  // ControlThread ct; // 一旦ポインタか後で初期化する必要があるため下部で対応
+  ControlThread *ct; // 一旦ポインタか後で初期化する必要があるため下部で対応
+
+  std::vector<uint8_t> beamList; // [siz, data...]
 
   // gpu
   uint16_t *fields_gpu;
   uint16_t *fields_gpu_buf;
   uint16_t *types_gpu;
   uint16_t *result_gpu;
+  uint16_t *fids_gpu;
+  uint8_t *opes_gpu;
+
+  uint8_t *beamList_gpu;
+
+  MemObj21();
 };
 
 struct TasksQueue {
-  std::vector<std::array<uint16_t, MemObj21::ROT_DEPTH+2>> data; // MemObj2 -> MemObj21に修正
+  std::vector<std::array<uint16_t, MemObj21::ROT_DEPTH+2>> data;
   std::vector<uint16_t> types;
   std::vector<int32_t> scores;
 
@@ -64,7 +74,7 @@ struct TasksQueue {
   }
 
   inline void sift_down(int idx) {
-    int n = scores.size(); // heap.size() -> scores.size() に修正
+    int n = scores.size();
     while (true) {
       int left = idx * 2 + 1;
       int right = idx * 2 + 2;
@@ -90,7 +100,7 @@ struct TasksQueue {
     return scores.empty();
   }
 
-  inline int size() const {
+  inline size_t size() const {
     return scores.size();
   }
 
@@ -100,7 +110,6 @@ struct TasksQueue {
     scores.clear();
   }
   
-  // dの型を std::array に修正
   inline void push(std::array<uint16_t, MemObj21::ROT_DEPTH+2> d, uint16_t type, int32_t score) {
     data.push_back(d);
     types.push_back(type);
@@ -109,7 +118,7 @@ struct TasksQueue {
   }
 
   inline void pop() {
-    std::swap(scores[0], scores.back()); // std::を追加
+    std::swap(scores[0], scores.back());
     std::swap(data[0], data.back());
     std::swap(types[0], types.back());
     scores.pop_back();
@@ -118,7 +127,6 @@ struct TasksQueue {
     if (!scores.empty()) sift_down(0);
   }
 
-  // dと戻り値の型を std::array に修正
   inline std::array<uint16_t, MemObj21::ROT_DEPTH+2> replace(std::array<uint16_t, MemObj21::ROT_DEPTH+2> d, uint16_t type, int32_t score) {
     auto ret = data[0];
     data[0] = d;
@@ -146,14 +154,14 @@ struct ControlThread {
   std::vector<std::vector<Ope>> resultOperations;
   std::vector<std::vector<Ope>> bresultOperations;
   TasksQueue tq;
-  std::vector<std::vector<Ope>> resultopes; // 参照(&)を外し通常の実態に変更
   
-  ControlThread(); // コンストラクタ宣言を追加
+  ControlThread();
+  ~ControlThread();
 
   inline void wait_gpu() {
     std::unique_lock<std::mutex> lock(this->gpu_mtx);
     gpu_stop = false;
-    gpu_cv.wait(lock, [this]{ return gpu_stop; }); // cv -> gpu_cv, [this]キャプチャ追加
+    gpu_cv.wait(lock, [this]{ return gpu_stop; });
   }
 
   inline void start_gpu() {
@@ -170,7 +178,7 @@ struct ControlThread {
   inline void wait_afterTask() {
     std::unique_lock<std::mutex> lock(this->afterTask_mtx);
     afterTask_stop = false;
-    afterTask_cv.wait(lock, [this]{ return afterTask_stop; }); // cv -> afterTask_cv
+    afterTask_cv.wait(lock, [this]{ return afterTask_stop; });
   }
 
   inline void start_afterTask() {
@@ -193,7 +201,6 @@ struct ControlThread {
     uint32_t nowfsize = fsize - ((type >> 12) & 0b1100);
     uint32_t pairnum = (fsize << 1) * nowfsize - nowfsize * nowfsize + (type & 0b1111) + __builtin_popcount((int)(type & 0b111111110000)) * (nowfsize >> 1);
     
-    // 0割り防止
     if (pairnum == 0) pairnum = 1; 
 
     int32_t score = (resultOperations[d[0]].size() / pairnum) * 100000;
@@ -205,8 +212,11 @@ struct ControlThread {
     }
   }
 
-  void afterTask();
+  void afterTask(std::vector<std::vector<Ope>>& opes);
 };
 
+
+
+void algo2_algo1(RawField field, uint32_t fsize, MemObj21& mem21, std::vector<std::vector<Ope>>& opes, std::vector<RawField>& fields, std::vector<std::pair<uint8_t, uint8_t>> &offsets);
 }
 #endif

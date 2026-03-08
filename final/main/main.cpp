@@ -5,6 +5,8 @@
 #include <future>
 #include <thread>
 
+#include <algo2_algo1.hpp>
+
 // debug
 #include <algo2lib.hpp>
 using namespace algo2lib;
@@ -17,6 +19,7 @@ int main(void) {
 
   // Initialization
   MemObj1 mem1 = init1();
+  /* algo2_algo1::MemObj21 mem21{}; */
   MemObj2 mem2{};
 
   //std::vector<MemObj2> mem2s(max_threads);
@@ -30,7 +33,8 @@ int main(void) {
   std::vector<std::vector<Ope>> opes;
   std::vector<std::vector<uint16_t>> fields;
   std::vector<std::pair<uint8_t, uint8_t>> offsets;
-  algorithm1(field, fsize, mem1, opes, fields, offsets);;
+  algorithm1(field, fsize, mem1, opes, fields, offsets);
+  /* algo2_algo1::algo2_algo1(field, fsize, mem21, opes, fields, offsets); */
 
   /* // algorithm2 debug */
   /* uint32_t fsize = 12; */
@@ -40,7 +44,8 @@ int main(void) {
   /* offsets.push_back(std::pair(0, 0)); */
 
   // algorithm 2
-   std::vector<Ope> result = algorithm2(fields, opes, offsets, 12, mem2);
+  uint32_t fs = (fsize % 4) == 0 ? 12 : 10;
+   std::vector<Ope> result = algorithm2(fields, opes, offsets, fs, mem2);
   /* std::vector<Ope> result = algorithm2(fields, opes, offsets, fsize, mem2); */
 
   /*std::vector<Ope> result;

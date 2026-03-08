@@ -14,6 +14,14 @@ void createMatrixArrayL(const uint8_t x, const uint8_t y, const uint8_t n, uint3
   a[1] = t << 8 | (x + y + n - 1);
 }
 
+
+__device__ __host__ __forceinline__
+void createMatrixArrayR(const uint8_t x, const uint8_t y, const uint8_t n, uint32_t *a) {
+  a[0] = 0x00ff0100;
+  uint8_t t = y - x;
+  a[1] = (x + y + n - 1) << 8 | t;
+}
+
 // a * bの配列演算の結果をaに入れる
 __device__ __forceinline__
 void multDp4a(uint32_t *a, const uint32_t *b) {

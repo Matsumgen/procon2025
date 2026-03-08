@@ -2,19 +2,28 @@
 
 namespace algo2_algo1 {
 
+Ope getParamsCpu(uint16_t rid, uint32_t fsize, uint16_t type) {
+  return Ope{};
+}
+
 ControlThread::ControlThread() : field_len(0), fsize(0) {
-  this->result = (uint16_t*)malloc(MemObj21::GPU_PROCESS_NUM * (MemObj21::ROT_DEPTH + 1) * sizeof(uint16_t)); // sizeof(uint16_t) に修正、セミコロン追加
-  this->result_buf = (uint16_t*)malloc(MemObj21::GPU_PROCESS_NUM * (MemObj21::ROT_DEPTH + 1) * sizeof(uint16_t)); // 同上
+  this->result = (uint16_t*)malloc(MemObj21::GPU_PROCESS_NUM * (MemObj21::ROT_DEPTH + 1) * sizeof(uint16_t));
+  this->result_buf = (uint16_t*)malloc(MemObj21::GPU_PROCESS_NUM * (MemObj21::ROT_DEPTH + 1) * sizeof(uint16_t));
 
   resultOperations.resize(MemObj21::BEAM_WIDTH);
   bresultOperations.resize(MemObj21::BEAM_WIDTH);
-  for(auto& v: resultOperations)  { v.reserve(350); } // resultOperaitons -> resultOperations
-  for(auto& v: bresultOperations) { v.reserve(350); } // 同上
+  for(auto& v: resultOperations)  { v.reserve(350); }
+  for(auto& v: bresultOperations) { v.reserve(350); }
 }
 
-void ControlThread::afterTask() {
+ControlThread::~ControlThread() {
+  free(this->result);
+  free(this->result_buf);
+}
+
+void ControlThread::afterTask(std::vector<std::vector<Ope>>& opes) {
   while(true){
-    this->wait_afterTask(); // waitAfterTask -> wait_afterTask に修正
+    this->wait_afterTask();
 
     // ompつかう？
     for(size_t i = 0; i < MemObj21::GPU_PROCESS_NUM * (MemObj21::ROT_DEPTH + 1); i += MemObj21::ROT_DEPTH + 1){
@@ -29,7 +38,7 @@ void ControlThread::afterTask() {
 
         if((nowfsize >> 1) <= (type & 0b1111)) {
           uint8_t a = (type >> 12) & 0b11;
-          d[j++] = (0b11 << 14) | a; // ridは13bitしか使わない
+          d[j++] = (0b11 << 14) | a;
 
           type &= 0b1111111111110000;
           uint8_t r = (4 + (a<<1));
@@ -37,7 +46,6 @@ void ControlThread::afterTask() {
           if(b == 0) type |= (1 << r);
           if(b == 1) type |= (0b11 << r);
           
-          // ビット演算の優先順位をカッコで明示
           if((type & 0b0000111111110000) == 0b0000111111110000){
             type += (1 << 14);
             if(type >= (0b11 << 14)) {
@@ -46,9 +54,9 @@ void ControlThread::afterTask() {
               for(size_t k = 0; k < j; ++k) {
                 uint16_t rid = d[k+1];
                 Ope ope;
-                if(rid >= (0b11 << 14)) { // カッコを追加
+                if(rid >= (0b11 << 14)) {
                   rid &= 0b1111;
-                  uint8_t a_inner = (type >> 13) & 0b110; // 変数名を被らないよう a -> a_inner に変更
+                  uint8_t a_inner = (type >> 13) & 0b110;
                   if(rid == 0){
                     ope.data[0] = fsize >> 1;
                     ope.data[1] = a_inner;
@@ -64,19 +72,17 @@ void ControlThread::afterTask() {
                   }
                   ope.data[2] = (fsize >> 1) - a_inner;
                 }else{
-                  // getParamsCpuに不足していた引数を補い、名前空間algo2libを明示
-                  ope = algo2lib::getParamsCpu(rid, fsize, 2, 1); 
+                  ope = getParamsCpu(rid, fsize, type); 
                 }
                 buf.push_back(ope);
               }
-              resultopes.push_back(buf);
+              opes.push_back(buf);
             }
           }
         }
 
         for(; j < MemObj21::ROT_DEPTH + 2; ++j) d[j] = 0x3fff;
 
-        // キューへの追加 (直接配列 d と type を渡すよう修正)
         this->tq_add(d, type, resultOperations[d[0]].size());
       }
     }
