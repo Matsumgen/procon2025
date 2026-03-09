@@ -4,8 +4,9 @@
 #include <array>
 #include <future>
 #include <thread>
+#include <random>
 
-#include <algo2_algo1.hpp>
+/* #include <algo2_algo1.hpp> */
 
 // debug
 #include <algo2lib.hpp>
@@ -22,18 +23,27 @@ int main(void) {
   /* algo2_algo1::MemObj21 mem21{}; */
   MemObj2 mem2{};
 
+  std::vector<Ope> best_result(400);
+  std::vector<size_t> indexs(256);
+  for(size_t i = 0; i < indexs.size(); ++i) indexs[i] = i;
+  std::mt19937 g;
+  std::vector<std::vector<Ope>> opes_local(256);
+  std::vector<std::vector<uint16_t>> fields_local(256);
+  std::vector<std::pair<uint8_t, uint8_t>> offsets_local(256);
+  
+
   //std::vector<MemObj2> mem2s(max_threads);
 
   // get problem
   RawField field;
-  uint32_t fsize = 20;
+  uint32_t fsize = 24;
   getProblem(field, fsize);
 
   // debug
-  /*field = createRandomField(fsize);
-  for (int j = 0; j < fsize; j++) for (int k = 0; k < fsize; k++) {
-    std::cout << field[j * fsize + k] << " \n"[k == fsize - 1];
-  }*/
+  /* field = createRandomField(fsize); */
+  /* for (int j = 0; j < fsize; j++) for (int k = 0; k < fsize; k++) { */
+  /*   std::cout << field[j * fsize + k] << " \n"[k == fsize - 1]; */
+  /* } */
 
 
   // algorithm 1
@@ -67,18 +77,35 @@ int main(void) {
 
   // algorithm 2
   uint32_t fs = (fsize % 4) == 0 ? 12 : 10;
-  std::vector<Ope> best_result(400);
-  const uint32_t sl = 8;
-  for(size_t i = 0; i < opes.size(); i += sl){
-    std::vector<std::vector<Ope>> opes_local(opes.begin() + i, opes.begin() + i + sl);
-    std::vector<std::vector<uint16_t>> fields_local(fields.begin() + i, fields.begin() + i + sl);
-    std::vector<std::pair<uint8_t, uint8_t>> offsets_local(offsets.begin() + i, offsets.begin() + i + sl);
+
+
+  while(true) {
+    for(size_t i = 0; i < indexs.size(); ++i) {
+      opes_local[i] = opes[indexs[i]];
+      fields_local[i] = fields[indexs[i]];
+      offsets_local[i] = offsets[indexs[i]];
+    }
     std::vector<Ope> result = algorithm2(fields_local, opes_local, offsets_local, fs, mem2);
     if(best_result.size() > result.size()) {
       submission(result);
       best_result = result;
-
     }
+
+  /* RawField f = field; */
+  /* for(auto& v : result) { rotateField(f, fsize, v); } */
+  /* if(!isEnd(f, fsize)) { */
+  /*   f = field; */
+  /*   printField(f, fsize); */
+  /*   std::cout << std::endl; */
+  /*   for(auto& v : result) { */
+  /*     std::cout << (int)v.x() << " " << (int)v.y() << " " << (int)v.n() << std::endl; */
+  /*   } */
+  /*   std::cout << std::endl; */
+  /*   printField(f, fsize); */
+  /* } */
+
+
+    std::shuffle(indexs.begin(), indexs.end(), g);
   }
   /* std::vector<Ope> result = algorithm2(fields, opes, offsets, fsize, mem2); */
 
