@@ -68,10 +68,10 @@ namespace algo2lib{
 #define P_THREADS_PER_BLOCK 256
 #endif
 #ifndef P_QUEUE_SIZE
-#define P_QUEUE_SIZE (1 << 20)
+#define P_QUEUE_SIZE (1 << 21)
 #endif
 #ifndef P_BEAM_WIDTH
-#define P_BEAM_WIDTH (1 << 18)
+#define P_BEAM_WIDTH (1 << 20)
 #endif
 #ifndef P_FIELDS_PER_THREAD
 #define P_FIELDS_PER_THREAD 32

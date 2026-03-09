@@ -31,13 +31,7 @@ void gparam(const uint32_t tid, const uint32_t fsize, uint32_t *X, uint32_t *Y, 
 
 __device__ __forceinline__
 uint32_t evaluation(uint16_t *f, uint32_t fsize, const uint32_t paramMode) {
-  if(paramMode == 0) {
-    return evaluation2(f, fsize);
-  } else if (paramMode == 1){
   return evaluation1(f, fsize);
-  }else {
-    return evaluation3(f, fsize);
-  }
 }
 
 __global__
