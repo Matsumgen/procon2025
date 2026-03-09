@@ -21,16 +21,18 @@ CUFLAGS  = $(FLAGS) -Xcompiler "$(CFLAGS)" -lineinfo
 #INCLUDE  = -Iinc -Isrc -Ilib/lmdb/include
 INCLUDE_OMP = -Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include
 #LIBRARY  = lib/lmdb/lib/liblmdb.a
-LIBRARY_OMP = -L/opt/homebrew/opt/libomp/lib -lgomp
+# LIBRARY_OMP = -L/opt/homebrew/opt/libomp/lib -lgomp
+LIBRARY_OMP = -L../lib/lib -lgomp
 #INCLUDE_OMP =
 LIBRARY  =
 #LIBRARY_OMP =
 
 # インクルードパスの追加
-INCLUDE = -Iinc -Isrc -I/usr/local/include
+# INCLUDE = -Iinc -Isrc -I/usr/local/include
+INCLUDE = -Iinc -Isrc -I../lib/include
 
 # リンクフラグの追加
-LDFLAGS += -lcpr -lcurl -lssl -lcrypto
+LDFLAGS += -lcpr -lcurl -lssl -lcrypto -lz -llmdb
 
 # ディレクトリ
 SRCDIR  = src

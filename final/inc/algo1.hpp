@@ -5,6 +5,7 @@
 #include <array>
 #include <vector>
 #include <stdint.h>
+#include <lmdb.h>
 
 struct MemObj1;
 
@@ -20,10 +21,15 @@ namespace algo1 {
   #define RESULT2_ENUM_CNT 5
   #define RESULT3_ENUM_CNT 5
 
+  #define TYPE_CNT1 3
+  #define TYPE_CNT2 5
+  #define TYPE_CNT3 5
   #define TYPE_CNT4 5
-  #define CPU_CNT 30
 
-  const static size_t BEAM_WIDTH = 5000;
+  #define CPU_CNT 20
+
+  #define BEAM_WIDTH1 5000
+  #define BEAM_WIDTH2 5000
 
   #define getBit(x, y) (((x)>>(y))&1)
   #define setBit(x, y) ((x)|((unsigned long long int)1<<(y)))
@@ -43,6 +49,16 @@ namespace algo1 {
     OUTSIDE,
     LEFT,
     RIGHT
+  };
+
+  enum PileDir {
+    // HORIZON = 0,
+    VERTICAL = 1
+  };
+
+  enum SolveType {
+    TYPE_A = 0,
+    TYPE_B
   };
 
   template<typename T>
@@ -186,18 +202,22 @@ namespace algo1 {
       int type;
       int ent;
       int idx;
+      int solve_type;
 
       AnsLog();
-      AnsLog(int type, int ent, int idx);
+      AnsLog(int type, int ent, int idx, int solve_type);
   };
 
   class State {
     public:
       int x_hosei, y_hosei;
       int rotate_hosei;
+      int solve_type;
       Field f;
       int edge_cnt;
       int progress;
+      bool pile_dir;
+      int last_pair_x;
       int score;
       bool end_flag;
       int last_type;
@@ -222,6 +242,7 @@ namespace algo1 {
     private:
       std::vector<Ope> getOperation(int type, int ent, int idx, MemObj1 &mem1);
       Pos getTmpBasePos(int type);
+      std::vector<Ope> getToHorizonOpe();
   };
 
   class BeamNode {
@@ -237,32 +258,62 @@ namespace algo1 {
   Ope rotateOpe(Ope ope, int fsize, int r);
   Pos getRotatePos(Pos p, Ope ope);
   Pos intToPos(int p, int size);
+  int manhattan(Pos p1, Pos p2);
 
   void clearSeg(Seg<BeamNode> *seg);
   BeamNode seg_ope(BeamNode x, BeamNode y);
 };
 
+namespace fdb {
+  inline MDB_env *field4_env = nullptr;
+  inline MDB_dbi field4_dbi  = 0;
+  inline MDB_txn *field4_txn = nullptr;
+  inline std::array<std::array<std::uint8_t, 3>, 256> f4decodeOpe = {};
+
+  bool field4_init(const char *db_path);
+  void field4_deinit();
+
+
+  std::vector<Ope> getField4(algo1::Field &f);
+  std::vector<std::uint8_t> encodeField4(algo1::Field& f);
+
+  //LUT化
+  Ope decodeOperate(const std::uint8_t& ope);
+}
+
 struct MemObj1 {
   size_t size;
 
   /* bfs結果ファイルで使用  */
+  uint16_t **bfs_result1;
+  uint16_t **bfs_result2;
+  uint16_t **bfs_result3;
   uint16_t **bfs_result4;
   std::vector<Ope> all_ope;  
+  std::vector<std::vector<std::vector<std::vector<int>>>> idx_memo3;
 
   /* ビームサーチで使用 */
-  algo1::State *state_mem[2];
-  algo1::Pos *pos_mem[2];
-  algo1::Ent *ent_mem[2];
+  algo1::State *tmp_state_mem[2];
+  algo1::Pos *tmp_pos_mem[2];
+  algo1::Ent *tmp_ent_mem[2];
+  algo1::State *com_state_mem[2];
+  algo1::Pos *com_pos_mem[2];
+  algo1::Ent *com_ent_mem[2];
   algo1::BeamNode *now_beam;
   algo1::BeamNode *tmp_beam;
 
   /* bfs結果取得関連の関数 */
   std::vector<Ope> getBfsResultOperation(algo1::State *s, std::vector<algo1::Pos> &target_pos, int type, int ent, int idx);
   int getBfsResultOperationCount(algo1::State *s, std::vector<algo1::Pos> &target_pos, int type, int ent);
+  size_t getIndex1(int size, int t, int type, int p1, int p2, int idx);
+  size_t getIndex3(int size, int t, int type, int x, int p1, int p2, int idx);
   size_t getIndex4(int size, int t, int type, int p1, int p2, int idx);
+  uint16_t getParent1(int size, int t, int type, int p1, int p2, int idx);
+  uint16_t getParent2(int size, int t, int type, int target1, int target2, int idx);
+  uint16_t getParent3(int size, int t, int type, int x, int p1, int p2, int idx);
   uint16_t getParent4(int size, int t, int type, int p1, int p2, int idx);
 };
 
 MemObj1 init1();
-void algorithm1(RawField field, uint32_t fsize, MemObj1& mem1, std::vector<std::vector<Ope>>& opes, std::vector<RawField>& fields, std::vector<std::pair<uint8_t, uint8_t>> &offsets);
+std::vector<Ope> algorithm1(RawField field, uint32_t fsize, MemObj1& mem1, std::vector<std::vector<Ope>>& opes, std::vector<RawField>& fields, std::vector<std::pair<uint8_t, uint8_t>> &offsets);
 #endif

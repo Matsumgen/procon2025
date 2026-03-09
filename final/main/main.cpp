@@ -26,8 +26,14 @@ int main(void) {
 
   // get problem
   RawField field;
-  uint32_t fsize;
+  uint32_t fsize = 20;
   getProblem(field, fsize);
+
+  // debug
+  /*field = createRandomField(fsize);
+  for (int j = 0; j < fsize; j++) for (int k = 0; k < fsize; k++) {
+    std::cout << field[j * fsize + k] << " \n"[k == fsize - 1];
+  }*/
 
 
   // algorithm 1
@@ -35,6 +41,21 @@ int main(void) {
   std::vector<std::vector<uint16_t>> fields;
   std::vector<std::pair<uint8_t, uint8_t>> offsets;
   algorithm1(field, fsize, mem1, opes, fields, offsets);
+
+  // algorithm1 debug
+  /*for (int i = 0; i < (int)opes.size(); i++) {
+    std::cout << i << std::endl;
+    std::cout << "Ope" << std::endl;
+    for (int j = 0; j < opes[i].size(); j++) {
+      std::cout << (int)opes[i][j].data[0] << " " << (int)opes[i][j].data[1] << " " << (int)opes[i][j].data[2] << std::endl;
+    }
+    std::cout << "Field" << std::endl;
+    for (int j = 0; j < 12; j++) for (int k = 0; k < 12; k++) {
+      std::cout << fields[i][j * 12 + k] << " \n"[k == 11];
+    }
+    std::cout << std::endl;
+  }*/
+  
   /* algo2_algo1::algo2_algo1(field, fsize, mem21, opes, fields, offsets); */
 
   /* // algorithm2 debug */
