@@ -16,10 +16,10 @@ MemObj1 init1() {
   mem.size = 0;
 
   /* bfs結果関連のメモリ確保(ファイル読み込み含む) */
-  char *base_file_name1 = (char*)"/mnt/c/Users/student/Documents/procon/bfs_result8/bfs_result8_n%d_m5.bin";
-  char *base_file_name2 = (char*)"/mnt/c/Users/student/Documents/procon/bfs_result10/bfs_result10_n%d_m5.bin";
-  char *base_file_name3 = (char*)"/mnt/c/Users/student/Documents/procon/make_bfs_result11/data/bfs_result11_n%d_m5.bin";
-  char *base_file_name4 = (char*)"/mnt/c/Users/student/Documents/procon/make_bfs_result12/data/bfs_result12_n%d_m5.bin";
+  char *base_file_name1 = (char*)"../data/bfs_result8/bfs_result8_n%d_m5.bin";
+  char *base_file_name2 = (char*)"../data/bfs_result10/bfs_result10_n%d_m5.bin";
+  char *base_file_name3 = (char*)"../data/bfs_result11/bfs_result11_n%d_m5.bin";
+  char *base_file_name4 = (char*)"../data/bfs_result12/bfs_result12_n%d_m5.bin";
   FILE *fp;
   char file_name[256];
 
@@ -172,7 +172,7 @@ MemObj1 init1() {
 
   /* 4x4のデータベース読み込み */
   // field4_init("../data/field4_db");
-  field4_init("/mnt/c/Users/student/OneDrive/OneDrive - 独立行政法人 国立高等専門学校機構/自分用/Iken/procon/R7/field4_db");
+  field4_init("../data/field4_db");
 
   /* ビームサーチ関連のメモリ確保 */
   for (int i = 0; i < 2; i++) {
